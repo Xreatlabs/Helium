@@ -1,9 +1,9 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.0 ― Cascade Ridge
+ * Helium 1.0.0 ― Cascade Ridge
  *
- * This is for the admin side of Heliactyl.
+ * This is for the admin side of Helium.
  * @module admin
  */
 

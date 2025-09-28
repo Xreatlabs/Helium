@@ -1,9 +1,9 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.1 ― Cascade Ridge 
+ * Helium 1.0.0 ― Cascade Ridge 
  *
- * This file represents the main entry point of the Heliactyl application.
+ * This file represents the main entry point of the Helium application.
  * It loads the necessary packages, settings, and databases.
  * It also handles the routing and rendering of web pages.
  * @module index
@@ -97,7 +97,7 @@ module.exports.db = db;
 
 if (cluster.isMaster) {
   const numCPUs = 8;
-  console.log(chalk.gray('Starting workers on Heliactyl 14 (Cascade Ridge)'))
+  console.log(chalk.gray('Starting workers on Helium 1 (Cascade Ridge)'))
   console.log(chalk.gray(`Master ${process.pid} is running`));
   console.log(chalk.gray(`Forking ${numCPUs} workers...`));
 
@@ -127,7 +127,7 @@ if (cluster.isMaster) {
   module.exports.app = app;
 
   app.use((req, res, next) => {
-    res.setHeader("X-Powered-By", "14th Gen Heliactyl (Cascade Ridge)");
+    res.setHeader("X-Powered-By", "1st Gen Helium (Cascade Ridge)");
     next();
   });
 

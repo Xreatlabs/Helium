@@ -1,9 +1,9 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.0 ― Cascade Ridge
+ * Helium 1.0.0 ― Cascade Ridge
  *
- * This file acts as the API for the Heliactyl application.
+ * This file acts as the API for the Helium application.
  * @module api
 */
 

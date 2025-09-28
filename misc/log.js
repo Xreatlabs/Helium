@@ -22,10 +22,10 @@ module.exports = (action, message) => {
                     title: `Event: \`${action}\``,
                     description: message,
                     author: {
-                        name: 'Heliactyl Logging'
+                        name: 'Helium Logging'
                     },
                     thumbnail: {
-                        url: 'https://atqr.pages.dev/favicon.png' // This is the default Heliactyl logo, you can change it if you want.
+                        url: 'https://atqr.pages.dev/favicon.png' // This is the default Helium logo, you can change it if you want.
                     }
                 }
             ]

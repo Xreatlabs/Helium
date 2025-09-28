@@ -1,7 +1,7 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.0 ― Cascade Ridge
+ * Helium 1.0.0 ― Cascade Ridge
  *
  * This is for miscellaneous extra endpoints.
  * @module extras

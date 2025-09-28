@@ -1,7 +1,7 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.1 ― Cascade Ridge
+ * Helium 1.0.0 ― Cascade Ridge
  *
  * This is for the AFK websocket. It gives the user coins every x seconds.
  * @module afk
