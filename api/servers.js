@@ -1,7 +1,7 @@
 /**
  * |-| [- |_ | /\ ( ~|~ `/ |_
  *
- * Heliactyl 14.11.0 ― Cascade Ridge
+ * Helium 1.0.0 ― Cascade Ridge
  *
  * This is for creating, deleting and editing servers on the user side.
  * @module servers
@@ -63,7 +63,7 @@ module.exports.load = async function (app, db) {
         if (!cacheaccount) {
           cb();
           return res.send(
-            "Heliactyl failed to find an account on the configured panel, try relogging"
+            "Helium failed to find an account on the configured panel, try relogging"
           );
         }
         req.session.pterodactyl = cacheaccount.attributes;

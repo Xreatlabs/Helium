@@ -1,14 +1,14 @@
-# Heliactyl
+# Helium
 
 ![GitHub commit](https://img.shields.io/github/last-commit/heliactyloss/heliactyl) ![GitHub Release](https://img.shields.io/github/v/release/heliactyloss/heliactyl)
 
 > [!NOTE]
-> This version of Heliactyl 14 is built to be clean, fast and stable. It lacks highly specific features such as Linkvertise and Stripe billing but retains all of the functionality of previous Heliactyl releases (v11, v12, v13).
+> This version of Helium 1 is built to be clean, fast and stable. It lacks highly specific features such as Linkvertise and Stripe billing but retains all of the functionality of previous Helium releases (v11, v12, v13).
 
 > [!WARNING]  
-> Heliactyl 14 is not compatible with `settings.json` files from v13 or earlier. You can keep the same `database.sqlite` though without having any issues.
+> Helium 1 is not compatible with `settings.json` files from v13 or earlier. You can keep the same `database.sqlite` though without having any issues.
 
-Heliactyl is a high-performance client area for the Pterodactyl Panel. It allows your users to create, edit and delete servers, and also earn coins which can be used to upgrade their servers.
+Helium is a high-performance client area for the Pterodactyl Panel. It allows your users to create, edit and delete servers, and also earn coins which can be used to upgrade their servers.
 
 ## Get started
 
@@ -16,7 +16,7 @@ You can get started straight away by following these steps:
 
 1. Clone the repo: Run `git clone https://github.com/heliactyloss/heliactyl` on your machine
 2. Enter the directory and configure the `settings.json` file - most are optional except the Pterodactyl and OAuth2 settings which **must** be configured
-3. Check everything out and make sure you've configured Heliactyl correctly
+3. Check everything out and make sure you've configured Helium correctly
 4. Create SSL certificates for your target domain and set up the NGINX reverse proxy
 
 ## NGINX Reverse Proxy
@@ -61,13 +61,13 @@ server {
 
 These commands are available:
 ```
-npm run start - starts Heliactyl via nodemon
+npm run start - starts Helium via nodemon
 npm run build - builds TailwindCSS, required for making changes to the UI
 ```
 
-## Heliactyl API v2
+## Helium API v2
 
-In v14, we've introduced the next generation of Heliactyl's API. You can see the documentation below:
+In v1, we've introduced the next generation of Helium's API. You can see the documentation below:
 
 ### /api/v2/userinfo
 
