@@ -30,7 +30,8 @@
     "start": "nodemon app.js",
     "build": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --watch",
     "test": "jest",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "setup": "node scripts/setup.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.9",

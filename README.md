@@ -15,9 +15,56 @@ Helium is a high-performance client area for the Pterodactyl Panel. It allows yo
 You can get started straight away by following these steps:
 
 1. Clone the repo: Run `git clone https://github.com/heliactyloss/heliactyl` on your machine
-2. Enter the directory and configure the `settings.json` file - most are optional except the Pterodactyl and OAuth2 settings which **must** be configured
-3. Check everything out and make sure you've configured Helium correctly
-4. Create SSL certificates for your target domain and set up the NGINX reverse proxy
+2. Run setup: `npm run setup` (creates `settings.json` from template)
+3. Configure `settings.json` - most are optional except the Pterodactyl and OAuth2 settings which **must** be configured
+4. Install dependencies: `npm install`
+5. Run database migration: `npm run migrate`
+6. Start the application: `npm start`
+7. Create SSL certificates for your target domain and set up the NGINX reverse proxy
+
+### First Time Setup
+
+```bash
+# Clone repository
+git clone https://github.com/heliactyloss/heliactyl
+cd heliactyl
+
+# Initial setup (creates settings.json and .env)
+npm run setup
+
+# Edit your configuration
+# Edit settings.json with your Pterodactyl & Discord credentials
+
+# Install and migrate
+npm install
+npm run migrate
+
+# Start
+npm start
+```
+
+### Updating Helium
+
+Your `settings.json` and `database.sqlite` are protected and won't be overwritten:
+
+```bash
+# Pull updates
+git pull origin master
+
+# Check for new config options
+diff settings.json settings.example.json
+
+# Install new dependencies
+npm install
+
+# Run new migrations (if any)
+npm run migrate
+
+# Restart
+npm start
+```
+
+**See [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for detailed update instructions.**
 
 ## NGINX Reverse Proxy
 
