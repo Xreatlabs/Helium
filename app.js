@@ -133,11 +133,19 @@ if (cluster.isMaster) {
 
   app.use(
     session({
-      store: new KeyvStore({ uri: settings.database }),
+      store: new KeyvStore({ 
+        uri: settings.database,
+        ttl: 86400000 // 24 hours
+      }),
       secret: settings.website.secret,
       resave: false,
       saveUninitialized: false,
-      cookie: { secure: false },
+      rolling: true, // Reset expiration on every response
+      cookie: { 
+        secure: false,
+        maxAge: 86400000, // 24 hours
+        httpOnly: true
+      },
     })
   );
 
@@ -197,12 +205,36 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
-    if (req.session.pterodactyl)
-      if (
-        req.session.pterodactyl.id !==
-        (await db.get("users-" + req.session.userinfo.id))
-      )
-        return res.redirect("/login?prompt=none");
+    // Prevent redirect loops - skip this check for login/callback/logout routes
+    const skipRoutes = ["/login", "/callback", "/logout", settings.api.client.oauth2.callbackpath];
+    const isSkipRoute = skipRoutes.some(route => req.path === route || req.path.startsWith(route));
+    
+    if (!isSkipRoute && req.session.pterodactyl && req.session.userinfo) {
+      const storedUserId = await db.get("users-" + req.session.userinfo.id);
+      
+      // Only redirect if there's a mismatch AND we haven't tried recently
+      if (storedUserId && req.session.pterodactyl.id !== storedUserId) {
+        // Check if we've already tried to re-authenticate recently (within last 30 seconds)
+        const lastReauthAttempt = req.session.lastReauthAttempt || 0;
+        const now = Date.now();
+        
+        if (now - lastReauthAttempt > 30000) {
+          console.log("OAuth: Pterodactyl ID mismatch detected, clearing session");
+          req.session.lastReauthAttempt = now;
+          // Clear the session instead of redirecting with prompt=none
+          req.session.destroy(() => {
+            return res.redirect("/login");
+          });
+          return;
+        } else {
+          // Too many re-auth attempts, show error instead of looping
+          return res.send(
+            "Your session appears to be invalid. Please <a href='/logout'>log out</a> and log in again."
+          );
+        }
+      }
+    }
+    
     let theme = indexjs.get(req);
     let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
     if (newsettings.api.afk.enabled == true)

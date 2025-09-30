@@ -36,6 +36,29 @@ const vpnCheck = require("../misc/vpnCheck");
 module.exports.load = async function (app, db) {
   // Login route - redirects to Discord OAuth
   app.get("/login", async (req, res) => {
+    // Prevent login loops - if already authenticated, redirect to dashboard
+    if (req.session.userinfo && req.session.pterodactyl) {
+      console.log("OAuth: User already authenticated, redirecting to dashboard");
+      return res.redirect("/dashboard");
+    }
+
+    // Track login attempts to prevent infinite loops
+    if (!req.session.loginAttempts) {
+      req.session.loginAttempts = 0;
+    }
+    req.session.loginAttempts++;
+
+    // If too many login attempts, clear session and show error
+    if (req.session.loginAttempts > 3) {
+      console.log("OAuth: Too many login attempts, clearing session");
+      req.session.destroy(() => {
+        return res.send(
+          "Too many login attempts. Please clear your cookies and try again. If the issue persists, contact support."
+        );
+      });
+      return;
+    }
+
     if (req.query.redirect) {
       req.session.redirect = "/" + req.query.redirect;
     }
@@ -55,9 +78,11 @@ module.exports.load = async function (app, db) {
     }
     
     let promptParam = "";
+    // Only use prompt=none if explicitly configured or if this is a re-auth attempt
     if (settings.api.client.oauth2.prompt == false) {
       promptParam = "&prompt=none";
-    } else if (req.query.prompt == "none") {
+    } else if (req.query.prompt == "none" && req.session.loginAttempts <= 2) {
+      // Don't use prompt=none after multiple failures
       promptParam = "&prompt=none";
     }
     
@@ -79,10 +104,36 @@ module.exports.load = async function (app, db) {
   // OAuth callback - handles the entire authentication flow
   app.get(settings.api.client.oauth2.callbackpath, async (req, res) => {
     try {
+      // Check for OAuth errors from Discord
+      if (req.query.error) {
+        console.log("OAuth callback: Discord returned error:", req.query.error);
+        
+        // Clear session to prevent loops
+        req.session.destroy(() => {
+          if (req.query.error === "access_denied") {
+            return res.send(
+              "You denied the authorization request. <a href='/login'>Click here to try again</a>."
+            );
+          } else {
+            return res.send(
+              `OAuth error: ${req.query.error}. <a href='/login'>Click here to try again</a>.`
+            );
+          }
+        });
+        return;
+      }
+
       // Validate authorization code
       if (!req.query.code) {
         console.log("OAuth callback: Missing authorization code");
-        return res.redirect(`/login`);
+        
+        // Clear login attempts and session to prevent loops
+        req.session.destroy(() => {
+          return res.send(
+            "No authorization code received. <a href='/login'>Click here to try again</a>."
+          );
+        });
+        return;
       }
 
       const newsettings = require("../settings.json");
@@ -129,9 +180,32 @@ module.exports.load = async function (app, db) {
       });
 
       if (!tokenResponse.ok) {
-        console.log("OAuth: Token exchange failed", await tokenResponse.text());
-        return res.redirect(`/login`);
+        const errorText = await tokenResponse.text();
+        console.log("OAuth: Token exchange failed", errorText);
+        
+        // Increment failure counter
+        if (!req.session.oauthFailures) {
+          req.session.oauthFailures = 0;
+        }
+        req.session.oauthFailures++;
+        
+        // If too many failures, clear session and show error
+        if (req.session.oauthFailures > 2) {
+          req.session.destroy(() => {
+            return res.send(
+              "OAuth token exchange failed multiple times. Please clear your cookies and <a href='/login'>try again</a>. Error details: " + errorText
+            );
+          });
+          return;
+        }
+        
+        return res.send(
+          "OAuth token exchange failed. <a href='/login'>Click here to try again</a>."
+        );
       }
+      
+      // Reset failure counter on success
+      req.session.oauthFailures = 0;
 
       let codeinfo = JSON.parse(await tokenResponse.text());
       let scopes = codeinfo.scope;
@@ -495,6 +569,13 @@ module.exports.load = async function (app, db) {
       req.session.pterodactyl = cacheaccountinfo.attributes;
       req.session.userinfo = userinfo;
       
+      // Reset login attempts on successful login
+      req.session.loginAttempts = 0;
+      
+      // Set a flag to indicate successful authentication
+      req.session.authenticated = true;
+      req.session.lastAuthTime = Date.now();
+      
       console.log("OAuth: Login successful for user:", userinfo.username);
       
       // Save session and redirect
@@ -504,6 +585,8 @@ module.exports.load = async function (app, db) {
           return res.send("Session save failed. Please try logging in again.");
         }
         
+        console.log("OAuth: Session saved successfully, redirecting user");
+        
         let theme = indexjs.get(req);
         if (customredirect) {
           return res.redirect(customredirect);
@@ -511,7 +594,7 @@ module.exports.load = async function (app, db) {
         return res.redirect(
           theme.settings.redirect.callback
             ? theme.settings.redirect.callback
-            : "/"
+            : "/dashboard"
         );
       });
       
