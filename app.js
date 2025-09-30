@@ -82,7 +82,7 @@ module.exports.renderdataeval = `(async () => {
   })();`;
 
 // Load database
-const Keyv = require("keyv");
+const Keyv = require("keyv").default;
 const db = new Keyv(settings.database);
 
 db.on("error", (err) => {

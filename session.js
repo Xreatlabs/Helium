@@ -1,4 +1,4 @@
-const Keyv = require('keyv');
+const Keyv = require('keyv').default;
 const { Store } = require('express-session');
 
 class KeyvStore extends Store {
