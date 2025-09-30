@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webhook Management - Helium</title>
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    [v-cloak] { display: none; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div id="app" v-cloak>
+    <!-- Navigation -->
+    <%- include('../components/navigation') %>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <!-- Header with Dark Mode Toggle -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Discord Webhooks</h1>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">Manage Discord webhook notifications for events</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Dark Mode Toggle -->
+          <button @click="toggleDarkMode" class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <svg v-if="!darkMode" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+            <svg v-else class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+          </button>
+          <button @click="showCreateModal = true" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+            + Create Webhook
+          </button>
+        </div>
+      </div>
+
+      <!-- Webhooks List -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div v-if="loading" class="p-8 text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">Loading webhooks...</p>
+        </div>
+
+        <div v-else-if="webhooks.length === 0" class="p-8 text-center">
+          <p class="text-gray-600 dark:text-gray-400">No webhooks configured yet.</p>
+        </div>
+
+        <div v-else class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Events</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="webhook in webhooks" :key="webhook.id" class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ webhook.name }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ truncateUrl(webhook.webhook_url) }}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex flex-wrap gap-1">
+                    <span v-for="event in webhook.event_types.slice(0, 3)" :key="event" class="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                      {{ event }}
+                    </span>
+                    <span v-if="webhook.event_types.length > 3" class="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                      +{{ webhook.event_types.length - 3 }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <button @click="toggleWebhook(webhook)" class="inline-flex items-center">
+                    <span class="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input type="checkbox" :checked="webhook.enabled" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform" :class="webhook.enabled ? 'right-0 border-green-500' : 'left-0 border-gray-300'" />
+                      <label class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer" :class="webhook.enabled ? 'bg-green-500' : 'bg-gray-300'"></label>
+                    </span>
+                  </button>
+                </td>
+                <td class="px-6 py-4 text-right text-sm font-medium">
+                  <button @click="testWebhook(webhook)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-4">Test</button>
+                  <button @click="editWebhook(webhook)" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 mr-4">Edit</button>
+                  <button @click="deleteWebhook(webhook)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create/Edit Modal -->
+      <div v-if="showCreateModal || editingWebhook" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ editingWebhook ? 'Edit Webhook' : 'Create Webhook' }}</h2>
+            
+            <form @submit.prevent="saveWebhook">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+                  <input v-model="formData.name" type="text" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
+                  <input v-model="formData.webhook_url" type="url" required placeholder="https://discord.com/api/webhooks/..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Get this from Discord: Server Settings → Integrations → Webhooks</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server ID (Optional)</label>
+                  <input v-model="formData.server_id" type="text" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Types</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <label v-for="event in availableEvents" :key="event.value" class="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                      <input type="checkbox" :value="event.value" v-model="formData.event_types" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="text-sm text-gray-900 dark:text-white">{{ event.label }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex items-center">
+                  <input type="checkbox" v-model="formData.enabled" id="enabled" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                  <label for="enabled" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Enabled</label>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-4 mt-6">
+                <button type="button" @click="closeModal" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  {{ editingWebhook ? 'Update' : 'Create' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div v-if="toast.show" class="fixed bottom-4 right-4 bg-white dark:bg-gray-800 border-l-4 rounded-lg shadow-lg p-4 max-w-sm z-50 transition-all" :class="toast.type === 'success' ? 'border-green-500' : 'border-red-500'">
+      <div class="flex items-center">
+        <span class="text-2xl mr-3">{{ toast.type === 'success' ? '✅' : '❌' }}</span>
+        <p class="text-gray-900 dark:text-white">{{ toast.message }}</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          darkMode: localStorage.getItem('darkMode') === 'true',
+          webhooks: [],
+          loading: true,
+          showCreateModal: false,
+          editingWebhook: null,
+          formData: {
+            name: '',
+            webhook_url: '',
+            server_id: '',
+            event_types: [],
+            enabled: true,
+          },
+          availableEvents: [
+            { value: '*', label: 'All Events' },
+            { value: 'server.created', label: 'Server Created' },
+            { value: 'server.deleted', label: 'Server Deleted' },
+            { value: 'server.modified', label: 'Server Modified' },
+            { value: 'server.suspended', label: 'Server Suspended' },
+            { value: 'server.unsuspended', label: 'Server Unsuspended' },
+            { value: 'user.registered', label: 'User Registered' },
+            { value: 'user.login', label: 'User Login' },
+            { value: 'coins.added', label: 'Coins Added' },
+            { value: 'coins.spent', label: 'Coins Spent' },
+            { value: 'resource.purchased', label: 'Resource Purchased' },
+            { value: 'admin.action', label: 'Admin Action' },
+          ],
+          toast: {
+            show: false,
+            message: '',
+            type: 'success',
+          },
+        };
+      },
+      mounted() {
+        this.applyDarkMode();
+        this.loadWebhooks();
+      },
+      methods: {
+        applyDarkMode() {
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        },
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          localStorage.setItem('darkMode', this.darkMode);
+          this.applyDarkMode();
+        },
+        async loadWebhooks() {
+          this.loading = true;
+          try {
+            const response = await fetch('/api/webhooks');
+            const data = await response.json();
+            this.webhooks = data.webhooks;
+          } catch (error) {
+            this.showToast('Failed to load webhooks', 'error');
+          }
+          this.loading = false;
+        },
+        async saveWebhook() {
+          try {
+            const url = this.editingWebhook ? `/api/webhooks/${this.editingWebhook.id}` : '/api/webhooks';
+            const method = this.editingWebhook ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.formData),
+            });
+
+            if (response.ok) {
+              this.showToast(this.editingWebhook ? 'Webhook updated' : 'Webhook created', 'success');
+              this.closeModal();
+              this.loadWebhooks();
+            } else {
+              const data = await response.json();
+              this.showToast(data.error || 'Failed to save webhook', 'error');
+            }
+          } catch (error) {
+            this.showToast('Network error', 'error');
+          }
+        },
+        async toggleWebhook(webhook) {
+          try {
+            const response = await fetch(`/api/webhooks/${webhook.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ enabled: !webhook.enabled }),
+            });
+
+            if (response.ok) {
+              this.loadWebhooks();
+            }
+          } catch (error) {
+            this.showToast('Failed to toggle webhook', 'error');
+          }
+        },
+        async testWebhook(webhook) {
+          try {
+            const response = await fetch(`/api/webhooks/${webhook.id}/test`, {
+              method: 'POST',
+            });
+
+            if (response.ok) {
+              this.showToast('Test webhook sent!', 'success');
+            } else {
+              this.showToast('Failed to send test webhook', 'error');
+            }
+          } catch (error) {
+            this.showToast('Network error', 'error');
+          }
+        },
+        editWebhook(webhook) {
+          this.editingWebhook = webhook;
+          this.formData = {
+            name: webhook.name,
+            webhook_url: webhook.webhook_url,
+            server_id: webhook.server_id || '',
+            event_types: [...webhook.event_types],
+            enabled: webhook.enabled,
+          };
+        },
+        async deleteWebhook(webhook) {
+          if (!confirm(`Delete webhook "${webhook.name}"?`)) return;
+
+          try {
+            const response = await fetch(`/api/webhooks/${webhook.id}`, {
+              method: 'DELETE',
+            });
+
+            if (response.ok) {
+              this.showToast('Webhook deleted', 'success');
+              this.loadWebhooks();
+            } else {
+              this.showToast('Failed to delete webhook', 'error');
+            }
+          } catch (error) {
+            this.showToast('Network error', 'error');
+          }
+        },
+        closeModal() {
+          this.showCreateModal = false;
+          this.editingWebhook = null;
+          this.formData = {
+            name: '',
+            webhook_url: '',
+            server_id: '',
+            event_types: [],
+            enabled: true,
+          };
+        },
+        truncateUrl(url) {
+          return url.length > 50 ? url.substring(0, 50) + '...' : url;
+        },
+        showToast(message, type = 'success') {
+          this.toast = { show: true, message, type };
+          setTimeout(() => {
+            this.toast.show = false;
+          }, 3000);
+        },
+      },
+    }).mount('#app');
+  </script>
+
+  <style>
+    .toggle-checkbox:checked {
+      transform: translateX(100%);
+    }
+  </style>
+</body>
+</html>

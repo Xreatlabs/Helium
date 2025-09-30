@@ -293,6 +293,14 @@ module.exports.load = async function (app, db) {
               "created server",
               `${req.session.userinfo.username}#${req.session.userinfo.discriminator} created a new server named \`${name}\` with the following specs:\n\`\`\`Memory: ${ram} MB\nCPU: ${cpu}%\nDisk: ${disk}\`\`\``
             );
+            
+            // Trigger webhook event
+            const { onServerCreated } = require('../lib/integrations');
+            onServerCreated(
+              { id: serverinfotext.attributes.id, name, limits: { memory: ram, disk, cpu } },
+              { id: req.session.userinfo.id, username: req.session.userinfo.username }
+            ).catch(err => console.error('Webhook error:', err));
+            
             return res.redirect("/servers?err=CREATED");
           } else {
             cb();
@@ -505,6 +513,14 @@ module.exports.load = async function (app, db) {
           pterorelationshipsserverdata;
         let theme = indexjs.get(req);
         adminjs.suspend(req.session.userinfo.id);
+        
+        // Trigger webhook event
+        const { onServerModified } = require('../lib/integrations');
+        onServerModified(
+          { id: text.attributes.id, name: text.attributes.name, limits: { memory: ram, disk, cpu } },
+          { id: req.session.userinfo.id, username: req.session.userinfo.username }
+        ).catch(err => console.error('Webhook error:', err));
+        
         res.redirect("/servers?err=MODIFIED");
       } else {
         res.redirect(`${redirectlink}?id=${req.query.id}&err=MISSINGVARIABLE`);
@@ -551,6 +567,11 @@ module.exports.load = async function (app, db) {
         return res.send(
           "An error has occur while attempting to delete the server."
         );
+      
+      const deletedServer = req.session.pterodactyl.relationships.servers.data.find(
+        (server) => server.attributes.id.toString() === req.query.id
+      );
+      
       let pterodactylinfo = req.session.pterodactyl;
       pterodactylinfo.relationships.servers.data =
         pterodactylinfo.relationships.servers.data.filter(
@@ -559,6 +580,15 @@ module.exports.load = async function (app, db) {
       req.session.pterodactyl = pterodactylinfo;
 
       adminjs.suspend(req.session.userinfo.id);
+      
+      // Trigger webhook event
+      if (deletedServer) {
+        const { onServerDeleted } = require('../lib/integrations');
+        onServerDeleted(
+          { id: deletedServer.attributes.id, name: deletedServer.attributes.name },
+          { id: req.session.userinfo.id, username: req.session.userinfo.username }
+        ).catch(err => console.error('Webhook error:', err));
+      }
 
       return res.redirect("/servers?err=DELETED");
     } else {

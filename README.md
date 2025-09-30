@@ -122,3 +122,263 @@ Request Body:
 Response:
   - status (string): "success" or an error message
 ```
+
+## Discord Webhook System
+
+Helium now includes a comprehensive Discord webhook system for real-time notifications of events.
+
+### Features
+
+- **Event Notifications**: Get notified about server creation, deletion, modifications, user registrations, coin transactions, and more
+- **Multiple Webhooks**: Configure multiple webhooks for different events
+- **Smart Retry Logic**: Automatic retry with exponential backoff for failed deliveries
+- **Rate Limit Handling**: Intelligent handling of Discord's rate limits
+- **Beautiful Embeds**: Rich, color-coded Discord embeds for each event type
+- **Admin UI**: Easy-to-use admin interface for managing webhooks
+
+### Setup
+
+1. **Run Database Migration**:
+```bash
+npm install
+npm run migrate
+```
+
+2. **Access Admin Panel**:
+Navigate to `/webhooks` (requires admin privileges)
+
+3. **Create a Webhook**:
+- Go to your Discord server → Server Settings → Integrations → Webhooks
+- Create a new webhook and copy the URL
+- In Helium admin panel, click "Create Webhook"
+- Enter a name, paste the webhook URL, and select event types
+- Click "Create"
+
+### Webhook API Endpoints
+
+#### List Webhooks
+```bash
+curl -X GET http://localhost:3000/api/webhooks \
+  -H "Cookie: your-session-cookie"
+```
+
+#### Create Webhook
+```bash
+curl -X POST http://localhost:3000/api/webhooks \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "name": "Server Events",
+    "webhook_url": "https://discord.com/api/webhooks/...",
+    "event_types": ["server.created", "server.deleted", "server.modified"],
+    "enabled": true
+  }'
+```
+
+#### Update Webhook
+```bash
+curl -X PUT http://localhost:3000/api/webhooks/1 \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{
+    "enabled": false
+  }'
+```
+
+#### Delete Webhook
+```bash
+curl -X DELETE http://localhost:3000/api/webhooks/1 \
+  -H "Cookie: your-session-cookie"
+```
+
+#### Test Webhook
+```bash
+curl -X POST http://localhost:3000/api/webhooks/1/test \
+  -H "Cookie: your-session-cookie"
+```
+
+#### Receive Pterodactyl Events
+Configure your Pterodactyl panel to send webhooks to:
+```
+POST http://your-helium-domain.com/api/ptero/webhook
+```
+
+### Supported Event Types
+
+- `*` - All events
+- `server.created` - Server is created
+- `server.deleted` - Server is deleted
+- `server.modified` - Server resources are modified
+- `server.suspended` - Server is suspended
+- `server.unsuspended` - Server is unsuspended
+- `user.registered` - New user registers
+- `user.login` - User logs in
+- `coins.added` - Coins added to account
+- `coins.spent` - Coins spent from account
+- `resource.purchased` - Resources purchased from store
+- `admin.action` - Admin performs action
+
+### Programmatic Event Triggering
+
+You can trigger webhook events from your code:
+
+```javascript
+const { triggerEvent } = require('./lib/integrations');
+
+// Trigger server created event
+await triggerEvent('server.created', {
+  serverId: 123,
+  serverName: 'My Server',
+  userId: '123456789',
+  username: 'User#1234',
+  ram: 2048,
+  disk: 10240,
+  cpu: 200,
+});
+
+// Trigger custom admin action
+await triggerEvent('admin.action', {
+  admin: 'Admin#0001',
+  userId: '987654321',
+  description: 'Reset user password',
+  fields: [
+    { name: 'Action', value: 'Password Reset', inline: true },
+    { name: 'Target', value: 'User#1234', inline: true },
+  ],
+});
+```
+
+## Pterodactyl API Client
+
+Helium includes an enhanced Pterodactyl API client with advanced features.
+
+### Features
+
+- **Automatic Retry**: Exponential backoff for failed requests
+- **Rate Limiting**: Smart handling of rate limits with `Retry-After` header
+- **Caching**: Short-lived cache to reduce API calls (configurable TTL)
+- **Health Check**: Built-in health monitoring
+- **Full Coverage**: Methods for servers, users, and more
+
+### Usage
+
+```javascript
+const PteroClient = require('./lib/PteroClient');
+
+// Initialize client
+const client = new PteroClient(
+  'https://panel.example.com',
+  'your-api-key',
+  {
+    maxRetries: 3,
+    retryDelay: 1000,
+    cacheTTL: 60, // seconds
+  }
+);
+
+// Health check
+const health = await client.healthCheck();
+console.log(health.status); // 'healthy' or 'unhealthy'
+
+// Get server (with caching)
+const server = await client.getServer(123);
+
+// Get server (skip cache)
+const freshServer = await client.getServer(123, true);
+
+// List servers
+const servers = await client.listServers({ per_page: 50 });
+
+// Get user
+const user = await client.getUser(456);
+
+// Update server resources
+await client.updateServerBuild(123, {
+  limits: {
+    memory: 2048,
+    disk: 10240,
+    cpu: 200,
+  },
+});
+
+// Suspend/unsuspend server
+await client.suspendServer(123);
+await client.unsuspendServer(123);
+
+// Clear cache
+client.clearCache();
+
+// Get rate limit info
+const rateLimitInfo = client.getRateLimitInfo();
+console.log(rateLimitInfo.remaining, rateLimitInfo.reset);
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+# Pterodactyl Panel
+PTERODACTYL_DOMAIN=https://panel.example.com
+PTERODACTYL_API_KEY=your_api_key
+
+# Discord OAuth2
+DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_SECRET=your_client_secret
+DISCORD_CALLBACK_URL=http://localhost:3000/callback
+
+# Website
+WEBSITE_PORT=3000
+WEBSITE_SECRET=random_secret_string
+NODE_ENV=production
+
+# Database
+DATABASE_PATH=sqlite://database.sqlite
+
+# Optional: Caching & Rate Limiting
+CACHE_TTL=60
+MAX_RETRIES=3
+RETRY_DELAY=1000
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run tests with coverage:
+
+```bash
+npm test -- --coverage
+```
+
+### Test Files
+
+- `__tests__/discordWebhook.test.js` - Discord webhook functionality
+- `__tests__/PteroClient.test.js` - Pterodactyl API client
+
+## Database Migration
+
+The webhook system requires a database migration:
+
+```bash
+npm run migrate
+```
+
+This creates the `discord_webhooks` table with the following schema:
+
+```sql
+CREATE TABLE discord_webhooks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  webhook_url TEXT NOT NULL,
+  server_id TEXT,
+  event_types TEXT NOT NULL,
+  enabled INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
