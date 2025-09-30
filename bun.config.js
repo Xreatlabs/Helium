@@ -15,7 +15,7 @@ export default {
   
   // Server configuration
   server: {
-    // Port configuration
+    // Port configuration - will be overridden by settings.json
     port: process.env.PORT || 3000,
     
     // Host configuration

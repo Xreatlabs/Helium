@@ -3,6 +3,9 @@
  * This wraps the Express app to work with Bun.serve()
  */
 
+// Load settings to get the port
+const settings = require('./settings.json');
+
 // Import the main app
 const appModule = require('./app.js');
 
@@ -110,6 +113,15 @@ const fetchHandler = async (request) => {
     headers: responseHeaders
   });
 };
+
+// Start the Bun server with the port from settings
+const server = Bun.serve({
+  fetch: fetchHandler,
+  port: settings.website.port,
+  hostname: "0.0.0.0"
+});
+
+console.log(`Helium server running on port ${settings.website.port}`);
 
 // Export the fetch handler for Bun.serve()
 module.exports = {

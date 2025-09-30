@@ -36,9 +36,11 @@ bun --hot server.js
 
 The application uses the following files for Bun compatibility:
 
-- `server.js` - Bun-compatible entry point that wraps the Express app
+- `server.js` - Bun-compatible entry point that wraps the Express app and reads port from `settings.json`
 - `bun.config.js` - Bun configuration file
 - `package.json` - Updated with Bun scripts
+
+The server automatically uses the port specified in `settings.json` under `website.port`.
 
 ## Troubleshooting
 
