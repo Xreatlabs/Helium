@@ -30,7 +30,8 @@
     "start": "nodemon app.js",
     "start:bun": "bun run server.js",
     "dev": "bun --hot server.js",
-    "build": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --watch",
+    "build": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --minify",
+    "build:watch": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --watch",
     "test": "jest",
     "migrate": "node scripts/migrate.js",
     "setup": "node scripts/setup.js"

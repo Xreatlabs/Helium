@@ -11,11 +11,20 @@
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200" style="font-family: 'Inter', sans-serif;">
-  <div>
+  <div class="dark">
     <%- include('../components/navigation') %>
-    <div class="md:pl-48 flex flex-col flex-1 h-screen">
-      <main class="flex-1 pb-32">
+    <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
+      <main class="flex-1 pb-8">
         <div class="py-6">
+          <!-- Dark mode toggle button in top right -->
+          <div class="absolute top-6 right-6 z-50">
+            <button id="topDarkModeToggle" class="p-3 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+              <svg id="topDarkModeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-600 dark:text-gray-300">
+                <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          
           <% /* Skeleton loader, lasts about 0.3s to let the page content load */ %>
           <%- include('../components/skeleton') %>
           <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">

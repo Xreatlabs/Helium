@@ -339,62 +339,99 @@
   // Dark mode toggle functionality
   document.addEventListener("DOMContentLoaded", function() {
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const topDarkModeToggle = document.getElementById('topDarkModeToggle');
     const darkModeCheckbox = document.getElementById('darkModeCheckbox');
     const darkModeIcon = document.getElementById('darkModeIcon');
+    const topDarkModeIcon = document.getElementById('topDarkModeIcon');
     const darkModeText = document.getElementById('darkModeText');
     
     // Icons for light and dark mode
     const sunIcon = `<path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z" />`;
     const moonIcon = `<path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />`;
     
-    // Load dark mode preference from server
+    // Set dark mode as default immediately
+    document.documentElement.classList.add('dark');
+    
+    // Load dark mode preference from server, default to true (dark mode)
     fetch('/api/darkmode')
       .then(response => response.json())
       .then(data => {
-        if (data.darkMode) {
-          enableDarkMode();
-        } else {
+        // Default to dark mode if no preference is saved
+        if (data.darkMode === false) {
           disableDarkMode();
+        } else {
+          enableDarkMode();
+          // Save default dark mode preference if not already saved
+          if (data.darkMode === undefined) {
+            saveDarkModePreference(true);
+          }
         }
       })
       .catch(error => {
         console.error('Error loading dark mode preference:', error);
-        // Check localStorage as fallback
-        if (localStorage.getItem('darkMode') === 'true') {
-          enableDarkMode();
-        }
+        // Default to dark mode on error
+        enableDarkMode();
       });
     
-    // Toggle dark mode on click
+    // Toggle dark mode on sidebar button click
     if (darkModeToggle) {
       darkModeToggle.addEventListener('click', function() {
-        const isDarkMode = document.documentElement.classList.contains('dark');
-        
-        if (isDarkMode) {
-          disableDarkMode();
-          saveDarkModePreference(false);
-        } else {
-          enableDarkMode();
-          saveDarkModePreference(true);
-        }
+        toggleDarkMode();
       });
+    }
+    
+    // Toggle dark mode on top button click
+    if (topDarkModeToggle) {
+      topDarkModeToggle.addEventListener('click', function() {
+        toggleDarkMode();
+      });
+    }
+    
+    function toggleDarkMode() {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      
+      if (isDarkMode) {
+        disableDarkMode();
+        saveDarkModePreference(false);
+      } else {
+        enableDarkMode();
+        saveDarkModePreference(true);
+      }
     }
     
     function enableDarkMode() {
       document.documentElement.classList.add('dark');
-      darkModeCheckbox.checked = true;
-      darkModeCheckbox.style.transform = 'translateX(100%)';
-      darkModeIcon.innerHTML = moonIcon;
-      darkModeText.textContent = 'Dark mode';
+      if (darkModeCheckbox) {
+        darkModeCheckbox.checked = true;
+        darkModeCheckbox.style.transform = 'translateX(100%)';
+      }
+      if (darkModeIcon) {
+        darkModeIcon.innerHTML = moonIcon;
+      }
+      if (topDarkModeIcon) {
+        topDarkModeIcon.innerHTML = moonIcon;
+      }
+      if (darkModeText) {
+        darkModeText.textContent = 'Dark mode';
+      }
       localStorage.setItem('darkMode', 'true');
     }
     
     function disableDarkMode() {
       document.documentElement.classList.remove('dark');
-      darkModeCheckbox.checked = false;
-      darkModeCheckbox.style.transform = 'translateX(0%)';
-      darkModeIcon.innerHTML = sunIcon;
-      darkModeText.textContent = 'Light mode';
+      if (darkModeCheckbox) {
+        darkModeCheckbox.checked = false;
+        darkModeCheckbox.style.transform = 'translateX(0%)';
+      }
+      if (darkModeIcon) {
+        darkModeIcon.innerHTML = sunIcon;
+      }
+      if (topDarkModeIcon) {
+        topDarkModeIcon.innerHTML = sunIcon;
+      }
+      if (darkModeText) {
+        darkModeText.textContent = 'Light mode';
+      }
       localStorage.setItem('darkMode', 'false');
     }
     
