@@ -275,6 +275,36 @@ module.exports.load = async function (app, db) {
   });
 
   /**
+   * GET /api/darkmode
+   * Returns the current dark mode preference for the user.
+   */
+  app.get("/api/darkmode", async (req, res) => {
+    if (!req.session.userinfo) {
+      return res.send({ status: "not authenticated" });
+    }
+    
+    const darkMode = await db.get(`darkmode-${req.session.userinfo.id}`);
+    res.send({ status: "success", darkMode: darkMode || false });
+  });
+
+  /**
+   * POST /api/darkmode
+   * Sets the dark mode preference for the user.
+   */
+  app.post("/api/darkmode", async (req, res) => {
+    if (!req.session.userinfo) {
+      return res.send({ status: "not authenticated" });
+    }
+    
+    if (typeof req.body.enabled !== "boolean") {
+      return res.send({ status: "enabled must be a boolean" });
+    }
+    
+    await db.set(`darkmode-${req.session.userinfo.id}`, req.body.enabled);
+    res.send({ status: "success" });
+  });
+
+  /**
    * Checks the authorization and returns the settings if authorized.
    * Renders the file based on the theme and sends the response.
    * @param {Object} req - The request object.

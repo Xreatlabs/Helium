@@ -84,19 +84,29 @@
       transform: rotate(360deg);
     }
   }
+  
+  /* Dark mode toggle styles */
+  .toggle-checkbox {
+    right: 0;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .toggle-label {
+    transition: background-color 0.2s ease-in-out;
+  }
 </style>
 <div id="spinner" class="spinner mt-2 mr-2"></div>
 <!-- Static sidebar for desktop -->
 <div class="<% if (settings.testing == true) { %>mt-12 <% } %> md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
   <!-- This is so that the testing alert isn't in the way of the sidebar -->
   <!-- Sidebar component, swap this element with another sidebar if you like -->
-  <div class="flex-1 flex flex-col min-h-0 bg-gray-100 border-r border-gray-200">
+  <div class="flex-1 flex flex-col min-h-0 bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
     <div class="flex-1 flex flex-col p-4 overflow-y-auto">
       <nav class="navbar-nav flex-1 px-2 space-y-1">
         <div class="mb-4 flex">
-          <span class="text-gray-700 text-lg font-semibold tracking-tight mt-2 mb-2"><%= settings.name %></span>
+          <span class="text-gray-700 dark:text-gray-200 text-lg font-semibold tracking-tight mt-2 mb-2"><%= settings.name %></span>
         </div>
-        <div class="flex-shrink-0 flex shadow bg-gray-100 border border-gray-300/70 rounded-3xl 
+        <div class="flex-shrink-0 flex shadow bg-gray-100 dark:bg-gray-800 border border-gray-300/70 dark:border-gray-700 rounded-3xl 
         <% if (settings.api.client.accountSwitcher !== true) { %>
           p-4
         <% } else { %>
@@ -110,8 +120,8 @@
                 <img class="inline-block h-9 w-9 rounded-xl" src="https://cdn.discordapp.com/avatars/<%= userinfo.id %>/<%= userinfo.avatar %>?size=256" alt="">
               </div>
               <div class="ml-3">
-                <p class="text-sm font-semibold text-gray-800"><%= userinfo.global_name %></p>
-                <p class="text-xs font-medium text-gray-400 group-hover:text-gray-500 transition">
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200"><%= userinfo.global_name %></p>
+                <p class="text-xs font-medium text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition">
                   <% if (typeof packagename.charAt(0) == 'number') { %>
                   <%= packagename %> plan
                   <% } else { %>
@@ -123,15 +133,15 @@
           </a>
           <% } else { %>
           <% /* v2 of account view with built in account switcher */ %>
-          <a href="../accounts" class="flex-shrink-0 w-full group block transition hover:bg-gray-200/50 hover:shadow-none rounded-2xl p-2">
+          <a href="../accounts" class="flex-shrink-0 w-full group block transition hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:shadow-none rounded-2xl p-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center">
                 <div>
                   <img class="inline-block h-9 w-9 rounded-xl" src="https://cdn.discordapp.com/avatars/<%= userinfo.id %>/<%= userinfo.avatar %>?size=256" alt="">
                 </div>
                 <div class="ml-3">
-                  <p class="text-sm font-semibold text-gray-800"><%= userinfo.global_name %></p>
-                  <p class="text-xs font-medium text-gray-400">
+                  <p class="text-sm font-semibold text-gray-800 dark:text-gray-200"><%= userinfo.global_name %></p>
+                  <p class="text-xs font-medium text-gray-400 dark:text-gray-500">
                     <% if (typeof packagename.charAt(0) == 'number') { %>
                     <%= packagename %> plan
                     <% } else { %>
@@ -142,7 +152,7 @@
               </div>
               <!-- SVG Icon -->
               <div class="ml-auto mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400 dark:text-gray-500">
                   <path fill-rule="evenodd" d="M10.53 3.47a.75.75 0 0 0-1.06 0L6.22 6.72a.75.75 0 0 0 1.06 1.06L10 5.06l2.72 2.72a.75.75 0 1 0 1.06-1.06l-3.25-3.25Zm-4.31 9.81 3.25 3.25a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 1 0-1.06-1.06L10 14.94l-2.72-2.72a.75.75 0 0 0-1.06 1.06Z" clip-rule="evenodd" />
                 </svg>
               </div>
@@ -152,37 +162,53 @@
         </div>
         <div class="pt-4">
           <div class="relative mt-1 flex items-center">
-            <input placeholder="Search..." id="miniSearchInput" type="text" name="search" id="search" class="block w-full shadow bg-gray-100 border border-gray-300/70 rounded-2xl pr-12 focus:border-gray-500 transition focus:ring-gray-500 sm:text-sm">
+            <input placeholder="Search..." id="miniSearchInput" type="text" name="search" id="search" class="block w-full shadow bg-gray-100 dark:bg-gray-800 border border-gray-300/70 dark:border-gray-600 rounded-2xl pr-12 focus:border-gray-500 dark:focus:border-gray-400 transition focus:ring-gray-500 dark:focus:ring-gray-400 sm:text-sm dark:text-gray-200 dark:placeholder-gray-400">
             <div class="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
-              <a id="miniSearchButton" class="cursor-pointer inline-flex items-center rounded-l-lg hover:bg-gray-200 transition rounded-r-xl border border-gray-300 pr-2.5 pl-2 font-sans text-sm font-medium text-gray-400">/</a>
+              <a id="miniSearchButton" class="cursor-pointer inline-flex items-center rounded-l-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition rounded-r-xl border border-gray-300 dark:border-gray-600 pr-2.5 pl-2 font-sans text-sm font-medium text-gray-400 dark:text-gray-300">/</a>
             </div>
           </div>
         </div>
+        
+        <!-- Dark Mode Toggle -->
+        <div class="pt-2">
+          <button id="darkModeToggle" class="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition">
+            <span class="flex items-center">
+              <svg id="darkModeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400">
+                <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z" />
+              </svg>
+              <span id="darkModeText">Dark mode</span>
+            </span>
+            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+              <input type="checkbox" id="darkModeCheckbox" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 dark:border-gray-600 appearance-none cursor-pointer transition-transform duration-200 ease-in-out" />
+              <label for="darkModeCheckbox" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"></label>
+            </div>
+          </button>
+        </div>
 
         <div class="pb-4"></div>
-        <a href="../dashboard" class="nav-link transition text-gray-600 hover:bg-gray-200 backdrop-blur hover:text-gray-800 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
+        <a href="../dashboard" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400">
             <path d="M7.628 1.099a.75.75 0 0 1 .744 0l5.25 3a.75.75 0 0 1 0 1.302l-5.25 3a.75.75 0 0 1-.744 0l-5.25-3a.75.75 0 0 1 0-1.302l5.25-3Z" />
             <path d="m2.57 7.24-.192.11a.75.75 0 0 0 0 1.302l5.25 3a.75.75 0 0 0 .744 0l5.25-3a.75.75 0 0 0 0-1.303l-.192-.11-4.314 2.465a2.25 2.25 0 0 1-2.232 0L2.57 7.239Z" />
             <path d="m2.378 10.6.192-.11 4.314 2.464a2.25 2.25 0 0 0 2.232 0l4.314-2.465.192.11a.75.75 0 0 1 0 1.303l-5.25 3a.75.75 0 0 1-.744 0l-5.25-3a.75.75 0 0 1 0-1.303Z" />
           </svg>
           Dashboard
         </a>
-        <a href="../servers" class="nav-link transition text-gray-600 hover:bg-gray-200 backdrop-blur hover:text-gray-800 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
-            <path d="M3.665 3.588A2 2 0 0 1 5.622 2h4.754a2 2 0 0 1 1.958 1.588l1.098 5.218a3.487 3.487 0 0 0-1.433-.306H4c-.51 0-.995.11-1.433.306l1.099-5.218Z" />
+        <a href="../servers" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400">
+            <path d="M3.665 3.588A2 2 0 0 1 5.622 2h4.754a2 2 0 0 1 1.958 1.588l1.098 5.218a3.487 3.487 0 0 0-1.433-.306H4c-.51 0-.995.11-1.433.306l1.099-5.218 Z" />
             <path fill-rule="evenodd" d="M4 10a2 2 0 1 0 0 4h8a2 2 0 1 0 0-4H4Zm8 2.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM9.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" clip-rule="evenodd" />
           </svg>
           Servers
         </a>
-        <a href="../profile" class="nav-link transition text-gray-600 hover:bg-gray-200 backdrop-blur hover:text-gray-800 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
+        <a href="../profile" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400">
             <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 18a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" />
           </svg>
           Profile
         </a>
-        <a href="../security" class="nav-link transition text-gray-600 hover:bg-gray-200 backdrop-blur hover:text-gray-800 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
+        <a href="../security" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 group flex items-center px-4 py-2 text-sm font-medium rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400">
             <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
           </svg>
           Security
@@ -251,12 +277,12 @@
       </nav>
 
       <% if (settings.api.client.coins.enabled == true) { %>
-      <div class="flex-shrink-0 flex shadow bg-gray-100 border border-gray-300/70 rounded-2xl px-3 py-2 mt-4 transition justify-between">
+      <div class="flex-shrink-0 flex shadow bg-gray-100 dark:bg-gray-800 border border-gray-300/70 dark:border-gray-700 rounded-2xl px-3 py-2 mt-4 transition justify-between">
         <div class="flex items-center">
-          <p class="text-xs font-medium text-gray-500 tracking-tight"><%= coins.toFixed(2) %> coin<%= coins == 1 ? "" : "s" %></p>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-tight"><%= coins.toFixed(2) %> coin<%= coins == 1 ? "" : "s" %></p>
         </div>
-        <a href="../logout" class="text-xs bg-gray-200 rounded-full py-1 px-4 text-gray-600 flex items-center hover:bg-gray-300 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 inline-flex mr-1">
+        <a href="../logout" class="text-xs bg-gray-200 dark:bg-gray-700 rounded-full py-1 px-4 text-gray-600 dark:text-gray-300 flex items-center hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 dark:text-gray-400 inline-flex mr-1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
           </svg>
           Sign out
@@ -292,7 +318,9 @@
         link.classList.add(
           'transition',
           'text-gray-900',
+          'dark:text-gray-100',
           'bg-gray-200',
+          'dark:bg-gray-700',
           'backdrop-blur',
           'group',
           'flex',
@@ -305,6 +333,89 @@
         );
       }
     });
+  });
+</script>
+<script>
+  // Dark mode toggle functionality
+  document.addEventListener("DOMContentLoaded", function() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeCheckbox = document.getElementById('darkModeCheckbox');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const darkModeText = document.getElementById('darkModeText');
+    
+    // Icons for light and dark mode
+    const sunIcon = `<path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z" />`;
+    const moonIcon = `<path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />`;
+    
+    // Load dark mode preference from server
+    fetch('/api/darkmode')
+      .then(response => response.json())
+      .then(data => {
+        if (data.darkMode) {
+          enableDarkMode();
+        } else {
+          disableDarkMode();
+        }
+      })
+      .catch(error => {
+        console.error('Error loading dark mode preference:', error);
+        // Check localStorage as fallback
+        if (localStorage.getItem('darkMode') === 'true') {
+          enableDarkMode();
+        }
+      });
+    
+    // Toggle dark mode on click
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener('click', function() {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        
+        if (isDarkMode) {
+          disableDarkMode();
+          saveDarkModePreference(false);
+        } else {
+          enableDarkMode();
+          saveDarkModePreference(true);
+        }
+      });
+    }
+    
+    function enableDarkMode() {
+      document.documentElement.classList.add('dark');
+      darkModeCheckbox.checked = true;
+      darkModeCheckbox.style.transform = 'translateX(100%)';
+      darkModeIcon.innerHTML = moonIcon;
+      darkModeText.textContent = 'Dark mode';
+      localStorage.setItem('darkMode', 'true');
+    }
+    
+    function disableDarkMode() {
+      document.documentElement.classList.remove('dark');
+      darkModeCheckbox.checked = false;
+      darkModeCheckbox.style.transform = 'translateX(0%)';
+      darkModeIcon.innerHTML = sunIcon;
+      darkModeText.textContent = 'Light mode';
+      localStorage.setItem('darkMode', 'false');
+    }
+    
+    function saveDarkModePreference(enabled) {
+      fetch('/api/darkmode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ enabled: enabled })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          console.log('Dark mode preference saved');
+        }
+      })
+      .catch(error => {
+        console.error('Error saving dark mode preference:', error);
+      });
+    }
   });
 </script>
 <script>
@@ -441,4 +552,5 @@
     opacity: 1;
     /* Show the modal content when it has the 'visible' class */
   }
+</style>
 </style>
