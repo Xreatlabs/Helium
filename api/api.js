@@ -284,8 +284,8 @@ module.exports.load = async function (app, db) {
     }
     
     const darkMode = await db.get(`darkmode-${req.session.userinfo.id}`);
-    // Default to true (dark mode) if no preference is set
-    res.send({ status: "success", darkMode: darkMode !== undefined ? darkMode : true });
+    // Default to false (light mode) if no preference is set
+    res.send({ status: "success", darkMode: darkMode || false });
   });
 
   /**
