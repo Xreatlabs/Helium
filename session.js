@@ -4,7 +4,11 @@ const { Store } = require('express-session');
 class KeyvStore extends Store {
   constructor(options) {
     super();
-    this.keyv = new Keyv(options.uri, options);
+    // Use a namespace for sessions to avoid conflicts
+    this.keyv = new Keyv(options.uri, {
+      ...options,
+      namespace: 'session' // This will prefix all keys with 'session:'
+    });
     this.keyv.on('error', err => console.error('Keyv connection error:', err));
     
     // Set TTL for sessions (24 hours by default)
@@ -13,13 +17,13 @@ class KeyvStore extends Store {
 
   async get(sid, callback) {
     try {
-      const key = `sess:${sid}`;
-      const data = await this.keyv.get(key);
+      // Don't add prefix - Keyv handles it automatically
+      const data = await this.keyv.get(sid);
       if (data) {
         // Check if session has expired
         if (data._expires && data._expires < Date.now()) {
           console.log(`Session expired: ${sid}`);
-          await this.keyv.delete(key);
+          await this.keyv.delete(sid);
           callback(null, null);
           return;
         }
@@ -36,7 +40,7 @@ class KeyvStore extends Store {
 
   async set(sid, session, callback) {
     try {
-      const key = `sess:${sid}`;
+      // Don't add prefix - Keyv handles it automatically
       // Add expiration timestamp to session
       const sessionWithExpiry = {
         ...session,
@@ -44,7 +48,7 @@ class KeyvStore extends Store {
       };
       
       // Set with TTL
-      await this.keyv.set(key, sessionWithExpiry, this.ttl);
+      await this.keyv.set(sid, sessionWithExpiry, this.ttl);
       console.log(`Session stored: ${sid}, has userinfo: ${!!session.userinfo}`);
       callback(null);
     } catch (err) {
@@ -55,8 +59,8 @@ class KeyvStore extends Store {
 
   async destroy(sid, callback) {
     try {
-      const key = `sess:${sid}`;
-      await this.keyv.delete(key);
+      // Don't add prefix - Keyv handles it automatically
+      await this.keyv.delete(sid);
       console.log(`Session destroyed: ${sid}`);
       if (callback) callback(null);
     } catch (err) {
@@ -67,15 +71,15 @@ class KeyvStore extends Store {
 
   async touch(sid, session, callback) {
     try {
-      const key = `sess:${sid}`;
+      // Don't add prefix - Keyv handles it automatically
       // Refresh session TTL
-      const existing = await this.keyv.get(key);
+      const existing = await this.keyv.get(sid);
       if (existing) {
         const sessionWithExpiry = {
           ...session,
           _expires: Date.now() + this.ttl
         };
-        await this.keyv.set(key, sessionWithExpiry, this.ttl);
+        await this.keyv.set(sid, sessionWithExpiry, this.ttl);
       }
       callback(null);
     } catch (err) {

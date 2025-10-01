@@ -128,6 +128,14 @@ if (cluster.isMaster) {
 
   app.use((req, res, next) => {
     res.setHeader("X-Powered-By", "1st Gen Helium (Cascade Ridge)");
+    
+    // Clear old session cookies that might interfere
+    const cookieHeader = req.headers.cookie || '';
+    if (cookieHeader.includes('connect.sid=')) {
+      res.clearCookie('connect.sid', { path: '/' });
+      console.log('Clearing old connect.sid cookie');
+    }
+    
     next();
   });
 

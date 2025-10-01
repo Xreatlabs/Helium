@@ -611,26 +611,16 @@ module.exports.load = async function (app, db) {
         
         // Verify the session was actually saved to the database
         try {
-          // Check both with and without the keyv namespace prefix
-          const possibleKeys = [
-            `sess:${req.sessionID}`,
-            `keyv:sess:${req.sessionID}`,
-            req.sessionID
-          ];
+          // Note: The session store uses Keyv with namespace 'session'
+          // So the actual key will be 'session:sessionID'
+          const Keyv = require("keyv").default;
+          const sessionKeyv = new Keyv(settings.database, { namespace: 'session' });
+          const savedSession = await sessionKeyv.get(req.sessionID);
           
-          let found = false;
-          for (const key of possibleKeys) {
-            const savedSession = await db.get(key);
-            if (savedSession) {
-              console.log(`OAuth: Session verified in database with key: ${key}`);
-              found = true;
-              break;
-            }
-          }
-          
-          if (!found) {
+          if (savedSession) {
+            console.log(`OAuth: Session verified in database (namespace: session)`);
+          } else {
             console.error("OAuth: WARNING - Session not found in database after save!");
-            console.error("OAuth: Tried keys:", possibleKeys);
           }
         } catch (verifyErr) {
           console.error("OAuth: Error verifying session:", verifyErr);
