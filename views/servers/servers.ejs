@@ -2,6 +2,16 @@
 <head>
   <title><%= settings.name %></title>
   <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
+  <script>
+    (function() {
+      try {
+        var ls = localStorage.getItem('darkMode');
+        var preferDark = (ls === 'true') || (ls === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (preferDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="../assets/tailwind.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/@popperjs/core@2.10.1/dist/umd/popper.min.js"></script>

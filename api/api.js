@@ -282,10 +282,10 @@ module.exports.load = async function (app, db) {
     if (!req.session.userinfo) {
       return res.send({ status: "not authenticated" });
     }
-    
     const darkMode = await db.get(`darkmode-${req.session.userinfo.id}`);
-    // Default to false (light mode) if no preference is set
-    res.send({ status: "success", darkMode: darkMode || false });
+    // Normalize to a strict boolean to avoid truthy string/number edge cases
+    const enabled = (darkMode === true) || (darkMode === 1) || (darkMode === "true");
+    res.send({ status: "success", darkMode: enabled });
   });
 
   /**

@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Webhook Management - Helium</title>
+  <script>
+    (function() {
+      try {
+        var ls = localStorage.getItem('darkMode');
+        var preferDark = (ls === 'true') || (ls === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (preferDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="/assets/tailwind.css">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
@@ -163,7 +173,7 @@
     createApp({
       data() {
         return {
-          darkMode: localStorage.getItem('darkMode') === 'true',
+          darkMode: false,
           webhooks: [],
           loading: true,
           showCreateModal: false,
@@ -197,7 +207,22 @@
         };
       },
       mounted() {
-        this.applyDarkMode();
+        // Load dark mode preference from server for persistence across pages
+        fetch('/api/darkmode')
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.status === 'success') {
+              this.darkMode = data.darkMode === true;
+            } else {
+              // Fallback to localStorage if not authenticated or error
+              this.darkMode = localStorage.getItem('darkMode') === 'true';
+            }
+            this.applyDarkMode();
+          })
+          .catch(() => {
+            this.darkMode = localStorage.getItem('darkMode') === 'true';
+            this.applyDarkMode();
+          });
         this.loadWebhooks();
       },
       methods: {
@@ -212,6 +237,12 @@
           this.darkMode = !this.darkMode;
           localStorage.setItem('darkMode', this.darkMode);
           this.applyDarkMode();
+          // Persist preference to server-side DB so it applies to all pages
+          fetch('/api/darkmode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: this.darkMode })
+          }).catch(() => {});
         },
         async loadWebhooks() {
           this.loading = true;

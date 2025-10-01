@@ -65,7 +65,8 @@ module.exports.renderdataeval = `(async () => {
    let isDarkMode = false;
    if (req.session && req.session.userinfo && req.session.userinfo.id) {
      const darkModeStatus = await db.get("darkmode-" + req.session.userinfo.id);
-     isDarkMode = darkModeStatus === true;
+     // Support different truthy representations stored by the DB (true/1/"true")
+     isDarkMode = (darkModeStatus === true) || (darkModeStatus === 1) || (darkModeStatus === "true");
    }
    
     let renderdata = {
@@ -382,4 +383,3 @@ async function renderTemplate(theme, renderdataeval, req, res, db) {
     );
   });
 }
-
