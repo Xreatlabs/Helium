@@ -205,6 +205,15 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
+    // Debug logging for session state
+    if (req.path === "/dashboard" || req.path === "/") {
+      console.log(`Request to ${req.path} - SessionID: ${req.sessionID}`);
+      console.log(`Session has userinfo: ${!!req.session.userinfo}, has pterodactyl: ${!!req.session.pterodactyl}`);
+      if (req.session.userinfo) {
+        console.log(`Session user: ${req.session.userinfo.username} (${req.session.userinfo.id})`);
+      }
+    }
+    
     // Prevent redirect loops - skip this check for login/callback/logout routes and static assets
     const skipRoutes = ["/login", "/callback", "/logout", "/assets", settings.api.client.oauth2.callbackpath];
     const isSkipRoute = skipRoutes.some(route => req.path === route || req.path.startsWith(route));

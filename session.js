@@ -13,15 +13,19 @@ class KeyvStore extends Store {
 
   async get(sid, callback) {
     try {
-      const data = await this.keyv.get(sid);
+      const key = `sess:${sid}`;
+      const data = await this.keyv.get(key);
       if (data) {
         // Check if session has expired
         if (data._expires && data._expires < Date.now()) {
           console.log(`Session expired: ${sid}`);
-          await this.keyv.delete(sid);
+          await this.keyv.delete(key);
           callback(null, null);
           return;
         }
+        console.log(`Session retrieved: ${sid}, has userinfo: ${!!data.userinfo}`);
+      } else {
+        console.log(`Session NOT found: ${sid}`);
       }
       callback(null, data);
     } catch (err) {
@@ -32,6 +36,7 @@ class KeyvStore extends Store {
 
   async set(sid, session, callback) {
     try {
+      const key = `sess:${sid}`;
       // Add expiration timestamp to session
       const sessionWithExpiry = {
         ...session,
@@ -39,7 +44,8 @@ class KeyvStore extends Store {
       };
       
       // Set with TTL
-      await this.keyv.set(sid, sessionWithExpiry, this.ttl);
+      await this.keyv.set(key, sessionWithExpiry, this.ttl);
+      console.log(`Session stored: ${sid}, has userinfo: ${!!session.userinfo}`);
       callback(null);
     } catch (err) {
       console.error(`Error setting session: ${sid}`, err);
@@ -49,7 +55,9 @@ class KeyvStore extends Store {
 
   async destroy(sid, callback) {
     try {
-      await this.keyv.delete(sid);
+      const key = `sess:${sid}`;
+      await this.keyv.delete(key);
+      console.log(`Session destroyed: ${sid}`);
       if (callback) callback(null);
     } catch (err) {
       console.error(`Error destroying session: ${sid}`, err);
@@ -59,14 +67,15 @@ class KeyvStore extends Store {
 
   async touch(sid, session, callback) {
     try {
+      const key = `sess:${sid}`;
       // Refresh session TTL
-      const existing = await this.keyv.get(sid);
+      const existing = await this.keyv.get(key);
       if (existing) {
         const sessionWithExpiry = {
           ...session,
           _expires: Date.now() + this.ttl
         };
-        await this.keyv.set(sid, sessionWithExpiry, this.ttl);
+        await this.keyv.set(key, sessionWithExpiry, this.ttl);
       }
       callback(null);
     } catch (err) {

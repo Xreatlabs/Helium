@@ -596,26 +596,39 @@ module.exports.load = async function (app, db) {
       req.session.authenticated = true;
       req.session.lastAuthTime = Date.now();
       
-      console.log("OAuth: Login successful for user:", userinfo.username);
+      console.log(`OAuth: Login successful for user: ${userinfo.username} (ID: ${userinfo.id})`);
+      console.log(`OAuth: Setting session - Pterodactyl ID: ${cacheaccountinfo.attributes.id}, Discord ID: ${userinfo.id}`);
+      console.log(`OAuth: Session ID: ${req.sessionID}`);
       
-      // Save session and redirect
-      req.session.save((err) => {
+      // Save session with proper error handling and timing
+      req.session.save(async (err) => {
         if (err) {
           console.error("OAuth: Session save error:", err);
           return res.send("Session save failed. Please try logging in again.");
         }
         
-        console.log("OAuth: Session saved successfully, redirecting user");
+        console.log(`OAuth: Session saved successfully for ${userinfo.username}, SessionID: ${req.sessionID}`);
         
-        let theme = indexjs.get(req);
-        if (customredirect) {
-          return res.redirect(customredirect);
+        // Verify the session was actually saved to the database
+        try {
+          const sessionKey = `sess:${req.sessionID}`;
+          const savedSession = await db.get(sessionKey);
+          if (savedSession) {
+            console.log("OAuth: Session verified in database, proceeding with redirect");
+          } else {
+            console.error("OAuth: WARNING - Session not found in database after save!");
+          }
+        } catch (verifyErr) {
+          console.error("OAuth: Error verifying session:", verifyErr);
         }
-        return res.redirect(
-          theme.settings.redirect.callback
-            ? theme.settings.redirect.callback
-            : "/dashboard"
-        );
+        
+        // Small delay to ensure session is fully persisted across all workers
+        setTimeout(() => {
+          let theme = indexjs.get(req);
+          const redirectUrl = customredirect || theme.settings.redirect.callback || "/dashboard";
+          console.log(`OAuth: Redirecting to: ${redirectUrl}`);
+          return res.redirect(redirectUrl);
+        }, 100);
       });
       
     } catch (error) {
