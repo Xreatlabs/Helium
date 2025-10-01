@@ -283,6 +283,9 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
     ? generatePassword(settings.api.client.passwordgenerator.length || 16)
     : null;
 
+  console.log(`[OAuth] Creating Pterodactyl account for ${discordUser.username}...`);
+  console.log(`[OAuth] API URL: ${settings.pterodactyl.domain}/api/application/users`);
+  
   const createResponse = await fetch(
     `${settings.pterodactyl.domain}/api/application/users`,
     {
@@ -290,6 +293,7 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       headers: {
         'Authorization': `Bearer ${settings.pterodactyl.key}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         username: discordUser.id,
@@ -300,6 +304,8 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       }),
     }
   );
+  
+  console.log(`[OAuth] Create response status: ${createResponse.status} ${createResponse.statusText}`);
 
   if (createResponse.ok) {
     try {
@@ -318,13 +324,17 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       return data.attributes;
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse Pterodactyl create response:`, jsonError);
-      const responseText = await createResponse.text();
-      console.error(`[OAuth] Create response text:`, responseText);
+      // Don't try to read response text again as it's already been consumed
+      console.error(`[OAuth] This usually means the API returned HTML instead of JSON`);
     }
   } else {
     console.error(`[OAuth] Failed to create Pterodactyl account: ${createResponse.status} ${createResponse.statusText}`);
-    const responseText = await createResponse.text();
-    console.error(`[OAuth] Create response text:`, responseText);
+    try {
+      const responseText = await createResponse.text();
+      console.error(`[OAuth] Create response text:`, responseText);
+    } catch (textError) {
+      console.error(`[OAuth] Could not read response text:`, textError.message);
+    }
   }
 
   // Try to find account by email
@@ -359,13 +369,17 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       }
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse Pterodactyl search response:`, jsonError);
-      const responseText = await searchResponse.text();
-      console.error(`[OAuth] Search response text:`, responseText);
+      // Don't try to read response text again as it's already been consumed
+      console.error(`[OAuth] This usually means the API returned HTML instead of JSON`);
     }
   } else {
     console.error(`[OAuth] Failed to search Pterodactyl accounts: ${searchResponse.status} ${searchResponse.statusText}`);
-    const responseText = await searchResponse.text();
-    console.error(`[OAuth] Search response text:`, responseText);
+    try {
+      const responseText = await searchResponse.text();
+      console.error(`[OAuth] Search response text:`, responseText);
+    } catch (textError) {
+      console.error(`[OAuth] Could not read response text:`, textError.message);
+    }
   }
 
   console.error('[OAuth] Failed to create or find Pterodactyl account');
