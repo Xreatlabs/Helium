@@ -206,6 +206,20 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
+    // Ensure pterodactyl data structure is compatible with templates
+    if (req.session && req.session.pterodactyl) {
+      if (!req.session.pterodactyl.relationships) {
+        req.session.pterodactyl.relationships = {
+          servers: {
+            data: req.session.pterodactyl.servers || []
+          }
+        };
+      }
+      if (!req.session.pterodactyl.servers) {
+        req.session.pterodactyl.servers = [];
+      }
+    }
+    
     let theme = indexjs.get(req);
     let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
     if (newsettings.api.afk.enabled == true)

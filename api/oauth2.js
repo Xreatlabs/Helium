@@ -209,14 +209,20 @@ module.exports.load = function (app, db) {
         email: discordUser.email
       };
       req.session.pterodactylId = pterodactylUser.id;
-      req.session.pterodactyl = pterodactylUser;
+      
+      // Structure pterodactyl data to match template expectations
+      req.session.pterodactyl = {
+        ...pterodactylUser,
+        relationships: {
+          servers: {
+            data: pterodactylUser.servers || []
+          }
+        },
+        servers: pterodactylUser.servers || []
+      };
+      
       req.session.authenticated = true;
       req.session.loginTime = Date.now();
-      
-      // Ensure servers array exists for template compatibility
-      if (!req.session.pterodactyl.servers) {
-        req.session.pterodactyl.servers = [];
-      }
 
       // Save session and redirect
       req.session.save((err) => {
