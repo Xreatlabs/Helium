@@ -49,7 +49,17 @@ class KeyvStore extends Store {
       
       // Set with TTL
       await this.keyv.set(sid, sessionWithExpiry, this.ttl);
-      console.log(`Session stored: ${sid}, has userinfo: ${!!session.userinfo}`);
+      console.log(`Session SET: ${sid}, has userinfo: ${!!session.userinfo}`);
+      
+      // Immediately verify we can retrieve it using the same Keyv instance
+      const testGet = await this.keyv.get(sid);
+      if (testGet) {
+        console.log(`✓ Session GET successful immediately after SET: ${sid}`);
+      } else {
+        console.error(`✗ CRITICAL: Session GET failed immediately after SET: ${sid}`);
+        console.error(`This indicates a Keyv configuration or namespace issue`);
+      }
+      
       callback(null);
     } catch (err) {
       console.error(`Error setting session: ${sid}`, err);

@@ -1,660 +1,485 @@
 /**
- * |-| [- |_ | /\ ( ~|~ `/ |_
- *
- * Helium 1.0.0 ― Cascade Ridge
- *
- * OAuth2 authentication module - refactored to prevent login loops
- * @module oauth2
-*/
+ * Modern OAuth2 Authentication System for Helium
+ * Built from scratch with clean architecture
+ */
 
 "use strict";
 
-const settings = require("../settings.json");
-
-if (settings.api.client.oauth2.link.slice(-1) == "/")
-  settings.api.client.oauth2.link = settings.api.client.oauth2.link.slice(
-    0,
-    -1
-  );
-
-if (settings.api.client.oauth2.callbackpath.slice(0, 1) !== "/")
-  settings.api.client.oauth2.callbackpath =
-    "/" + settings.api.client.oauth2.callbackpath;
-
-if (settings.pterodactyl.domain.slice(-1) == "/")
-  settings.pterodactyl.domain = settings.pterodactyl.domain.slice(0, -1);
-
 const fetch = require("node-fetch");
-
-const indexjs = require("../app.js");
+const settings = require("../settings.json");
 const log = require("../misc/log");
-
-const fs = require("fs");
-const { renderFile } = require("ejs");
 const vpnCheck = require("../misc/vpnCheck");
 
-module.exports.load = async function (app, db) {
-  // Login route - redirects to Discord OAuth
-  app.get("/login", async (req, res) => {
-    // Prevent login loops - if already authenticated AND session is valid, redirect to dashboard
-    if (req.session.userinfo && req.session.pterodactyl) {
-      // Validate session integrity before redirecting
-      const storedUserId = await db.get("users-" + req.session.userinfo.id);
-      
-      // Only redirect if session data is consistent
-      if (storedUserId && req.session.pterodactyl.id === storedUserId) {
-        console.log("OAuth: User already authenticated, redirecting to dashboard");
-        return res.redirect("/dashboard");
-      } else {
-        // Session is inconsistent, clear it completely and start fresh
-        console.log("OAuth: Session data inconsistent, clearing and restarting login");
-        return req.session.destroy((err) => {
-          if (err) {
-            console.error("OAuth: Error destroying session:", err);
-          }
-          // Redirect to login again with a clean slate
-          return res.redirect("/login");
-        });
-      }
-    }
+// Normalize settings
+const normalizeUrl = (url) => url.replace(/\/$/, '');
+const normalizePath = (path) => path.startsWith('/') ? path : `/${path}`;
 
-    // Track login attempts to prevent infinite loops (only for actual OAuth attempts)
-    if (!req.session.loginAttempts) {
-      req.session.loginAttempts = 0;
+const DISCORD_API = "https://discord.com/api";
+const OAUTH_CONFIG = {
+  domain: normalizeUrl(settings.api.client.oauth2.link),
+  callbackPath: normalizePath(settings.api.client.oauth2.callbackpath),
+  clientId: settings.api.client.oauth2.id,
+  clientSecret: settings.api.client.oauth2.secret,
+};
+
+module.exports.load = function (app, db) {
+  
+  /**
+   * Login Route - Initiates OAuth flow
+   */
+  app.get("/login", (req, res) => {
+    // If already logged in, redirect to dashboard
+    if (req.session && req.session.userId && req.session.pterodactylId) {
+      console.log(`[OAuth] User already authenticated: ${req.session.userId}`);
+      return res.redirect("/dashboard");
     }
     
-    // Only increment if we're actually going to redirect to OAuth
-    // Don't count redirects from session clearing
-    if (req.query.redirect || req.session.loginAttempts > 0) {
-      req.session.loginAttempts++;
-    }
-
-    // If too many login attempts, clear session and show error
-    if (req.session.loginAttempts > 5) {
-      console.log("OAuth: Too many login attempts, clearing session");
-      return req.session.destroy(() => {
-        return res.send(
-          "Too many login attempts. Please clear your cookies and try again. If the issue persists, contact support."
-        );
-      });
-    }
-
+    // Store redirect target if provided
     if (req.query.redirect) {
-      req.session.redirect = "/" + req.query.redirect;
+      req.session.oauthRedirect = `/${req.query.redirect}`;
     }
     
-    let newsettings = JSON.parse(fs.readFileSync("./settings.json"));
+    // Build OAuth URL
+    const redirectUri = encodeURIComponent(OAUTH_CONFIG.domain + OAUTH_CONFIG.callbackPath);
     
-    const redirectUri = encodeURIComponent(
-      settings.api.client.oauth2.link + settings.api.client.oauth2.callbackpath
-    );
+    let scopes = ['identify', 'email'];
+    if (settings.api.client.j4r?.enabled) scopes.push('guilds');
+    if (settings.api.client.bot?.joinguild?.enabled) scopes.push('guilds.join');
     
-    let scopes = "identify%20email";
-    if (newsettings.api.client.bot.joinguild.enabled == true) {
-      scopes += "%20guilds.join";
-    }
-    if (newsettings.api.client.j4r.enabled == true) {
-      scopes += "%20guilds";
-    }
+    const scopeString = scopes.join('%20');
+    const authUrl = `${DISCORD_API}/oauth2/authorize?client_id=${OAUTH_CONFIG.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}`;
     
-    let promptParam = "";
-    // Only use prompt=none if explicitly configured or if this is a re-auth attempt
-    if (settings.api.client.oauth2.prompt == false) {
-      promptParam = "&prompt=none";
-    } else if (req.query.prompt == "none" && req.session.loginAttempts <= 2) {
-      // Don't use prompt=none after multiple failures
-      promptParam = "&prompt=none";
-    }
-    
-    res.redirect(
-      `https://discord.com/api/oauth2/authorize?client_id=${settings.api.client.oauth2.id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}${promptParam}`
-    );
+    console.log(`[OAuth] Redirecting to Discord for authentication`);
+    res.redirect(authUrl);
   });
 
-  // Logout route
+  /**
+   * Logout Route
+   */
   app.get("/logout", (req, res) => {
-    let theme = indexjs.get(req);
-    req.session.destroy(() => {
-      return res.redirect(
-        theme.settings.redirect.logout ? theme.settings.redirect.logout : "/"
-      );
+    const redirectUrl = settings.pages?.redirect?.logout || "/";
+    req.session.destroy((err) => {
+      if (err) console.error("[OAuth] Logout error:", err);
+      console.log(`[OAuth] User logged out`);
+      res.redirect(redirectUrl);
     });
   });
 
-  // OAuth callback - handles the entire authentication flow
-  app.get(settings.api.client.oauth2.callbackpath, async (req, res) => {
+  /**
+   * OAuth Callback - Handles Discord redirect
+   */
+  app.get(OAUTH_CONFIG.callbackPath, async (req, res) => {
     try {
-      // Check for OAuth errors from Discord
+      // Handle OAuth errors
       if (req.query.error) {
-        console.log("OAuth callback: Discord returned error:", req.query.error);
-        
-        // Clear session to prevent loops
-        req.session.destroy(() => {
-          if (req.query.error === "access_denied") {
-            return res.send(
-              "You denied the authorization request. <a href='/login'>Click here to try again</a>."
-            );
-          } else {
-            return res.send(
-              `OAuth error: ${req.query.error}. <a href='/login'>Click here to try again</a>.`
-            );
-          }
-        });
-        return;
+        console.error(`[OAuth] Discord error: ${req.query.error}`);
+        return res.send(`Authorization failed: ${req.query.error}. <a href="/login">Try again</a>`);
       }
 
       // Validate authorization code
       if (!req.query.code) {
-        console.log("OAuth callback: Missing authorization code");
-        
-        // Clear login attempts and session to prevent loops
-        req.session.destroy(() => {
-          return res.send(
-            "No authorization code received. <a href='/login'>Click here to try again</a>."
-          );
-        });
-        return;
+        console.error(`[OAuth] No authorization code received`);
+        return res.send('No authorization code received. <a href="/login">Try again</a>');
       }
 
-      const newsettings = require("../settings.json");
-      
-      // Get custom redirect if it exists
-      let customredirect = req.session.redirect;
-      delete req.session.redirect;
+      console.log(`[OAuth] Processing callback with code`);
 
-      // Get client IP
-      let ip = newsettings.api.client.oauth2.ip["trust x-forwarded-for"] == true
-        ? req.headers["x-forwarded-for"] || req.connection.remoteAddress
-        : req.connection.remoteAddress;
-      ip = (ip ? ip : "::1")
-        .replace(/::1/g, "::ffff:127.0.0.1")
-        .replace(/^.*:/, "");
-
-      // VPN check
-      if (
-        newsettings.antivpn.status &&
-        ip !== "127.0.0.1" &&
-        !newsettings.antivpn.whitelistedIPs.includes(ip)
-      ) {
-        const vpn = await vpnCheck(newsettings.antivpn.APIKey, db, ip, res);
-        if (vpn) return;
-      }
-
-      // Exchange authorization code for access token
-      console.log("OAuth: Exchanging code for token...");
-      let tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
-        method: "post",
-        body:
-          "client_id=" +
-          settings.api.client.oauth2.id +
-          "&client_secret=" +
-          settings.api.client.oauth2.secret +
-          "&grant_type=authorization_code&code=" +
-          encodeURIComponent(req.query.code) +
-          "&redirect_uri=" +
-          encodeURIComponent(
-            settings.api.client.oauth2.link +
-              settings.api.client.oauth2.callbackpath
-          ),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      // Exchange code for access token
+      const tokenResponse = await fetch(`${DISCORD_API}/oauth2/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: OAUTH_CONFIG.clientId,
+          client_secret: OAUTH_CONFIG.clientSecret,
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          redirect_uri: OAUTH_CONFIG.domain + OAUTH_CONFIG.callbackPath,
+        }),
       });
 
       if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
-        console.log("OAuth: Token exchange failed", errorText);
-        
-        // Increment failure counter
-        if (!req.session.oauthFailures) {
-          req.session.oauthFailures = 0;
-        }
-        req.session.oauthFailures++;
-        
-        // If too many failures, clear session and show error
-        if (req.session.oauthFailures > 2) {
-          req.session.destroy(() => {
-            return res.send(
-              "OAuth token exchange failed multiple times. Please clear your cookies and <a href='/login'>try again</a>. Error details: " + errorText
-            );
-          });
-          return;
-        }
-        
-        return res.send(
-          "OAuth token exchange failed. <a href='/login'>Click here to try again</a>."
-        );
-      }
-      
-      // Reset failure counter on success
-      req.session.oauthFailures = 0;
-
-      let codeinfo = JSON.parse(await tokenResponse.text());
-      let scopes = codeinfo.scope;
-      let missingscopes = [];
-
-      // Check required scopes
-      if (scopes.replace(/identify/g, "") == scopes)
-        missingscopes.push("identify");
-      if (scopes.replace(/email/g, "") == scopes) 
-        missingscopes.push("email");
-      if (newsettings.api.client.bot.joinguild.enabled == true)
-        if (scopes.replace(/guilds.join/g, "") == scopes)
-          missingscopes.push("guilds.join");
-      if (newsettings.api.client.j4r.enabled)
-        if (scopes.replace(/guilds/g, "") == scopes)
-          missingscopes.push("guilds");
-      
-      if (missingscopes.length !== 0) {
-        console.log("OAuth: Missing scopes:", missingscopes);
-        return res.send("Missing scopes: " + missingscopes.join(", "));
+        const error = await tokenResponse.text();
+        console.error(`[OAuth] Token exchange failed:`, error);
+        return res.send('Failed to exchange authorization code. <a href="/login">Try again</a>');
       }
 
-      // Fetch user info from Discord
-      console.log("OAuth: Fetching user info...");
-      let userjson = await fetch("https://discord.com/api/users/@me", {
-        method: "get",
-        headers: {
-          Authorization: `Bearer ${codeinfo.access_token}`,
-        },
+      const tokenData = await tokenResponse.json();
+      
+      // Verify required scopes
+      const requiredScopes = ['identify', 'email'];
+      const hasAllScopes = requiredScopes.every(scope => tokenData.scope.includes(scope));
+      
+      if (!hasAllScopes) {
+        console.error(`[OAuth] Missing required scopes`);
+        return res.send('Missing required permissions. <a href="/login">Try again</a>');
+      }
+
+      // Fetch user information from Discord
+      const userResponse = await fetch(`${DISCORD_API}/users/@me`, {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
       });
-      let userinfo = JSON.parse(await userjson.text());
 
-      // Check whitelist
-      if (settings.whitelist.status) {
-        if (!settings.whitelist.users.includes(userinfo.id)) {
-          return res.send("Service is under maintenance.");
-        }
+      const discordUser = await userResponse.json();
+      console.log(`[OAuth] Discord user fetched: ${discordUser.username}#${discordUser.discriminator} (${discordUser.id})`);
+
+      // Security checks
+      if (!discordUser.verified) {
+        return res.send('Please verify your Discord email address before logging in.');
       }
 
-      // Check email verification
-      if (userinfo.verified !== true) {
-        return res.send(
-          "Not verified a Discord account. Please verify the email on your Discord account."
-        );
+      if (settings.whitelist?.status && !settings.whitelist.users.includes(discordUser.id)) {
+        return res.send('Service is currently in maintenance mode.');
       }
 
-      // Check IP block
-      if (newsettings.api.client.oauth2.ip.block.includes(ip)) {
-        return res.send(
-          "You could not sign in, because your IP has been blocked from signing in."
-        );
+      // Get user IP
+      const userIp = (settings.api.client.oauth2.ip['trust x-forwarded-for'] 
+        ? req.headers['x-forwarded-for'] 
+        : req.connection.remoteAddress) || '127.0.0.1';
+      
+      const normalizedIp = userIp.replace(/::1/g, '127.0.0.1').replace(/^.*:/, '');
+
+      // VPN check
+      if (settings.antivpn?.status && normalizedIp !== '127.0.0.1' 
+          && !settings.antivpn.whitelistedIPs?.includes(normalizedIp)) {
+        const isVpn = await vpnCheck(settings.antivpn.APIKey, db, normalizedIp, res);
+        if (isVpn) return;
+      }
+
+      // IP blocking
+      if (settings.api.client.oauth2.ip.block?.includes(normalizedIp)) {
+        return res.send('Your IP address has been blocked.');
       }
 
       // Duplicate IP check
-      if (
-        newsettings.api.client.oauth2.ip["duplicate check"] == true &&
-        ip !== "127.0.0.1"
-      ) {
-        const ipuser = await db.get(`ipuser-${ip}`);
-        if (ipuser && ipuser !== userinfo.id) {
-          renderFile(
-            `./themes/${newsettings.defaulttheme}/alerts/alt.ejs`,
-            {
-              settings: newsettings,
-              db,
-              extra: { home: { name: "VPN Detected" } },
-            },
-            null,
-            (err, str) => {
-              if (err)
-                return res.send(
-                  'Another account on your IP has been detected, there can only be one account per IP. Think this is a mistake? <a href="https://discord.gg/halexnodes" target="_blank">Join our discord.</a>'
-                );
-              res.status(200);
-              res.send(str);
-            }
-          );
-          return;
-        } else if (!ipuser) {
-          await db.set(`ipuser-${ip}`, userinfo.id);
+      if (settings.api.client.oauth2.ip['duplicate check'] && normalizedIp !== '127.0.0.1') {
+        const existingUser = await db.get(`ipuser-${normalizedIp}`);
+        if (existingUser && existingUser !== discordUser.id) {
+          return res.send('Another account is already registered with your IP address.');
+        }
+        if (!existingUser) {
+          await db.set(`ipuser-${normalizedIp}`, discordUser.id);
         }
       }
 
-      // Fetch user guilds for J4R
-      let guildsinfo = [];
-      if (newsettings.api.client.j4r.enabled) {
-        console.log("OAuth: Fetching guilds for J4R...");
-        let guildsjson = await fetch("https://discord.com/api/users/@me/guilds", {
-          method: "get",
-          headers: {
-            Authorization: `Bearer ${codeinfo.access_token}`,
-          },
-        });
-        guildsinfo = await guildsjson.json();
-        
-        if (guildsinfo.message == "401: Unauthorized") {
-          return res.send(
-            "Please allow us to know what servers you are in to let the J4R system work properly. <a href='/login'>Login again</a>"
-          );
-        }
-
-        let userj4r = (await db.get(`j4rs-${userinfo.id}`)) ?? [];
-        let coins = (await db.get(`coins-${userinfo.id}`)) ?? 0;
-
-        // Checking if the user has completed any new j4rs
-        for (const guild of newsettings.api.client.j4r.ads) {
-          if (
-            guildsinfo.find((g) => g.id === guild.id) &&
-            !userj4r.find((g) => g.id === guild.id)
-          ) {
-            userj4r.push({
-              id: guild.id,
-              coins: guild.coins,
-            });
-            coins += guild.coins;
-          }
-        }
-
-        // Checking if the user has left any j4r servers
-        for (const j4r of userj4r) {
-          if (!guildsinfo.find((g) => g.id === j4r.id)) {
-            userj4r = userj4r.filter((g) => g.id !== j4r.id);
-            coins -= j4r.coins;
-          }
-        }
-
-        await db.set(`j4rs-${userinfo.id}`, userj4r);
-        await db.set(`coins-${userinfo.id}`, coins);
+      // Handle Join-for-Rewards (J4R)
+      if (settings.api.client.j4r?.enabled && tokenData.scope.includes('guilds')) {
+        await handleJ4R(discordUser.id, tokenData.access_token, db);
       }
 
-      // Auto-join guild if enabled
-      if (newsettings.api.client.bot.joinguild.enabled == true) {
-        console.log("OAuth: Auto-joining guild...");
-        if (typeof newsettings.api.client.bot.joinguild.guildid == "string") {
-          await fetch(
-            `https://discord.com/api/guilds/${newsettings.api.client.bot.joinguild.guildid}/members/${userinfo.id}`,
-            {
-              method: "put",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bot ${newsettings.api.client.bot.token}`,
-              },
-              body: JSON.stringify({
-                access_token: codeinfo.access_token,
-              }),
-            }
-          );
-        } else if (
-          typeof newsettings.api.client.bot.joinguild.guildid == "object"
-        ) {
-          if (Array.isArray(newsettings.api.client.bot.joinguild.guildid)) {
-            for (let guild of newsettings.api.client.bot.joinguild.guildid) {
-              await fetch(
-                `https://discord.com/api/guilds/${guild}/members/${userinfo.id}`,
-                {
-                  method: "put",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bot ${newsettings.api.client.bot.token}`,
-                  },
-                  body: JSON.stringify({
-                    access_token: codeinfo.access_token,
-                  }),
-                }
-              );
-            }
-          } else {
-            return res.send(
-              "api.client.bot.joinguild.guildid is not an array nor a string."
-            );
-          }
-        } else {
-          return res.send(
-            "api.client.bot.joinguild.guildid is not an array nor a string."
-          );
-        }
+      // Auto-join Discord guild
+      if (settings.api.client.bot?.joinguild?.enabled && tokenData.scope.includes('guilds.join')) {
+        await autoJoinGuild(discordUser.id, tokenData.access_token);
       }
 
       // Give role on login
-      if (newsettings.api.client.bot.giverole.enabled == true) {
-        console.log("OAuth: Assigning role...");
-        if (
-          typeof newsettings.api.client.bot.giverole.guildid == "string" &&
-          typeof newsettings.api.client.bot.giverole.roleid == "string"
-        ) {
-          await fetch(
-            `https://discord.com/api/guilds/${newsettings.api.client.bot.giverole.guildid}/members/${userinfo.id}/roles/${newsettings.api.client.bot.giverole.roleid}`,
-            {
-              method: "put",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bot ${newsettings.api.client.bot.token}`,
-              },
-            }
-          );
-        } else {
-          return res.send(
-            "api.client.bot.giverole.guildid or roleid is not a string."
-          );
-        }
+      if (settings.api.client.bot?.giverole?.enabled) {
+        await giveRole(discordUser.id);
       }
 
-      // Apply role packages
-      if (newsettings.api.client.packages.rolePackages.roles) {
-        console.log("OAuth: Checking role packages...");
-        const member = await fetch(
-          `https://discord.com/api/v9/guilds/${newsettings.api.client.packages.rolePackages.roleServer}/members/${userinfo.id}`,
-          {
-            headers: {
-              Authorization: `Bot ${newsettings.api.client.bot.token}`,
-            },
-          }
-        );
-        const memberinfo = await member.json();
-        if (memberinfo.user) {
-          const currentpackage = await db.get(`package-${userinfo.id}`);
-          if (
-            Object.values(
-              newsettings.api.client.packages.rolePackages.roles
-            ).includes(currentpackage)
-          ) {
-            for (const rolePackage of Object.keys(
-              newsettings.api.client.packages.rolePackages.roles
-            )) {
-              if (
-                newsettings.api.client.packages.rolePackages.roles[
-                  rolePackage
-                ] === currentpackage
-              ) {
-                if (!memberinfo.roles.includes(rolePackage)) {
-                  await db.set(
-                    `package-${userinfo.id}`,
-                    newsettings.api.client.packages.default
-                  );
-                }
-              }
-            }
-          }
-          for (const role of memberinfo.roles) {
-            if (newsettings.api.client.packages.rolePackages.roles[role]) {
-              await db.set(
-                `package-${userinfo.id}`,
-                newsettings.api.client.packages.rolePackages.roles[role]
-              );
-            }
-          }
-        }
+      // Handle role packages
+      if (settings.api.client.packages?.rolePackages?.roles) {
+        await handleRolePackages(discordUser.id, db);
       }
 
-      // Create new account if doesn't exist
-      if (!(await db.get("users-" + userinfo.id))) {
-        console.log("OAuth: Creating new account...");
-        if (newsettings.api.client.allow.newusers == true) {
-          let genpassword = null;
-          if (newsettings.api.client.passwordgenerator.signup == true)
-            genpassword = makeid(
-              newsettings.api.client.passwordgenerator["length"]
-            );
-          
-          let accountjson = await fetch(
-            settings.pterodactyl.domain + "/api/application/users",
-            {
-              method: "post",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${settings.pterodactyl.key}`,
-              },
-              body: JSON.stringify({
-                username: userinfo.id,
-                email: userinfo.email,
-                first_name: userinfo.username,
-                last_name: "#" + userinfo.discriminator,
-                password: genpassword,
-              }),
-            }
-          );
-          
-          if ((await accountjson.status) == 201) {
-            let accountinfo = JSON.parse(await accountjson.text());
-            let userids = (await db.get("users")) ? await db.get("users") : [];
-            userids.push(accountinfo.attributes.id);
-            await db.set("users", userids);
-            await db.set("users-" + userinfo.id, accountinfo.attributes.id);
-            req.session.newaccount = true;
-            req.session.password = genpassword;
-          } else {
-            // Try to find existing account by email
-            let accountlistjson = await fetch(
-              settings.pterodactyl.domain +
-                "/api/application/users?include=servers&filter[email]=" +
-                encodeURIComponent(userinfo.email),
-              {
-                method: "get",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${settings.pterodactyl.key}`,
-                },
-              }
-            );
-            let accountlist = await accountlistjson.json();
-            let user = accountlist.data.filter(
-              (acc) => acc.attributes.email == userinfo.email
-            );
-            
-            if (user.length == 1) {
-              let userid = user[0].attributes.id;
-              let userids = (await db.get("users"))
-                ? await db.get("users")
-                : [];
-              if (userids.filter((id) => id == userid).length == 0) {
-                userids.push(userid);
-                await db.set("users", userids);
-                await db.set("users-" + userinfo.id, userid);
-                req.session.pterodactyl = user[0].attributes;
-              } else {
-                return res.send(
-                  "We have detected an account with your Discord email on it but the user id has already been claimed on another Discord account."
-                );
-              }
-            } else {
-              return res.send(
-                "An error has occured when attempting to create your account."
-              );
-            }
-          }
-          
-          log(
-            "signup",
-            `${userinfo.username}#${userinfo.discriminator} logged in to the dashboard for the first time!`
-          );
-        } else {
-          return res.send("New users cannot signup currently.");
-        }
+      // Get or create Pterodactyl account
+      const pterodactylUser = await getOrCreatePterodactylAccount(discordUser, db);
+      
+      if (!pterodactylUser) {
+        return res.send('Failed to create or retrieve your account. Please contact support.');
       }
 
-      // Fetch pterodactyl account info
-      console.log("OAuth: Fetching Pterodactyl account...");
-      let cacheaccount = await fetch(
-        settings.pterodactyl.domain +
-          "/api/application/users/" +
-          (await db.get("users-" + userinfo.id)) +
-          "?include=servers",
-        {
-          method: "get",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${settings.pterodactyl.key}`,
-          },
-        }
-      );
-      
-      if ((await cacheaccount.statusText) == "Not Found") {
-        return res.send(
-          "An error has occured while attempting to get your user information."
-        );
-      }
-      
-      let cacheaccountinfo = JSON.parse(await cacheaccount.text());
-      
       // Set session data
-      req.session.pterodactyl = cacheaccountinfo.attributes;
-      req.session.userinfo = userinfo;
-      
-      // Reset login attempts on successful login
-      req.session.loginAttempts = 0;
-      
-      // Set a flag to indicate successful authentication
+      req.session.userId = discordUser.id;
+      req.session.userinfo = {
+        id: discordUser.id,
+        username: discordUser.username,
+        discriminator: discordUser.discriminator,
+        avatar: discordUser.avatar,
+        email: discordUser.email
+      };
+      req.session.pterodactylId = pterodactylUser.id;
+      req.session.pterodactyl = pterodactylUser;
       req.session.authenticated = true;
-      req.session.lastAuthTime = Date.now();
-      
-      console.log(`OAuth: Login successful for user: ${userinfo.username} (ID: ${userinfo.id})`);
-      console.log(`OAuth: Setting session - Pterodactyl ID: ${cacheaccountinfo.attributes.id}, Discord ID: ${userinfo.id}`);
-      console.log(`OAuth: Session ID: ${req.sessionID}`);
-      
-      // Save session with proper error handling and timing
-      req.session.save(async (err) => {
+      req.session.loginTime = Date.now();
+
+      // Save session and redirect
+      req.session.save((err) => {
         if (err) {
-          console.error("OAuth: Session save error:", err);
-          return res.send("Session save failed. Please try logging in again.");
+          console.error('[OAuth] Session save error:', err);
+          return res.send('Session error. Please try logging in again.');
         }
         
-        console.log(`OAuth: Session saved successfully for ${userinfo.username}, SessionID: ${req.sessionID}`);
+        console.log(`[OAuth] Login successful: ${discordUser.username} (${discordUser.id})`);
+        console.log(`[OAuth] Session ID: ${req.sessionID}`);
         
-        // Verify the session was actually saved to the database
-        try {
-          // Note: The session store uses Keyv with namespace 'session'
-          // So the actual key will be 'session:sessionID'
-          const Keyv = require("keyv").default;
-          const sessionKeyv = new Keyv(settings.database, { namespace: 'session' });
-          const savedSession = await sessionKeyv.get(req.sessionID);
-          
-          if (savedSession) {
-            console.log(`OAuth: Session verified in database (namespace: session)`);
-          } else {
-            console.error("OAuth: WARNING - Session not found in database after save!");
-          }
-        } catch (verifyErr) {
-          console.error("OAuth: Error verifying session:", verifyErr);
-        }
+        const redirectUrl = req.session.oauthRedirect || settings.pages?.redirect?.callback || '/dashboard';
+        delete req.session.oauthRedirect;
         
-        // Small delay to ensure session is fully persisted across all workers
-        setTimeout(() => {
-          let theme = indexjs.get(req);
-          const redirectUrl = customredirect || theme.settings.redirect.callback || "/dashboard";
-          console.log(`OAuth: Redirecting to: ${redirectUrl}`);
-          console.log(`OAuth: Response will send session cookie for: ${req.sessionID}`);
-          
-          // Log the cookies that will be sent
-          const cookies = res.getHeader('Set-Cookie');
-          console.log(`OAuth: Set-Cookie header:`, cookies);
-          
-          return res.redirect(redirectUrl);
-        }, 100);
+        res.redirect(redirectUrl);
       });
-      
+
     } catch (error) {
-      console.error("OAuth callback error:", error);
-      return res.send("An error occurred during login. Please try again.");
+      console.error('[OAuth] Callback error:', error);
+      res.send('An unexpected error occurred. Please try again.');
     }
   });
 };
 
-function makeid(length) {
-  let result = "";
-  let characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopyrightxyz0123456789";
-  let charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+/**
+ * Get or create Pterodactyl account for user
+ */
+async function getOrCreatePterodactylAccount(discordUser, db) {
+  const settings = require('../settings.json');
+  
+  // Check if user already has an account
+  const existingId = await db.get(`users-${discordUser.id}`);
+  
+  if (existingId) {
+    // Fetch existing account
+    const response = await fetch(
+      `${settings.pterodactyl.domain}/api/application/users/${existingId}?include=servers`,
+      {
+        headers: {
+          'Authorization': `Bearer ${settings.pterodactyl.key}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`[OAuth] Existing Pterodactyl account found: ID ${existingId}`);
+      return data.attributes;
+    }
   }
-  return result;
+
+  // Create new account
+  if (!settings.api.client.allow?.newusers) {
+    console.error('[OAuth] New user registration is disabled');
+    return null;
+  }
+
+  const password = settings.api.client.passwordgenerator?.signup 
+    ? generatePassword(settings.api.client.passwordgenerator.length || 16)
+    : null;
+
+  const createResponse = await fetch(
+    `${settings.pterodactyl.domain}/api/application/users`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.pterodactyl.key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: discordUser.id,
+        email: discordUser.email,
+        first_name: discordUser.username,
+        last_name: `#${discordUser.discriminator}`,
+        password: password,
+      }),
+    }
+  );
+
+  if (createResponse.ok) {
+    const data = await createResponse.json();
+    const userId = data.attributes.id;
+    
+    // Store user mapping
+    let userIds = (await db.get('users')) || [];
+    userIds.push(userId);
+    await db.set('users', userIds);
+    await db.set(`users-${discordUser.id}`, userId);
+    
+    log('signup', `${discordUser.username}#${discordUser.discriminator} created account`);
+    console.log(`[OAuth] Created new Pterodactyl account: ID ${userId}`);
+    
+    return data.attributes;
+  }
+
+  // Try to find account by email
+  const searchResponse = await fetch(
+    `${settings.pterodactyl.domain}/api/application/users?filter[email]=${encodeURIComponent(discordUser.email)}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${settings.pterodactyl.key}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (searchResponse.ok) {
+    const searchData = await searchResponse.json();
+    const matches = searchData.data.filter(u => u.attributes.email === discordUser.email);
+    
+    if (matches.length === 1) {
+      const userId = matches[0].attributes.id;
+      
+      // Check if not already claimed
+      let userIds = (await db.get('users')) || [];
+      if (!userIds.includes(userId)) {
+        userIds.push(userId);
+        await db.set('users', userIds);
+        await db.set(`users-${discordUser.id}`, userId);
+        
+        console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
+        return matches[0].attributes;
+      }
+    }
+  }
+
+  console.error('[OAuth] Failed to create or find Pterodactyl account');
+  return null;
 }
+
+/**
+ * Handle Join-for-Rewards
+ */
+async function handleJ4R(userId, accessToken, db) {
+  const settings = require('../settings.json');
+  
+  try {
+    const guildsResponse = await fetch(`${DISCORD_API}/users/@me/guilds`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    const guilds = await guildsResponse.json();
+    const userJ4Rs = (await db.get(`j4rs-${userId}`)) || [];
+    let coins = (await db.get(`coins-${userId}`)) || 0;
+
+    // Check for new J4R completions
+    for (const guildConfig of settings.api.client.j4r.ads) {
+      const inGuild = guilds.some(g => g.id === guildConfig.id);
+      const alreadyRewarded = userJ4Rs.some(j => j.id === guildConfig.id);
+      
+      if (inGuild && !alreadyRewarded) {
+        userJ4Rs.push({ id: guildConfig.id, coins: guildConfig.coins });
+        coins += guildConfig.coins;
+        console.log(`[J4R] User ${userId} joined ${guildConfig.id}, earned ${guildConfig.coins} coins`);
+      }
+    }
+
+    // Check for left servers
+    for (const j4r of userJ4Rs) {
+      const stillInGuild = guilds.some(g => g.id === j4r.id);
+      if (!stillInGuild) {
+        const index = userJ4Rs.findIndex(j => j.id === j4r.id);
+        userJ4Rs.splice(index, 1);
+        coins -= j4r.coins;
+        console.log(`[J4R] User ${userId} left guild ${j4r.id}, removed ${j4r.coins} coins`);
+      }
+    }
+
+    await db.set(`j4rs-${userId}`, userJ4Rs);
+    await db.set(`coins-${userId}`, coins);
+    
+  } catch (error) {
+    console.error('[J4R] Error:', error);
+  }
+}
+
+/**
+ * Auto-join Discord guild
+ */
+async function autoJoinGuild(userId, accessToken) {
+  const settings = require('../settings.json');
+  const guildIds = Array.isArray(settings.api.client.bot.joinguild.guildid)
+    ? settings.api.client.bot.joinguild.guildid
+    : [settings.api.client.bot.joinguild.guildid];
+
+  for (const guildId of guildIds) {
+    try {
+      await fetch(`${DISCORD_API}/guilds/${guildId}/members/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bot ${settings.api.client.bot.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token: accessToken }),
+      });
+      console.log(`[OAuth] Added user ${userId} to guild ${guildId}`);
+    } catch (error) {
+      console.error(`[OAuth] Failed to add user to guild ${guildId}:`, error);
+    }
+  }
+}
+
+/**
+ * Give role to user
+ */
+async function giveRole(userId) {
+  const settings = require('../settings.json');
+  
+  try {
+    await fetch(
+      `${DISCORD_API}/guilds/${settings.api.client.bot.giverole.guildid}/members/${userId}/roles/${settings.api.client.bot.giverole.roleid}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bot ${settings.api.client.bot.token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    console.log(`[OAuth] Gave role to user ${userId}`);
+  } catch (error) {
+    console.error('[OAuth] Failed to give role:', error);
+  }
+}
+
+/**
+ * Handle role-based packages
+ */
+async function handleRolePackages(userId, db) {
+  const settings = require('../settings.json');
+  
+  try {
+    const memberResponse = await fetch(
+      `${DISCORD_API}/guilds/${settings.api.client.packages.rolePackages.roleServer}/members/${userId}`,
+      {
+        headers: { 'Authorization': `Bot ${settings.api.client.bot.token}` },
+      }
+    );
+    
+    if (!memberResponse.ok) return;
+    
+    const member = await memberResponse.json();
+    const currentPackage = await db.get(`package-${userId}`);
+    
+    // Check if user lost their role
+    if (currentPackage && Object.values(settings.api.client.packages.rolePackages.roles).includes(currentPackage)) {
+      const hasRole = Object.keys(settings.api.client.packages.rolePackages.roles).some(
+        roleId => member.roles.includes(roleId)
+      );
+      
+      if (!hasRole) {
+        await db.set(`package-${userId}`, settings.api.client.packages.default);
+        console.log(`[RolePackage] User ${userId} lost role, reset to default package`);
+      }
+    }
+    
+    // Apply role package
+    for (const roleId of member.roles) {
+      if (settings.api.client.packages.rolePackages.roles[roleId]) {
+        await db.set(`package-${userId}`, settings.api.client.packages.rolePackages.roles[roleId]);
+        console.log(`[RolePackage] Applied package for role ${roleId} to user ${userId}`);
+        break;
+      }
+    }
+  } catch (error) {
+    console.error('[RolePackage] Error:', error);
+  }
+}
+
+/**
+ * Generate random password
+ */
+function generatePassword(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+

@@ -120,7 +120,7 @@ if (cluster.isMaster) {
   // Load express addons.
   const ejs = require("ejs");
   const session = require("express-session");
-  const KeyvStore = require("./session");
+  const createSessionStore = require("./lib/sessionStore");
   const indexjs = require("./app.js");
 
   // Load the website.
@@ -128,33 +128,23 @@ if (cluster.isMaster) {
 
   app.use((req, res, next) => {
     res.setHeader("X-Powered-By", "1st Gen Helium (Cascade Ridge)");
-    
-    // Clear old session cookies that might interfere
-    const cookieHeader = req.headers.cookie || '';
-    if (cookieHeader.includes('connect.sid=')) {
-      res.clearCookie('connect.sid', { path: '/' });
-      console.log('Clearing old connect.sid cookie');
-    }
-    
     next();
   });
 
+  // Modern session configuration with better-sqlite3
   app.use(
     session({
-      store: new KeyvStore({ 
-        uri: settings.database,
-        ttl: 86400000 // 24 hours
-      }),
+      store: createSessionStore('./database.sqlite'),
       secret: settings.website.secret,
-      resave: true, // Force session to be saved even if unmodified
-      saveUninitialized: true, // Force session to be saved even if new
-      rolling: true, // Reset expiration on every response
-      name: 'helium.sid', // Custom session cookie name
+      resave: false,
+      saveUninitialized: false,
+      rolling: true,
+      name: 'helium.sid',
       cookie: { 
         secure: false,
         maxAge: 86400000, // 24 hours
         httpOnly: true,
-        sameSite: 'lax', // Important for OAuth redirects
+        sameSite: 'lax',
         path: '/'
       },
     })
@@ -216,43 +206,6 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
-    // Debug logging for session state
-    if (req.path === "/dashboard" || req.path === "/") {
-      console.log(`Request to ${req.path} - SessionID: ${req.sessionID}`);
-      console.log(`Cookies received:`, req.headers.cookie);
-      console.log(`Session has userinfo: ${!!req.session.userinfo}, has pterodactyl: ${!!req.session.pterodactyl}`);
-      if (req.session.userinfo) {
-        console.log(`Session user: ${req.session.userinfo.username} (${req.session.userinfo.id})`);
-      }
-    }
-    
-    // Prevent redirect loops - skip this check for login/callback/logout routes and static assets
-    const skipRoutes = ["/login", "/callback", "/logout", "/assets", settings.api.client.oauth2.callbackpath];
-    const isSkipRoute = skipRoutes.some(route => req.path === route || req.path.startsWith(route));
-    
-    if (!isSkipRoute && req.session.pterodactyl && req.session.userinfo) {
-      const storedUserId = await db.get("users-" + req.session.userinfo.id);
-      
-      // Only redirect if there's a mismatch AND we haven't tried recently
-      if (storedUserId && req.session.pterodactyl.id !== storedUserId) {
-        // Check if we've already flagged this session as invalid
-        if (req.session.sessionInvalidated) {
-          return res.send(
-            "Your session is invalid. Please clear your cookies and <a href='/logout'>log in again</a>."
-          );
-        }
-        
-        console.log("OAuth: Pterodactyl ID mismatch detected, invalidating session");
-        req.session.sessionInvalidated = true;
-        
-        // Clear the session and redirect to logout instead of login
-        req.session.destroy(() => {
-          return res.redirect("/logout");
-        });
-        return;
-      }
-    }
-    
     let theme = indexjs.get(req);
     let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
     if (newsettings.api.afk.enabled == true)
