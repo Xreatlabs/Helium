@@ -37,6 +37,7 @@
     "build": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --minify",
     "build:watch": "npx tailwindcss -i ./assets/tw.conf -o ./assets/tailwind.css --watch",
     "test": "jest",
+    "test-ptero": "node scripts/test-ptero.js",
     "migrate": "node scripts/migrate.js",
     "setup": "node scripts/setup.js"
   },

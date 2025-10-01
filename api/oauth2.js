@@ -185,7 +185,18 @@ module.exports.load = function (app, db) {
       const pterodactylUser = await getOrCreatePterodactylAccount(discordUser, db);
       
       if (!pterodactylUser) {
-        return res.send('Failed to create or retrieve your account. Please contact support.');
+        console.error(`[OAuth] Pterodactyl API error for user ${discordUser.id}`);
+        return res.send(`
+          <h2>Pterodactyl API Error</h2>
+          <p>Unable to connect to the Pterodactyl panel. This could be due to:</p>
+          <ul>
+            <li>Panel is down for maintenance</li>
+            <li>Invalid API key or domain configuration</li>
+            <li>Network connectivity issues</li>
+          </ul>
+          <p>Please contact support or try again later.</p>
+          <a href="/login">Try again</a>
+        `);
       }
 
       // Set session data
@@ -247,9 +258,18 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
     );
     
     if (response.ok) {
-      const data = await response.json();
-      console.log(`[OAuth] Existing Pterodactyl account found: ID ${existingId}`);
-      return data.attributes;
+      try {
+        const data = await response.json();
+        console.log(`[OAuth] Existing Pterodactyl account found: ID ${existingId}`);
+        return data.attributes;
+      } catch (jsonError) {
+        console.error(`[OAuth] Failed to parse Pterodactyl response for user ${existingId}:`, jsonError);
+        console.error(`[OAuth] Response status: ${response.status}, Response text: ${await response.text()}`);
+        // Continue to create new account
+      }
+    } else {
+      console.error(`[OAuth] Failed to fetch existing Pterodactyl account ${existingId}: ${response.status} ${response.statusText}`);
+      // Continue to create new account
     }
   }
 
@@ -282,19 +302,29 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
   );
 
   if (createResponse.ok) {
-    const data = await createResponse.json();
-    const userId = data.attributes.id;
-    
-    // Store user mapping
-    let userIds = (await db.get('users')) || [];
-    userIds.push(userId);
-    await db.set('users', userIds);
-    await db.set(`users-${discordUser.id}`, userId);
-    
-    log('signup', `${discordUser.username}#${discordUser.discriminator} created account`);
-    console.log(`[OAuth] Created new Pterodactyl account: ID ${userId}`);
-    
-    return data.attributes;
+    try {
+      const data = await createResponse.json();
+      const userId = data.attributes.id;
+      
+      // Store user mapping
+      let userIds = (await db.get('users')) || [];
+      userIds.push(userId);
+      await db.set('users', userIds);
+      await db.set(`users-${discordUser.id}`, userId);
+      
+      log('signup', `${discordUser.username}#${discordUser.discriminator} created account`);
+      console.log(`[OAuth] Created new Pterodactyl account: ID ${userId}`);
+      
+      return data.attributes;
+    } catch (jsonError) {
+      console.error(`[OAuth] Failed to parse Pterodactyl create response:`, jsonError);
+      const responseText = await createResponse.text();
+      console.error(`[OAuth] Create response text:`, responseText);
+    }
+  } else {
+    console.error(`[OAuth] Failed to create Pterodactyl account: ${createResponse.status} ${createResponse.statusText}`);
+    const responseText = await createResponse.text();
+    console.error(`[OAuth] Create response text:`, responseText);
   }
 
   // Try to find account by email
@@ -309,23 +339,33 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
   );
 
   if (searchResponse.ok) {
-    const searchData = await searchResponse.json();
-    const matches = searchData.data.filter(u => u.attributes.email === discordUser.email);
-    
-    if (matches.length === 1) {
-      const userId = matches[0].attributes.id;
+    try {
+      const searchData = await searchResponse.json();
+      const matches = searchData.data.filter(u => u.attributes.email === discordUser.email);
       
-      // Check if not already claimed
-      let userIds = (await db.get('users')) || [];
-      if (!userIds.includes(userId)) {
-        userIds.push(userId);
-        await db.set('users', userIds);
-        await db.set(`users-${discordUser.id}`, userId);
+      if (matches.length === 1) {
+        const userId = matches[0].attributes.id;
         
-        console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
-        return matches[0].attributes;
+        // Check if not already claimed
+        let userIds = (await db.get('users')) || [];
+        if (!userIds.includes(userId)) {
+          userIds.push(userId);
+          await db.set('users', userIds);
+          await db.set(`users-${discordUser.id}`, userId);
+          
+          console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
+          return matches[0].attributes;
+        }
       }
+    } catch (jsonError) {
+      console.error(`[OAuth] Failed to parse Pterodactyl search response:`, jsonError);
+      const responseText = await searchResponse.text();
+      console.error(`[OAuth] Search response text:`, responseText);
     }
+  } else {
+    console.error(`[OAuth] Failed to search Pterodactyl accounts: ${searchResponse.status} ${searchResponse.statusText}`);
+    const responseText = await searchResponse.text();
+    console.error(`[OAuth] Search response text:`, responseText);
   }
 
   console.error('[OAuth] Failed to create or find Pterodactyl account');
