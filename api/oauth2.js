@@ -36,27 +36,47 @@ const vpnCheck = require("../misc/vpnCheck");
 module.exports.load = async function (app, db) {
   // Login route - redirects to Discord OAuth
   app.get("/login", async (req, res) => {
-    // Prevent login loops - if already authenticated, redirect to dashboard
+    // Prevent login loops - if already authenticated AND session is valid, redirect to dashboard
     if (req.session.userinfo && req.session.pterodactyl) {
-      console.log("OAuth: User already authenticated, redirecting to dashboard");
-      return res.redirect("/dashboard");
+      // Validate session integrity before redirecting
+      const storedUserId = await db.get("users-" + req.session.userinfo.id);
+      
+      // Only redirect if session data is consistent
+      if (storedUserId && req.session.pterodactyl.id === storedUserId) {
+        console.log("OAuth: User already authenticated, redirecting to dashboard");
+        return res.redirect("/dashboard");
+      } else {
+        // Session is inconsistent, clear it completely and start fresh
+        console.log("OAuth: Session data inconsistent, clearing and restarting login");
+        return req.session.destroy((err) => {
+          if (err) {
+            console.error("OAuth: Error destroying session:", err);
+          }
+          // Redirect to login again with a clean slate
+          return res.redirect("/login");
+        });
+      }
     }
 
-    // Track login attempts to prevent infinite loops
+    // Track login attempts to prevent infinite loops (only for actual OAuth attempts)
     if (!req.session.loginAttempts) {
       req.session.loginAttempts = 0;
     }
-    req.session.loginAttempts++;
+    
+    // Only increment if we're actually going to redirect to OAuth
+    // Don't count redirects from session clearing
+    if (req.query.redirect || req.session.loginAttempts > 0) {
+      req.session.loginAttempts++;
+    }
 
     // If too many login attempts, clear session and show error
-    if (req.session.loginAttempts > 3) {
+    if (req.session.loginAttempts > 5) {
       console.log("OAuth: Too many login attempts, clearing session");
-      req.session.destroy(() => {
+      return req.session.destroy(() => {
         return res.send(
           "Too many login attempts. Please clear your cookies and try again. If the issue persists, contact support."
         );
       });
-      return;
     }
 
     if (req.query.redirect) {

@@ -205,8 +205,8 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
-    // Prevent redirect loops - skip this check for login/callback/logout routes
-    const skipRoutes = ["/login", "/callback", "/logout", settings.api.client.oauth2.callbackpath];
+    // Prevent redirect loops - skip this check for login/callback/logout routes and static assets
+    const skipRoutes = ["/login", "/callback", "/logout", "/assets", settings.api.client.oauth2.callbackpath];
     const isSkipRoute = skipRoutes.some(route => req.path === route || req.path.startsWith(route));
     
     if (!isSkipRoute && req.session.pterodactyl && req.session.userinfo) {
@@ -214,24 +214,21 @@ if (cluster.isMaster) {
       
       // Only redirect if there's a mismatch AND we haven't tried recently
       if (storedUserId && req.session.pterodactyl.id !== storedUserId) {
-        // Check if we've already tried to re-authenticate recently (within last 30 seconds)
-        const lastReauthAttempt = req.session.lastReauthAttempt || 0;
-        const now = Date.now();
-        
-        if (now - lastReauthAttempt > 30000) {
-          console.log("OAuth: Pterodactyl ID mismatch detected, clearing session");
-          req.session.lastReauthAttempt = now;
-          // Clear the session instead of redirecting with prompt=none
-          req.session.destroy(() => {
-            return res.redirect("/login");
-          });
-          return;
-        } else {
-          // Too many re-auth attempts, show error instead of looping
+        // Check if we've already flagged this session as invalid
+        if (req.session.sessionInvalidated) {
           return res.send(
-            "Your session appears to be invalid. Please <a href='/logout'>log out</a> and log in again."
+            "Your session is invalid. Please clear your cookies and <a href='/logout'>log in again</a>."
           );
         }
+        
+        console.log("OAuth: Pterodactyl ID mismatch detected, invalidating session");
+        req.session.sessionInvalidated = true;
+        
+        // Clear the session and redirect to logout instead of login
+        req.session.destroy(() => {
+          return res.redirect("/logout");
+        });
+        return;
       }
     }
     
