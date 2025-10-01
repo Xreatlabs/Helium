@@ -17,14 +17,8 @@ const arciotext = require("../misc/afk");
 module.exports.load = async function (app, db) {
   app.all("/", async (req, res) => {
     try {
-      if (
-        req.session.pterodactyl &&
-        req.session.pterodactyl.id !==
-          (await db.get("users-" + req.session.userinfo.id))
-      ) {
-        return res.redirect("/login?prompt=none");
-      }
-
+      // Session validation is now handled globally in app.js, no need to duplicate here
+      
       let theme = indexjs.get(req);
       if (
         theme.settings.mustbeloggedin.includes(req._parsedUrl.pathname) &&
