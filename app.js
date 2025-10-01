@@ -61,6 +61,13 @@ module.exports.renderdataeval = `(async () => {
      isAdmin = adminStatus === 1;
    }
    
+   // Check dark mode preference from database
+   let isDarkMode = false;
+   if (req.session && req.session.userinfo && req.session.userinfo.id) {
+     const darkModeStatus = await db.get("darkmode-" + req.session.userinfo.id);
+     isDarkMode = darkModeStatus === true;
+   }
+   
     let renderdata = {
       req: req,
       settings: newsettings,
@@ -78,6 +85,7 @@ module.exports.renderdataeval = `(async () => {
       pterodactyl: req.session.pterodactyl,
       extra: theme.settings.variables,
       isAdmin: isAdmin,
+      isDarkMode: isDarkMode,
     db: db
     };
      renderdata.arcioafktext = JavaScriptObfuscator.obfuscate(\`

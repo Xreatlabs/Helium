@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 
 # Claude Code directory
 .claude/
+database.sqlite
