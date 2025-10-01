@@ -138,13 +138,16 @@ if (cluster.isMaster) {
         ttl: 86400000 // 24 hours
       }),
       secret: settings.website.secret,
-      resave: false,
-      saveUninitialized: false,
+      resave: true, // Force session to be saved even if unmodified
+      saveUninitialized: true, // Force session to be saved even if new
       rolling: true, // Reset expiration on every response
+      name: 'helium.sid', // Custom session cookie name
       cookie: { 
         secure: false,
         maxAge: 86400000, // 24 hours
-        httpOnly: true
+        httpOnly: true,
+        sameSite: 'lax', // Important for OAuth redirects
+        path: '/'
       },
     })
   );
@@ -208,6 +211,7 @@ if (cluster.isMaster) {
     // Debug logging for session state
     if (req.path === "/dashboard" || req.path === "/") {
       console.log(`Request to ${req.path} - SessionID: ${req.sessionID}`);
+      console.log(`Cookies received:`, req.headers.cookie);
       console.log(`Session has userinfo: ${!!req.session.userinfo}, has pterodactyl: ${!!req.session.pterodactyl}`);
       if (req.session.userinfo) {
         console.log(`Session user: ${req.session.userinfo.username} (${req.session.userinfo.id})`);

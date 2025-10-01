@@ -611,12 +611,26 @@ module.exports.load = async function (app, db) {
         
         // Verify the session was actually saved to the database
         try {
-          const sessionKey = `sess:${req.sessionID}`;
-          const savedSession = await db.get(sessionKey);
-          if (savedSession) {
-            console.log("OAuth: Session verified in database, proceeding with redirect");
-          } else {
+          // Check both with and without the keyv namespace prefix
+          const possibleKeys = [
+            `sess:${req.sessionID}`,
+            `keyv:sess:${req.sessionID}`,
+            req.sessionID
+          ];
+          
+          let found = false;
+          for (const key of possibleKeys) {
+            const savedSession = await db.get(key);
+            if (savedSession) {
+              console.log(`OAuth: Session verified in database with key: ${key}`);
+              found = true;
+              break;
+            }
+          }
+          
+          if (!found) {
             console.error("OAuth: WARNING - Session not found in database after save!");
+            console.error("OAuth: Tried keys:", possibleKeys);
           }
         } catch (verifyErr) {
           console.error("OAuth: Error verifying session:", verifyErr);
@@ -627,6 +641,12 @@ module.exports.load = async function (app, db) {
           let theme = indexjs.get(req);
           const redirectUrl = customredirect || theme.settings.redirect.callback || "/dashboard";
           console.log(`OAuth: Redirecting to: ${redirectUrl}`);
+          console.log(`OAuth: Response will send session cookie for: ${req.sessionID}`);
+          
+          // Log the cookies that will be sent
+          const cookies = res.getHeader('Set-Cookie');
+          console.log(`OAuth: Set-Cookie header:`, cookies);
+          
           return res.redirect(redirectUrl);
         }, 100);
       });
