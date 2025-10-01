@@ -210,6 +210,10 @@ module.exports.load = function (app, db) {
       };
       req.session.pterodactylId = pterodactylUser.id;
       
+      // Check if user is root admin and store in database
+      const isRootAdmin = pterodactylUser.root_admin === true;
+      await db.set(`admin-${discordUser.id}`, isRootAdmin ? 1 : 0);
+      
       // Structure pterodactyl data to match template expectations
       req.session.pterodactyl = {
         ...pterodactylUser,

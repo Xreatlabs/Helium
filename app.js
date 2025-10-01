@@ -53,6 +53,14 @@ const defaultthemesettings = {
 module.exports.renderdataeval = `(async () => {
    const JavaScriptObfuscator = require('javascript-obfuscator');
    let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
+   
+   // Check admin status from database
+   let isAdmin = false;
+   if (req.session && req.session.userinfo && req.session.userinfo.id) {
+     const adminStatus = await db.get("admin-" + req.session.userinfo.id);
+     isAdmin = adminStatus === 1;
+   }
+   
     let renderdata = {
       req: req,
       settings: newsettings,
@@ -69,6 +77,7 @@ module.exports.renderdataeval = `(async () => {
       x: 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1wVGZKZm5pUUZTOA==',
       pterodactyl: req.session.pterodactyl,
       extra: theme.settings.variables,
+      isAdmin: isAdmin,
     db: db
     };
      renderdata.arcioafktext = JavaScriptObfuscator.obfuscate(\`
@@ -233,14 +242,15 @@ if (cluster.isMaster) {
               : "")
         );
     if (theme.settings.mustbeadmin.includes(req._parsedUrl.pathname)) {
-      ejs.renderFile(
-        `./views/${theme.settings.notfound}`,
-        await eval(indexjs.renderdataeval),
-        null,
-        async function (err, str) {
-          delete req.session.newaccount;
-          delete req.session.password;
-          if (!req.session.userinfo || !req.session.pterodactyl) {
+      // Check if user is logged in
+      if (!req.session.userinfo || !req.session.pterodactyl) {
+        ejs.renderFile(
+          `./views/${theme.settings.notfound}`,
+          await eval(indexjs.renderdataeval),
+          null,
+          function (err, str) {
+            delete req.session.newaccount;
+            delete req.session.password;
             if (err) {
               console.log(err);
               return res.render("500.ejs", { err });
@@ -248,57 +258,49 @@ if (cluster.isMaster) {
             res.status(200);
             return res.send(str);
           }
-  
-          let cacheaccount = await fetch(
-            settings.pterodactyl.domain +
-              "/api/application/users/" +
-              (await db.get("users-" + req.session.userinfo.id)) +
-              "?include=servers",
-            {
-              method: "get",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${settings.pterodactyl.key}`,
-              },
-            }
-          );
-          if ((await cacheaccount.statusText) == "Not Found") {
+        );
+        return;
+      }
+
+      // Check admin status from database
+      const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
+      if (adminStatus !== 1) {
+        ejs.renderFile(
+          `./views/${theme.settings.notfound}`,
+          await eval(indexjs.renderdataeval),
+          null,
+          function (err, str) {
+            delete req.session.newaccount;
+            delete req.session.password;
             if (err) {
               console.log(err);
               return res.render("500.ejs", { err });
             }
+            res.status(200);
             return res.send(str);
           }
-          let cacheaccountinfo = JSON.parse(await cacheaccount.text());
-  
-          req.session.pterodactyl = cacheaccountinfo.attributes;
-          if (cacheaccountinfo.attributes.root_admin !== true) {
-            if (err) {
-              console.log(err);
-              return res.render("500.ejs", { err });
-            }
-            return res.send(str);
+        );
+        return;
+      }
+
+      // User is admin, render the page
+      ejs.renderFile(
+        `./views/${
+          theme.settings.pages[req._parsedUrl.pathname.slice(1)]
+            ? theme.settings.pages[req._parsedUrl.pathname.slice(1)]
+            : theme.settings.notfound
+        }`,
+        await eval(indexjs.renderdataeval),
+        null,
+        function (err, str) {
+          delete req.session.newaccount;
+          delete req.session.password;
+          if (err) {
+            console.log(err);
+            return res.render("500.ejs", { err });
           }
-  
-          ejs.renderFile(
-            `./views/${
-              theme.settings.pages[req._parsedUrl.pathname.slice(1)]
-                ? theme.settings.pages[req._parsedUrl.pathname.slice(1)]
-                : theme.settings.notfound
-            }`,
-            await eval(indexjs.renderdataeval),
-            null,
-            function (err, str) {
-              delete req.session.newaccount;
-              delete req.session.password;
-              if (err) {
-                console.log(err);
-                return res.render("500.ejs", { err });
-              }
-              res.status(200);
-              res.send(str);
-            }
-          );
+          res.status(200);
+          res.send(str);
         }
       );
       return;
