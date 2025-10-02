@@ -1,12 +1,12 @@
 # Helium
 
-![GitHub commit](https://img.shields.io/github/last-commit/heliactyloss/heliactyl) ![GitHub Release](https://img.shields.io/github/v/release/heliactyloss/heliactyl)
+![GitHub commit](https://img.shields.io/github/last-commit/xreatlabs/helium) ![GitHub Release](https://img.shields.io/github/v/release/xreatlabs/helium)
 
 > [!NOTE]
-> This version of Helium 1 is built to be clean, fast and stable. It lacks highly specific features such as Linkvertise and Stripe billing but retains all of the functionality of previous Helium releases (v11, v12, v13).
+> This version of Helium 1 is built to be clean, fast and stable. It lacks highly specific features such as Linkvertise and Stripe billing but retains all of the functionality of previous Helium releases .
 
 > [!WARNING]  
-> Helium 1 is not compatible with `settings.json` files from v13 or earlier. You can keep the same `database.sqlite` though without having any issues.
+> Helium 1 is not compatible with `settings.json` files  or earlier. You can keep the same `database.sqlite` though without having any issues.
 
 Helium is a high-performance client area for the Pterodactyl Panel. It allows your users to create, edit and delete servers, and also earn coins which can be used to upgrade their servers.
 
@@ -14,7 +14,7 @@ Helium is a high-performance client area for the Pterodactyl Panel. It allows yo
 
 You can get started straight away by following these steps:
 
-1. Clone the repo: Run `git clone https://github.com/heliactyloss/heliactyl` on your machine
+1. Clone the repo: Run `git clone https://github.com/xreatlabs/helium` on your machine
 2. Run setup: `npm run setup` (creates `settings.json` from template)
 3. Configure `settings.json` - most are optional except the Pterodactyl and OAuth2 settings which **must** be configured
 4. Install dependencies: `npm install`
@@ -26,8 +26,8 @@ You can get started straight away by following these steps:
 
 ```bash
 # Clone repository
-git clone https://github.com/heliactyloss/heliactyl
-cd heliactyl
+git clone https://github.com/xreatlabs/helium
+cd Helium
 
 # Initial setup (creates settings.json and .env)
 npm run setup
@@ -114,7 +114,7 @@ npm run build - builds TailwindCSS, required for making changes to the UI
 
 ## Helium API v2
 
-In v1, we've introduced the next generation of Helium's API. You can see the documentation below:
+ In v1, we've introduced the next generation of Helium's API. You can see the documentation below:
 
 ### /api/v2/userinfo
 
@@ -429,3 +429,6 @@ CREATE TABLE discord_webhooks (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+## Credits
+Heliactyl For building original Heliactyl
