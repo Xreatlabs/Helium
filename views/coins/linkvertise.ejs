@@ -1,0 +1,47 @@
+<head>
+  <title><%= settings.name %> — Linkvertise</title>
+  <script>
+    const preferDark = localStorage.getItem('darkMode') === 'true';
+    if (preferDark) document.documentElement.classList.add('dark');
+  </script>
+</head>
+<div class="md:pl-64">
+  <%- include('../components/navigation') %>
+  <main class="p-6">
+    <div id="skeleton-loader" class="loadingbar"><div class="bar"></div></div>
+    <div id="content">
+      <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Earn coins via Linkvertise</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Complete a Linkvertise to receive coins. Reward: <%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins.</p>
+          </div>
+        </div>
+        <% if (!(linkvertise && linkvertise.enabled)) { %>
+          <div class="mt-4 text-sm text-amber-700 bg-amber-100 rounded-xl px-4 py-3">Linkvertise rewards are currently disabled.</div>
+        <% } %>
+        <% if (linkvertise && Array.isArray(linkvertise.links) && linkvertise.links.length > 0) { %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <% linkvertise.links.forEach(function(l) { %>
+              <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200"><%= l.name %></p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Reward: <%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins</p>
+                <a href="<%= l.url %>" class="mt-3 inline-flex items-center text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full px-4 py-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                  Continue
+                </a>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="mt-4 text-sm text-gray-600 dark:text-gray-300">No Linkvertise links configured.</div>
+        <% } %>
+
+        <% if (req.query && req.query.err) { %>
+          <% const map = { none: 'Reward granted!', DISABLED: 'Feature disabled.', INVALID_LINK: 'Invalid link.', COOLDOWN: 'You have recently completed this. Please try later.' }; %>
+          <div class="mt-4 text-sm text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-xl px-4 py-3"><%= map[req.query.err] || 'Unknown status.' %></div>
+        <% } %>
+      </div>
+    </div>
+  </main>
+</div>
+

@@ -91,7 +91,8 @@
         "/admin": 1,
         "/regen": 1,
         "/renew": 1,
-        "/api/userinfo": 1
+        "/api/userinfo": 1,
+        "/linkvertise/callback": 1
       },
       "packages": {
         "default": "default",
@@ -196,6 +197,19 @@
             "per": 2
           }
         }
+      },
+      "linkvertise": {
+        "_comment": "Configure Linkvertise earning. Create Linkvertise links that redirect to your callback URL after completion.",
+        "enabled": false,
+        "rewardCoins": 10,
+        "requireKnownLink": true,
+        "links": [
+          {
+            "id": "support-1",
+            "name": "Support us via Linkvertise",
+            "url": "https://linkvertise.com/12345/support?target=http://localhost:3000/linkvertise/callback?id=support-1"
+          }
+        ]
       }
     },
     "afk": {

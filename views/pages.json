@@ -49,6 +49,7 @@
     "transfer": "coins/transfer.ejs",
     "afk": "coins/afk.ejs",
     "store": "coins/store.ejs",
+    "linkvertise": "coins/linkvertise.ejs",
     "servers": "servers/servers.ejs",
     "accounts": "accounts.ejs",
     "admin": "admin/admin.ejs",
