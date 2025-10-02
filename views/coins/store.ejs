@@ -50,7 +50,7 @@
             </div>
             <% if (req.query.err) { %>
             <% if (req.query.err == "none") { %>
-            <div class="rounded-3xl bg-white p-8 mb-5">
+            <div class="rounded-3xl bg-white dark:bg-gray-800 p-8 mb-5">
               <div class="flex">
                 <div class="flex-shrink-0">
                   <svg class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -66,7 +66,7 @@
               </div>
             </div>
             <% } else { %>
-            <div class="rounded-3xl bg-white p-8 mb-5">
+            <div class="rounded-3xl bg-white dark:bg-gray-800 p-8 mb-5">
               <div class="flex">
                 <div class="flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-amber-400">
@@ -85,7 +85,7 @@
             <% } %>
             <div>
               <dl class="mt-5 grid grid-cols-1 rounded-lg bg-gray-100 overflow-hidden md:grid-cols-4 gap-5">
-                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white rounded-3xl">
+                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl">
                   <dt class="text-md tracking-tight font-semibold text-gray-600"><%= settings.api.client.coins.store.ram.per/1024 %> GiB Memory per <%= settings.api.client.coins.store.ram.cost %> coin<%= settings.api.client.coins.store.ram.cost == 1 ? "" : "s" %></dt>
                   <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
                     <div class="mt-1 flex rounded-md">
@@ -111,7 +111,7 @@
                   </dd>
                 </div>
 
-                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white rounded-3xl">
+                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl">
                   <dt class="text-md tracking-tight font-semibold text-gray-600"><%= settings.api.client.coins.store.cpu.per/100 %> CPU Cores per <%= settings.api.client.coins.store.cpu.cost %> coin<%= settings.api.client.coins.store.cpu.cost == 1 ? "" : "s" %></dt>
                   <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
                     <div class="mt-1 flex rounded-md">
@@ -137,7 +137,7 @@
                   </dd>
                 </div>
 
-                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white rounded-3xl">
+                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl">
                   <dt class="text-md tracking-tight font-semibold text-gray-600"><%= settings.api.client.coins.store.disk.per/1024 %> GiB Storage per <%= settings.api.client.coins.store.disk.cost %> coin<%= settings.api.client.coins.store.disk.cost == 1 ? "" : "s" %></dt>
                   <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
                     <div class="mt-1 flex rounded-md">
@@ -163,7 +163,7 @@
                   </dd>
                 </div>
                 
-                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white rounded-3xl">
+                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl">
                   <dt class="text-md tracking-tight font-semibold text-gray-600"><%= settings.api.client.coins.store.servers.per %> Servers per <%= settings.api.client.coins.store.servers.cost %> coin<%= settings.api.client.coins.store.servers.cost == 1 ? "" : "s" %></dt>
                   <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
                     <div class="mt-1 flex rounded-md">

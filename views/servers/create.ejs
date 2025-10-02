@@ -46,21 +46,21 @@
             <div class="min-w-0 flex-1">
               <div class="flex">
                 <div class="relative">
-                  <div class="bg-gray-200 rounded-2xl h-11 w-11 text-center flex text-gray-400">
+                  <div class="bg-gray-200 dark:bg-gray-800 rounded-2xl h-11 w-11 text-center flex text-gray-400 dark:text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mt-3 ml-3">
                       <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                     </svg>
                   </div>
                 </div>
                 <div class="relative ml-4">
-                  <h2 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight">Deploy Server</h2>
-                  <p class="text-xs font-thin text-gray-500">Create a new server on the Panel.</p>
+                  <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 sm:truncate tracking-tight">Deploy Server</h2>
+                  <p class="text-xs font-thin text-gray-500 dark:text-gray-400">Create a new server on the Panel.</p>
                 </div>
               </div>
             </div>
           </div>
           <% if (req.query.err) { %>
-          <div class="rounded-3xl bg-gray-200 p-8 mb-5">
+          <div class="rounded-3xl bg-gray-200 dark:bg-gray-800 p-8 mb-5">
             <div class="flex">
               <div class="flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
@@ -68,8 +68,8 @@
                 </svg>
               </div>
               <div class="ml-3">
-                <h3 class="text-md font-medium tracking-tight text-gray-700">An error was encountered</h3>
-                <div class="mt-1 text-sm text-gray-500">
+                <h3 class="text-md font-medium tracking-tight text-gray-700 dark:text-gray-200">An error was encountered</h3>
+                <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   <p>Error code: <code><%= req.query.err %></code></p>
                 </div>
               </div>
@@ -80,22 +80,22 @@
           <div class="card mt-5">
             <div class="card-body">
               <% /* Server name */ %>
-              <label for="location" class="text-sm font-medium text-gray-600">Name</label><br>
-              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="name" placeholder="My server">
+              <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">Name</label><br>
+              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="name" placeholder="My server">
 
               <% /* Location */ %>
-              <label for="location" class="text-sm font-medium text-gray-600">Location</label>
-              <select class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="location">
+              <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">Location</label>
+              <select class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="location">
                 <% for (let [name, value] of Object.entries(settings.api.client.locations)) { %>
                 <option value="<%= name %>"><%= value.name %></option>
                 <% } %>
               </select>
 
               <% /* Software */ %>
-              <label for="location" class="text-sm font-medium text-gray-600">
+              <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Software
               </label>
-              <select class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="egg">
+              <select class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="egg">
                 <% for (let [name, value] of Object.entries(settings.api.client.eggs)) { %>
                 <option value="<%= name %>"><%= value.display %></option>
                 <% } %>

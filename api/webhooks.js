@@ -10,6 +10,8 @@ const { sendNotification } = require('../lib/discordWebhook');
 const { triggerEvent } = require('../lib/eventSystem');
 const validUrl = require('valid-url');
 const fetch = require('node-fetch');
+const appModule = require('../app.js');
+const dbGlobal = appModule && appModule.db;
 
 /**
  * Get database connection
@@ -25,26 +27,43 @@ function getDb() {
  * @private
  */
 async function isAdmin(req) {
-  if (!req.session.pterodactyl) return false;
-  
-  const cacheaccount = await fetch(
-    settings.pterodactyl.domain +
-      '/api/application/users/' +
-      req.session.pterodactyl.id +
-      '?include=servers',
-    {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${settings.pterodactyl.key}`,
-      },
+  // Trust session flag first if present
+  if (req.session && req.session.pterodactyl && req.session.pterodactyl.root_admin === true) {
+    return true;
+  }
+
+  // Fallback to DB flag if available
+  try {
+    if (dbGlobal && req.session && req.session.userinfo && req.session.userinfo.id) {
+      const adminStatus = await dbGlobal.get(`admin-${req.session.userinfo.id}`);
+      if (adminStatus === 1 || adminStatus === true || adminStatus === '1' || adminStatus === 'true') {
+        return true;
+      }
     }
-  );
-  
-  if (cacheaccount.statusText === 'Not Found') return false;
-  const cacheaccountinfo = await cacheaccount.json();
-  
-  return cacheaccountinfo.attributes.root_admin === true;
+  } catch (_) {}
+
+  if (!req.session || !req.session.pterodactyl || !req.session.pterodactyl.id) return false;
+
+  try {
+    const cacheaccount = await fetch(
+      `${settings.pterodactyl.domain}/api/application/users/${req.session.pterodactyl.id}?include=servers`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${settings.pterodactyl.key}`,
+          'Accept': 'application/json'
+        },
+      }
+    );
+
+    if (!cacheaccount.ok) return false;
+    const cacheaccountinfo = await cacheaccount.json();
+    return cacheaccountinfo.attributes?.root_admin === true;
+  } catch (e) {
+    console.error('Admin check failed:', e?.message || e);
+    return false;
+  }
 }
 
 module.exports.load = async function (app, db) {

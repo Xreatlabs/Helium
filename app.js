@@ -54,11 +54,17 @@ module.exports.renderdataeval = `(async () => {
    const JavaScriptObfuscator = require('javascript-obfuscator');
    let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
    
-   // Check admin status from database
+   // Check admin status from session (root_admin) or database
    let isAdmin = false;
    if (req.session && req.session.userinfo && req.session.userinfo.id) {
-     const adminStatus = await db.get("admin-" + req.session.userinfo.id);
-     isAdmin = adminStatus === 1;
+     const isRootAdminSession = !!(req.session.pterodactyl && req.session.pterodactyl.root_admin === true);
+     if (isRootAdminSession) {
+       isAdmin = true;
+     } else {
+       const adminStatus = await db.get("admin-" + req.session.userinfo.id);
+       // Accept 1, true, "1", "true" representations
+       isAdmin = (adminStatus === 1) || (adminStatus === true) || (adminStatus === "1") || (adminStatus === "true");
+     }
    }
    
    // Check dark mode preference from database
@@ -187,6 +193,19 @@ if (cluster.isMaster) {
 
   var cache = false;
   app.use(function (req, res, next) {
+    // Ensure _parsedUrl is available for downstream logic
+    if (!req._parsedUrl) {
+      try {
+        const parsed = new URL(req.url, 'http://localhost');
+        req._parsedUrl = {
+          pathname: parsed.pathname,
+          search: parsed.search,
+          query: Object.fromEntries(parsed.searchParams)
+        };
+      } catch (e) {
+        req._parsedUrl = { pathname: req.path || '/', search: '', query: req.query || {} };
+      }
+    }
     let manager = JSON.parse(fs.readFileSync("./settings.json").toString()).api
       .client.ratelimits;
     if (manager[req._parsedUrl.pathname]) {
@@ -224,6 +243,19 @@ if (cluster.isMaster) {
   });
 
   app.all("*", async (req, res) => {
+    // Ensure _parsedUrl exists in all environments (Node, Bun wrapper, proxies)
+    if (!req._parsedUrl) {
+      try {
+        const parsed = new URL(req.url, 'http://localhost');
+        req._parsedUrl = {
+          pathname: parsed.pathname,
+          search: parsed.search,
+          query: Object.fromEntries(parsed.searchParams)
+        };
+      } catch (e) {
+        req._parsedUrl = { pathname: req.path || '/', search: '', query: req.query || {} };
+      }
+    }
     // Ensure pterodactyl data structure is compatible with templates
     if (req.session && req.session.pterodactyl) {
       if (!req.session.pterodactyl.relationships) {
@@ -253,27 +285,20 @@ if (cluster.isMaster) {
     if (theme.settings.mustbeadmin.includes(req._parsedUrl.pathname)) {
       // Check if user is logged in
       if (!req.session.userinfo || !req.session.pterodactyl) {
-        ejs.renderFile(
-          `./views/${theme.settings.notfound}`,
-          await eval(indexjs.renderdataeval),
-          null,
-          function (err, str) {
-            delete req.session.newaccount;
-            delete req.session.password;
-            if (err) {
-              console.log(err);
-              return res.render("500.ejs", { err });
-            }
-            res.status(200);
-            return res.send(str);
-          }
-        );
-        return;
+        // Redirect to login preserving target
+        const redirectPath = req._parsedUrl.pathname.slice(1);
+        return res.redirect(`/login${redirectPath ? `?redirect=${redirectPath}` : ''}`);
       }
 
-      // Check admin status from database
-      const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
-      if (adminStatus !== 1) {
+      // Check admin from session root_admin first, then DB as fallback
+      let isAdmin = false;
+      if (req.session.pterodactyl && req.session.pterodactyl.root_admin === true) {
+        isAdmin = true;
+      } else {
+        const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
+        isAdmin = (adminStatus === 1) || (adminStatus === true) || (adminStatus === "1") || (adminStatus === "true");
+      }
+      if (!isAdmin) {
         ejs.renderFile(
           `./views/${theme.settings.notfound}`,
           await eval(indexjs.renderdataeval),

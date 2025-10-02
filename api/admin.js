@@ -24,12 +24,23 @@ const log = require("../misc/log");
 
 // Helper function to check admin status
 async function checkAdmin(req, res, db) {
-  if (!req.session.userinfo || !req.session.userinfo.id) {
+  if (!req.session || !req.session.userinfo || !req.session.userinfo.id) {
     return false;
   }
-  
+  // Prefer session root_admin if available
+  const isRootAdminSession =
+    !!(req.session.pterodactyl && req.session.pterodactyl.root_admin === true);
+
+  if (isRootAdminSession) return true;
+
+  // Fallback to DB flag, accepting multiple truthy representations
   const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
-  return adminStatus === 1;
+  return (
+    adminStatus === 1 ||
+    adminStatus === true ||
+    adminStatus === "1" ||
+    adminStatus === "true"
+  );
 }
 
 module.exports.load = async function (app, db) {
@@ -38,9 +49,8 @@ module.exports.load = async function (app, db) {
     if (!req.session.userinfo || !req.session.userinfo.id) {
       return res.status(403).send("Unauthorized");
     }
-    
-    const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
-    if (adminStatus !== 1) {
+
+    if (!(await checkAdmin(req, res, db))) {
       return res.status(403).send("Unauthorized");
     }
 
@@ -79,8 +89,7 @@ module.exports.load = async function (app, db) {
 
     if (!req.session.userinfo || !req.session.userinfo.id) return four0four(req, res, theme);
 
-    const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
-    if (adminStatus !== 1) return four0four(req, res, theme);
+    if (!(await checkAdmin(req, res, db))) return four0four(req, res, theme);
 
     let failredirect = theme.settings.redirect.failedsetcoins || "/";
 
@@ -120,8 +129,7 @@ module.exports.load = async function (app, db) {
 
     if (!req.session.userinfo || !req.session.userinfo.id) return four0four(req, res, theme);
 
-    const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
-    if (adminStatus !== 1) return four0four(req, res, theme);
+    if (!(await checkAdmin(req, res, db))) return four0four(req, res, theme);
 
     let failredirect = theme.settings.redirect.failedsetcoins || "/";
 

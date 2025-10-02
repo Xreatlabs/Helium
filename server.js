@@ -18,10 +18,13 @@ const fetchHandler = async (request) => {
   const url = new URL(request.url);
   
   // Create a mock request object that Express can understand
+  const headersObj = {};
+  request.headers.forEach((v, k) => headersObj[k.toLowerCase()] = v);
   const mockReq = {
     method: request.method,
-    url: request.url,
-    headers: request.headers,
+    url: url.pathname + url.search,
+    originalUrl: url.pathname + url.search,
+    headers: headersObj,
     body: request.body,
     query: Object.fromEntries(url.searchParams),
     _parsedUrl: {
@@ -30,10 +33,10 @@ const fetchHandler = async (request) => {
       query: Object.fromEntries(url.searchParams)
     },
     connection: {
-      remoteAddress: request.headers.get('x-forwarded-for') || '127.0.0.1'
+      remoteAddress: headersObj['x-forwarded-for'] || '127.0.0.1'
     },
     session: {},
-    headers: request.headers
+    get: (name) => headersObj[name.toLowerCase()]
   };
 
   // Create a mock response object
@@ -65,6 +68,10 @@ const fetchHandler = async (request) => {
       return mockRes;
     },
     getHeader: (name) => responseHeaders[name],
+    header: (name, value) => {
+      if (value === undefined) return responseHeaders[name];
+      responseHeaders[name] = value; return mockRes;
+    },
     render: (template, data, callback) => {
       // Handle EJS rendering
       const ejs = require('ejs');
