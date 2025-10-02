@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const ejs = require('ejs');
+const arciotext = require('../misc/afk');
 const { onCoinsAdded } = require('../lib/integrations');
 
 module.exports.load = function(app, db) {
