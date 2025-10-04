@@ -1,6 +1,6 @@
-<html<% if (isDarkMode) { %> class="dark"<% } %>>
+<html <% if (isDarkMode) { %>class="dark"<% } %>>
 <head>
-  <title><%= settings.name %> - Leaderboard</title>
+  <title><%= settings.name %> - AFK Leaderboard</title>
   <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
   <script>
     (function() {
@@ -31,121 +31,13 @@
             <!-- Header -->
             <div class="mb-8 text-center">
               <h1 class="text-4xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
-                🏆 Leaderboards
+                ⏱️ AFK Leaderboard
               </h1>
-              <p class="text-gray-500 dark:text-gray-400">Top players ranked by performance</p>
-            </div>
-
-            <!-- Tabs -->
-            <div class="mb-8">
-              <div class="flex justify-center space-x-4">
-                <button onclick="switchTab('coins')" id="tab-coins" class="tab-button active px-6 py-3 rounded-xl font-semibold transition">
-                  💰 Coins Leaderboard
-                </button>
-                <button onclick="switchTab('afk')" id="tab-afk" class="tab-button px-6 py-3 rounded-xl font-semibold transition">
-                  ⏱️ AFK Leaderboard
-                </button>
-              </div>
-            </div>
-
-            <!-- Coins Leaderboard -->
-            <div id="coins-leaderboard" class="leaderboard-content">
-              <div id="coins-loading" class="flex flex-col items-center justify-center py-20">
-                <svg class="animate-spin h-12 w-12 text-amber-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="text-gray-500 dark:text-gray-400">Loading coins leaderboard...</p>
-              </div>
-
-              <div id="coins-error" class="hidden">
-                <div class="rounded-3xl bg-red-50 dark:bg-red-900/20 p-8 border-2 border-red-200 dark:border-red-800">
-                  <p class="text-center text-red-700 dark:text-red-400">Unable to load coins leaderboard</p>
-                </div>
-              </div>
-
-              <div id="coins-content" class="hidden">
-                <!-- Podium -->
-                <div id="coins-podium" class="mb-12">
-                  <div class="flex items-end justify-center gap-4 max-w-4xl mx-auto">
-                    <!-- 2nd Place -->
-                    <div id="coins-rank-2" class="flex-1 hidden">
-                      <div class="bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-t-3xl p-6 text-center" style="height: 280px;">
-                        <div class="flex flex-col items-center justify-center h-full">
-                          <div class="text-5xl mb-3">🥈</div>
-                          <img id="coins-avatar-2" class="h-20 w-20 rounded-full ring-4 ring-gray-200 mb-3" src="" alt="">
-                          <div class="text-lg font-bold text-white mb-1" id="coins-name-2"></div>
-                          <div class="flex items-center mt-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-5 h-5 text-yellow-300 mr-1">
-                              <path d="M8 7c3.314 0 6-1.343 6-3s-2.686-3-6-3-6 1.343-6 3 2.686 3 6 3Z" />
-                            </svg>
-                            <span class="text-2xl font-bold text-white" id="coins-coins-2"></span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="bg-gray-300 dark:bg-gray-700 rounded-b-3xl p-4 text-center">
-                        <div class="text-2xl font-bold text-gray-700 dark:text-gray-200">#2</div>
-                      </div>
-                    </div>
-
-                    <!-- 1st Place -->
-                    <div id="coins-rank-1" class="flex-1 hidden">
-                      <div class="bg-gradient-to-br from-amber-400 to-yellow-500 rounded-t-3xl p-6 text-center shadow-2xl" style="height: 350px;">
-                        <div class="flex flex-col items-center justify-center h-full">
-                          <div class="text-6xl mb-4 animate-bounce">🥇</div>
-                          <img id="coins-avatar-1" class="h-24 w-24 rounded-full ring-4 ring-yellow-300 mb-4 shadow-lg" src="" alt="">
-                          <div class="text-xl font-black text-white mb-1" id="coins-name-1"></div>
-                          <div class="mt-4 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-6 h-6 text-yellow-200 mr-2">
-                              <path d="M8 7c3.314 0 6-1.343 6-3s-2.686-3-6-3-6 1.343-6 3 2.686 3 6 3Z" />
-                            </svg>
-                            <span class="text-3xl font-black text-white" id="coins-coins-1"></span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="bg-amber-400 rounded-b-3xl p-4 text-center">
-                        <div class="text-3xl font-black text-amber-900">#1</div>
-                      </div>
-                    </div>
-
-                    <!-- 3rd Place -->
-                    <div id="coins-rank-3" class="flex-1 hidden">
-                      <div class="bg-gradient-to-br from-orange-300 to-orange-400 dark:from-orange-600 dark:to-orange-700 rounded-t-3xl p-6 text-center" style="height: 240px;">
-                        <div class="flex flex-col items-center justify-center h-full">
-                          <div class="text-5xl mb-3">🥉</div>
-                          <img id="coins-avatar-3" class="h-20 w-20 rounded-full ring-4 ring-orange-200 mb-3" src="" alt="">
-                          <div class="text-lg font-bold text-white mb-1" id="coins-name-3"></div>
-                          <div class="mt-3 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-5 h-5 text-orange-200 mr-1">
-                              <path d="M8 7c3.314 0 6-1.343 6-3s-2.686-3-6-3-6 1.343-6 3 2.686 3 6 3Z" />
-                            </svg>
-                            <span class="text-2xl font-bold text-white" id="coins-coins-3"></span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="bg-orange-300 dark:bg-orange-700 rounded-b-3xl p-4 text-center">
-                        <div class="text-2xl font-bold text-orange-800 dark:text-orange-100">#3</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Ranks 4-20 -->
-                <div id="coins-remaining" class="hidden max-w-4xl mx-auto">
-                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">Ranks 4-20</h3>
-                  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden">
-                    <div class="max-h-96 overflow-y-auto" id="coins-ranks-4-20"></div>
-                  </div>
-                </div>
-
-                <div id="coins-empty" class="hidden text-center py-12">
-                  <p class="text-gray-500 dark:text-gray-400">No users with coins yet. Start earning!</p>
-                </div>
-              </div>
+              <p class="text-gray-500 dark:text-gray-400">Top players ranked by AFK time</p>
             </div>
 
             <!-- AFK Leaderboard -->
-            <div id="afk-leaderboard" class="leaderboard-content hidden">
+            <div id="afk-leaderboard">
               <div id="afk-loading" class="flex flex-col items-center justify-center py-20">
                 <svg class="animate-spin h-12 w-12 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -161,10 +53,10 @@
               </div>
 
               <div id="afk-content" class="hidden">
-                <!-- Podium for AFK -->
+                <!-- Podium -->
                 <div id="afk-podium" class="mb-12">
                   <div class="flex items-end justify-center gap-4 max-w-4xl mx-auto">
-                    <!-- Similar podium structure for AFK -->
+                    <!-- 2nd Place -->
                     <div id="afk-rank-2" class="flex-1 hidden">
                       <div class="bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-t-3xl p-6 text-center" style="height: 280px;">
                         <div class="flex flex-col items-center justify-center h-full">
@@ -181,6 +73,7 @@
                       </div>
                     </div>
 
+                    <!-- 1st Place -->
                     <div id="afk-rank-1" class="flex-1 hidden">
                       <div class="bg-gradient-to-br from-blue-400 to-blue-500 rounded-t-3xl p-6 text-center shadow-2xl" style="height: 350px;">
                         <div class="flex flex-col items-center justify-center h-full">
@@ -197,6 +90,7 @@
                       </div>
                     </div>
 
+                    <!-- 3rd Place -->
                     <div id="afk-rank-3" class="flex-1 hidden">
                       <div class="bg-gradient-to-br from-orange-300 to-orange-400 dark:from-orange-600 dark:to-orange-700 rounded-t-3xl p-6 text-center" style="height: 240px;">
                         <div class="flex flex-col items-center justify-center h-full">
@@ -215,6 +109,7 @@
                   </div>
                 </div>
 
+                <!-- Ranks 4-20 -->
                 <div id="afk-remaining" class="hidden max-w-4xl mx-auto">
                   <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">Ranks 4-20</h3>
                   <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden">
@@ -235,105 +130,7 @@
     </div>
   </div>
   
-  <style>
-    .tab-button {
-      background: transparent;
-      color: #9ca3af;
-    }
-    .tab-button.active {
-      background: linear-gradient(to br, #f59e0b, #eab308);
-      color: white;
-    }
-    .dark .tab-button.active {
-      background: linear-gradient(to br, #f59e0b, #eab308);
-    }
-  </style>
-  
   <script>
-    let currentTab = 'coins';
-    
-    function switchTab(tab) {
-      currentTab = tab;
-      
-      // Update tab buttons
-      document.getElementById('tab-coins').classList.toggle('active', tab === 'coins');
-      document.getElementById('tab-afk').classList.toggle('active', tab === 'afk');
-      
-      // Update content
-      document.getElementById('coins-leaderboard').classList.toggle('hidden', tab !== 'coins');
-      document.getElementById('afk-leaderboard').classList.toggle('hidden', tab !== 'afk');
-      
-      // Load data if not loaded yet
-      if (tab === 'afk' && !window.afkLoaded) {
-        loadAFKLeaderboard();
-        window.afkLoaded = true;
-      }
-    }
-    
-    async function loadCoinsLeaderboard() {
-      try {
-        const response = await fetch('/api/leaderboard');
-        const data = await response.json();
-        
-        document.getElementById('coins-loading').classList.add('hidden');
-        
-        if (data.success && data.leaderboard && data.leaderboard.length > 0) {
-          document.getElementById('coins-content').classList.remove('hidden');
-          
-          // Display top 3
-          const top3 = data.leaderboard.slice(0, 3);
-          top3.forEach((user) => {
-            const rank = user.rank;
-            const avatarUrl = user.avatar 
-              ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png?size=256`
-              : 'https://cdn.discordapp.com/embed/avatars/0.png';
-            
-            const container = document.getElementById(`coins-rank-${rank}`);
-            if (container) {
-              container.classList.remove('hidden');
-              document.getElementById(`coins-avatar-${rank}`).src = avatarUrl;
-              document.getElementById(`coins-name-${rank}`).textContent = user.global_name;
-              document.getElementById(`coins-coins-${rank}`).textContent = user.coins.toLocaleString();
-            }
-          });
-          
-          // Display ranks 4-20
-          const remaining = data.leaderboard.slice(3, 20);
-          if (remaining.length > 0) {
-            document.getElementById('coins-remaining').classList.remove('hidden');
-            document.getElementById('coins-ranks-4-20').innerHTML = remaining.map(user => {
-              const avatarUrl = user.avatar 
-                ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png?size=128`
-                : 'https://cdn.discordapp.com/embed/avatars/0.png';
-              
-              return `
-                <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border-b border-gray-200 dark:border-gray-700">
-                  <div class="flex items-center space-x-4">
-                    <div class="text-2xl font-bold text-gray-400 w-12">#${user.rank}</div>
-                    <img class="h-12 w-12 rounded-full ring-2 ring-gray-200 dark:ring-gray-600" src="${avatarUrl}" alt="">
-                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">${user.global_name}</div>
-                  </div>
-                  <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-5 h-5 text-amber-400 mr-2">
-                      <path d="M8 7c3.314 0 6-1.343 6-3s-2.686-3-6-3-6 1.343-6 3 2.686 3 6 3Z" />
-                    </svg>
-                    <span class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.coins.toLocaleString()}</span>
-                  </div>
-                </div>
-              `;
-            }).join('');
-          }
-        } else {
-          document.getElementById('coins-content').classList.remove('hidden');
-          document.getElementById('coins-empty').classList.remove('hidden');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('coins-loading').classList.add('hidden');
-        document.getElementById('coins-error').classList.remove('hidden');
-      }
-    }
-    
     async function loadAFKLeaderboard() {
       try {
         const response = await fetch('/api/leaderboard/afk');
@@ -394,8 +191,7 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-      loadCoinsLeaderboard();
-      window.afkLoaded = false;
+      loadAFKLeaderboard();
     });
   </script>
 </body>

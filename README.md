@@ -2,433 +2,514 @@
 
 ![GitHub commit](https://img.shields.io/github/last-commit/xreatlabs/helium) ![GitHub Release](https://img.shields.io/github/v/release/xreatlabs/helium)
 
-> [!NOTE]
-> This version of Helium 1 is built to be clean, fast and stable. It lacks highly specific features such as Linkvertise and Stripe billing but retains all of the functionality of previous Helium releases .
+Helium is a modern, high-performance client dashboard for Pterodactyl Panel. Built with Express.js and featuring Discord OAuth2 authentication, it provides users with an intuitive interface to manage their game servers, earn rewards through AFK time, and access premium features.
 
-> [!WARNING]  
-> Helium 1 is not compatible with `settings.json` files  or earlier. You can keep the same `database.sqlite` though without having any issues.
+## Features
 
-Helium is a high-performance client area for the Pterodactyl Panel. It allows your users to create, edit and delete servers, and also earn coins which can be used to upgrade their servers.
+- **Discord OAuth2 Authentication** - Secure login with Discord accounts
+- **Server Management** - Create, edit, and delete Pterodactyl servers
+- **Resource Management** - Manage CPU, RAM, disk, and server limits
+- **AFK Rewards System** - Earn coins by accumulating AFK time
+- **Resource Store** - Purchase additional resources with earned coins
+- **AFK Leaderboard** - Compete with other users for top AFK time
+- **Admin Dashboard** - Comprehensive admin tools for user and server management
+- **Discord Webhooks** - Real-time event notifications to Discord channels
+- **Server Renewal System** - Automatic server suspension with grace periods
+- **Dark Mode** - Full dark mode support with user preferences
+- **Linkvertise Integration** - Monetize with Linkvertise coin rewards
+- **Multi-worker Clustering** - Improved performance with cluster mode
 
-## Get started
+## Quick Start
 
-You can get started straight away by following these steps:
+### Prerequisites
 
-1. Clone the repo: Run `git clone https://github.com/xreatlabs/helium` on your machine
-2. Run setup: `npm run setup` (creates `settings.json` from template)
-3. Configure `settings.json` - most are optional except the Pterodactyl and OAuth2 settings which **must** be configured
-4. Install dependencies: `npm install`
-5. Run database migration: `npm run migrate`
-6. Start the application: `npm start`
-7. Create SSL certificates for your target domain and set up the NGINX reverse proxy
+- Node.js 16+ or Bun runtime
+- Pterodactyl Panel with API access
+- Discord OAuth2 application
 
-### First Time Setup
+### Installation
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/xreatlabs/helium
-cd Helium
+cd helium
 
-# Initial setup (creates settings.json and .env)
+# Run initial setup (creates settings.json)
 npm run setup
 
-# Edit your configuration
-# Edit settings.json with your Pterodactyl & Discord credentials
-
-# Install and migrate
+# Install dependencies
 npm install
+
+# Run database migrations
 npm run migrate
 
-# Start
+# Configure your settings
+nano settings.json
+
+# Start the application
 npm start
 ```
 
-### Updating Helium
+### Configuration
 
-Your `settings.json` and `database.sqlite` are protected and won't be overwritten:
+Edit `settings.json` with your Pterodactyl and Discord credentials:
+
+```json
+{
+  "pterodactyl": {
+    "domain": "https://panel.example.com",
+    "key": "your_pterodactyl_api_key"
+  },
+  "discord": {
+    "id": "your_discord_client_id",
+    "secret": "your_discord_client_secret",
+    "callbackpath": "http://localhost:3000/callback",
+    "prompt": false
+  },
+  "website": {
+    "port": 3000,
+    "secret": "random_secret_string"
+  }
+}
+```
+
+### First Run
+
+After configuration:
+
+1. Start the application with `npm start`
+2. Access the dashboard at `http://localhost:3000`
+3. Log in with Discord OAuth2
+4. Configure admin users via the admin panel
+
+## Updating Helium
+
+Your `settings.json` and `database.sqlite` are preserved during updates:
 
 ```bash
-# Pull updates
+# Pull latest changes
 git pull origin master
 
-# Check for new config options
+# Check for new configuration options
 diff settings.json settings.example.json
 
-# Install new dependencies
+# Install dependencies and run migrations
 npm install
-
-# Run new migrations (if any)
 npm run migrate
 
-# Restart
+# Restart the application
 npm start
 ```
 
-**See [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for detailed update instructions.**
+See [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) for detailed version-specific instructions.
 
 ## NGINX Reverse Proxy
 
-Here's a proxy config that we recommend, however you are free to change it:
+Recommended NGINX configuration with SSL:
 
 ```nginx
 server {
     listen 80;
-    server_name <domain>;
+    server_name your-domain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
+    server_name your-domain.com;
 
-    location /ws {
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
-      proxy_pass "http://localhost:<port>/ws";
-    }
-
-    server_name <domain>;
-
-    ssl_certificate /etc/letsencrypt/live/<domain>/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/<domain>/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
     ssl_session_cache shared:SSL:10m;
-    ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers  HIGH:!aNULL:!MD5;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
+    # WebSocket support
+    location /ws {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_pass http://localhost:3000/ws;
+    }
+
+    # Main application
     location / {
-      proxy_pass http://localhost:<port>/;
-      proxy_buffering off;
-      proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://localhost:3000/;
+        proxy_buffering off;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
     }
 }
 ```
 
-## Development Tools
+## Core Systems
 
-These commands are available:
+### AFK Rewards System
+
+Users earn coins by keeping the AFK page open. Configure in `settings.json`:
+
+```json
+{
+  "api": {
+    "afk": {
+      "enabled": true,
+      "every": 60,
+      "coins": 1
+    }
+  }
+}
 ```
-npm run start - starts Helium via nodemon
-npm run build - builds TailwindCSS, required for making changes to the UI
+
+- `every`: Seconds between coin awards
+- `coins`: Amount of coins per interval
+
+### Resource Store
+
+Users can purchase server resources with earned coins:
+
+- Additional RAM
+- Extra disk space
+- More CPU allocation
+- Additional server slots
+
+Configure pricing in `settings.json` under `api.client.coins.store`.
+
+### Server Renewal System
+
+Automatically manages server lifecycles with renewal reminders:
+
+```json
+{
+  "api": {
+    "client": {
+      "allow": {
+        "renewsuspendsystem": {
+          "enabled": true,
+          "renewTime": 2592000000,
+          "graceperiod": 3
+        }
+      }
+    }
+  }
+}
 ```
 
-## Helium API v2
+- Sends renewal notifications before expiration
+- Grace period before suspension
+- Automatic server suspension after grace period
+- Users can renew through the dashboard
 
- In v1, we've introduced the next generation of Helium's API. You can see the documentation below:
+### Discord Webhook System
 
-### /api/v2/userinfo
+Real-time notifications for server events. Configure webhooks through the admin panel at `/webhooks`.
+
+**Supported Events:**
+- Server creation, modification, deletion
+- User registration and login
+- Coin transactions
+- Resource purchases
+- Admin actions
+
+**API Endpoints:**
+- `GET /api/webhooks` - List all webhooks
+- `POST /api/webhooks` - Create new webhook
+- `PUT /api/webhooks/:id` - Update webhook
+- `DELETE /api/webhooks/:id` - Delete webhook
+- `POST /api/webhooks/:id/test` - Test webhook
+
+### Linkvertise Integration
+
+Monetize your dashboard with Linkvertise coin rewards. See [linkvertise-docs.md](linkvertise-docs.md) for setup instructions.
+
+## API Reference
+
+### Helium API v2
+
+All API endpoints require authentication.
+
+#### Get User Information
 
 ```
-Method: GET
-Query Parameters:
-  - id (string): The user's ID
+GET /api/v2/userinfo?id={userId}
 
 Response:
-  - status (string): "success" or an error message
-  - package (object): The user's package details
-  - extra (object): The user's additional resources
-  - userinfo (object): The user's information from the Pterodactyl panel
-  - coins (number | null): The user's coin balance (if coins is enabled)
+{
+  "status": "success",
+  "package": {...},
+  "extra": {...},
+  "userinfo": {...},
+  "coins": number | null
+}
 ```
 
-### /api/v2/setcoins
+#### Set User Coins
 
 ```
-Method: POST
-Request Body:
-  - id (string): The user's ID
-  - coins (number): The number of coins to set
+POST /api/v2/setcoins
+Body: { "id": "userId", "coins": 100 }
+
+Response: { "status": "success" }
+```
+
+#### Set User Plan
+
+```
+POST /api/v2/setplan
+Body: { "id": "userId", "package": "premium" }
+
+Response: { "status": "success" }
+```
+
+#### Set User Resources
+
+```
+POST /api/v2/setresources
+Body: {
+  "id": "userId",
+  "ram": 2048,
+  "disk": 10240,
+  "cpu": 200,
+  "servers": 5
+}
+
+Response: { "status": "success" }
+```
+
+### Leaderboard API
+
+#### Get AFK Leaderboard
+
+```
+GET /api/leaderboard/afk
 
 Response:
-  - status (string): "success" or an error message
-```
-
-### /api/v2/setplan
-
-```
-Method: POST
-Request Body:
-  - id (string): The user's ID
-  - package (string, optional): The package name (if not provided, the user's package will be removed)
-
-Response:
-  - status (string): "success" or an error message
-```
-
-### /api/v2/setresources
-
-```
-Method: POST
-Request Body:
-  - id (string): The user's ID
-  - ram (number): The amount of RAM to set
-  - disk (number): The amount of disk space to set
-  - cpu (number): The amount of CPU to set
-  - servers (number): The number of servers to set
-
-Response:
-  - status (string): "success" or an error message
-```
-
-## Discord Webhook System
-
-Helium now includes a comprehensive Discord webhook system for real-time notifications of events.
-
-### Features
-
-- **Event Notifications**: Get notified about server creation, deletion, modifications, user registrations, coin transactions, and more
-- **Multiple Webhooks**: Configure multiple webhooks for different events
-- **Smart Retry Logic**: Automatic retry with exponential backoff for failed deliveries
-- **Rate Limit Handling**: Intelligent handling of Discord's rate limits
-- **Beautiful Embeds**: Rich, color-coded Discord embeds for each event type
-- **Admin UI**: Easy-to-use admin interface for managing webhooks
-
-### Setup
-
-1. **Run Database Migration**:
-```bash
-npm install
-npm run migrate
-```
-
-2. **Access Admin Panel**:
-Navigate to `/webhooks` (requires admin privileges)
-
-3. **Create a Webhook**:
-- Go to your Discord server → Server Settings → Integrations → Webhooks
-- Create a new webhook and copy the URL
-- In Helium admin panel, click "Create Webhook"
-- Enter a name, paste the webhook URL, and select event types
-- Click "Create"
-
-### Webhook API Endpoints
-
-#### List Webhooks
-```bash
-curl -X GET http://localhost:3000/api/webhooks \
-  -H "Cookie: your-session-cookie"
-```
-
-#### Create Webhook
-```bash
-curl -X POST http://localhost:3000/api/webhooks \
-  -H "Content-Type: application/json" \
-  -H "Cookie: your-session-cookie" \
-  -d '{
-    "name": "Server Events",
-    "webhook_url": "https://discord.com/api/webhooks/...",
-    "event_types": ["server.created", "server.deleted", "server.modified"],
-    "enabled": true
-  }'
-```
-
-#### Update Webhook
-```bash
-curl -X PUT http://localhost:3000/api/webhooks/1 \
-  -H "Content-Type: application/json" \
-  -H "Cookie: your-session-cookie" \
-  -d '{
-    "enabled": false
-  }'
-```
-
-#### Delete Webhook
-```bash
-curl -X DELETE http://localhost:3000/api/webhooks/1 \
-  -H "Cookie: your-session-cookie"
-```
-
-#### Test Webhook
-```bash
-curl -X POST http://localhost:3000/api/webhooks/1/test \
-  -H "Cookie: your-session-cookie"
-```
-
-#### Receive Pterodactyl Events
-Configure your Pterodactyl panel to send webhooks to:
-```
-POST http://your-helium-domain.com/api/ptero/webhook
-```
-
-### Supported Event Types
-
-- `*` - All events
-- `server.created` - Server is created
-- `server.deleted` - Server is deleted
-- `server.modified` - Server resources are modified
-- `server.suspended` - Server is suspended
-- `server.unsuspended` - Server is unsuspended
-- `user.registered` - New user registers
-- `user.login` - User logs in
-- `coins.added` - Coins added to account
-- `coins.spent` - Coins spent from account
-- `resource.purchased` - Resources purchased from store
-- `admin.action` - Admin performs action
-
-### Programmatic Event Triggering
-
-You can trigger webhook events from your code:
-
-```javascript
-const { triggerEvent } = require('./lib/integrations');
-
-// Trigger server created event
-await triggerEvent('server.created', {
-  serverId: 123,
-  serverName: 'My Server',
-  userId: '123456789',
-  username: 'User#1234',
-  ram: 2048,
-  disk: 10240,
-  cpu: 200,
-});
-
-// Trigger custom admin action
-await triggerEvent('admin.action', {
-  admin: 'Admin#0001',
-  userId: '987654321',
-  description: 'Reset user password',
-  fields: [
-    { name: 'Action', value: 'Password Reset', inline: true },
-    { name: 'Target', value: 'User#1234', inline: true },
+{
+  "success": true,
+  "leaderboard": [
+    {
+      "userId": "123",
+      "username": "User",
+      "global_name": "Display Name",
+      "avatar": "hash",
+      "afkTime": 1234.56,
+      "afkHours": 20.58,
+      "rank": 1
+    }
   ],
-});
+  "total": 50
+}
+```
+
+## Development
+
+### Available Scripts
+
+```bash
+npm start           # Start with nodemon
+npm run start:bun   # Start with Bun runtime
+npm run dev         # Start with Bun hot reload
+npm run build       # Build Tailwind CSS
+npm run build:watch # Build Tailwind CSS in watch mode
+npm test            # Run test suite
+npm run migrate     # Run database migrations
+npm run setup       # Initial setup wizard
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test __tests__/PteroClient.test.js
+```
+
+### Database Migrations
+
+Migrations are located in the `migrations/` directory and run automatically with `npm run migrate`.
+
+Current migrations:
+- Initial database schema
+- Discord webhooks table
+- AFK time tracking
+- Server renewal system
+
+### Project Structure
+
+```
+helium/
+├── api/              # API route handlers
+├── assets/           # Static assets (CSS, images)
+├── lib/              # Core libraries and utilities
+├── managers/         # Business logic managers
+├── middleware/       # Express middleware
+├── migrations/       # Database migrations
+├── scripts/          # Utility scripts
+├── views/            # EJS templates
+│   ├── admin/        # Admin panel views
+│   ├── coins/        # Coin-related views
+│   ├── components/   # Reusable components
+│   ├── general/      # General pages
+│   └── servers/      # Server management views
+├── __tests__/        # Test files
+├── app.js            # Main application file
+├── server.js         # Bun runtime entry point
+└── settings.json     # Configuration file
 ```
 
 ## Pterodactyl API Client
 
-Helium includes an enhanced Pterodactyl API client with advanced features.
+Helium includes an enhanced Pterodactyl API client with:
 
-### Features
-
-- **Automatic Retry**: Exponential backoff for failed requests
-- **Rate Limiting**: Smart handling of rate limits with `Retry-After` header
-- **Caching**: Short-lived cache to reduce API calls (configurable TTL)
-- **Health Check**: Built-in health monitoring
-- **Full Coverage**: Methods for servers, users, and more
-
-### Usage
+- Automatic retry with exponential backoff
+- Rate limit handling with `Retry-After` support
+- Response caching (configurable TTL)
+- Built-in health checks
+- Full API coverage
 
 ```javascript
 const PteroClient = require('./lib/PteroClient');
 
-// Initialize client
 const client = new PteroClient(
   'https://panel.example.com',
-  'your-api-key',
+  'api-key',
   {
     maxRetries: 3,
     retryDelay: 1000,
-    cacheTTL: 60, // seconds
+    cacheTTL: 60
   }
 );
 
-// Health check
+// Check panel health
 const health = await client.healthCheck();
-console.log(health.status); // 'healthy' or 'unhealthy'
 
-// Get server (with caching)
+// Get server with caching
 const server = await client.getServer(123);
-
-// Get server (skip cache)
-const freshServer = await client.getServer(123, true);
-
-// List servers
-const servers = await client.listServers({ per_page: 50 });
-
-// Get user
-const user = await client.getUser(456);
 
 // Update server resources
 await client.updateServerBuild(123, {
   limits: {
     memory: 2048,
     disk: 10240,
-    cpu: 200,
-  },
+    cpu: 200
+  }
 });
-
-// Suspend/unsuspend server
-await client.suspendServer(123);
-await client.unsuspendServer(123);
-
-// Clear cache
-client.clearCache();
-
-// Get rate limit info
-const rateLimitInfo = client.getRateLimitInfo();
-console.log(rateLimitInfo.remaining, rateLimitInfo.reset);
 ```
 
-## Environment Variables
+## Security
 
-Copy `.env.example` to `.env` and configure:
+### Best Practices
 
-```env
-# Pterodactyl Panel
-PTERODACTYL_DOMAIN=https://panel.example.com
-PTERODACTYL_API_KEY=your_api_key
+- Change the default `website.secret` in `settings.json`
+- Use strong Pterodactyl API keys with minimal required permissions
+- Configure Discord OAuth2 with proper redirect URIs
+- Run behind NGINX with SSL/TLS
+- Regularly update dependencies
+- Enable rate limiting for production deployments
+- Review webhook events before enabling
 
-# Discord OAuth2
-DISCORD_CLIENT_ID=your_client_id
-DISCORD_CLIENT_SECRET=your_client_secret
-DISCORD_CALLBACK_URL=http://localhost:3000/callback
+### Admin Access
 
-# Website
-WEBSITE_PORT=3000
-WEBSITE_SECRET=random_secret_string
-NODE_ENV=production
+Admins are determined by:
+1. Pterodactyl panel `root_admin` status (priority)
+2. Database `admin-{userId}` flag (fallback)
 
-# Database
-DATABASE_PATH=sqlite://database.sqlite
+Grant admin access through the admin panel at `/admin`.
 
-# Optional: Caching & Rate Limiting
-CACHE_TTL=60
-MAX_RETRIES=3
-RETRY_DELAY=1000
+## Performance
+
+### Cluster Mode
+
+Helium runs with 8 worker processes by default for improved performance. Adjust in `app.js`:
+
+```javascript
+const numCPUs = 8; // Change as needed
 ```
 
-## Testing
+### Caching
 
-Run the test suite:
+- Pterodactyl API responses cached for 60 seconds (configurable)
+- Session data stored in SQLite with better-sqlite3
+- Static assets should be cached by NGINX
+
+### Rate Limiting
+
+Configure per-endpoint rate limits in `settings.json`:
+
+```json
+{
+  "api": {
+    "client": {
+      "ratelimits": {
+        "/api/some-endpoint": 5
+      }
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"Database error" on startup**
+- Ensure `database.sqlite` has correct permissions
+- Run `npm run migrate` to apply migrations
+
+**"Failed to authenticate" errors**
+- Verify Pterodactyl API key has correct permissions
+- Check panel URL is accessible from Helium server
+
+**OAuth2 redirect issues**
+- Verify Discord OAuth2 callback URL matches `settings.json`
+- Check redirect URI in Discord Developer Portal
+
+**Session lost after restart**
+- Sessions are persistent in SQLite
+- Check `database.sqlite` permissions
+
+### Debug Mode
+
+Enable detailed logging:
 
 ```bash
-npm test
+NODE_ENV=development npm start
 ```
 
-Run tests with coverage:
+## Contributing
 
-```bash
-npm test -- --coverage
-```
+Contributions are welcome! Please:
 
-### Test Files
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with tests
+4. Submit a pull request
 
-- `__tests__/discordWebhook.test.js` - Discord webhook functionality
-- `__tests__/PteroClient.test.js` - Pterodactyl API client
+## License
 
-## Database Migration
-
-The webhook system requires a database migration:
-
-```bash
-npm run migrate
-```
-
-This creates the `discord_webhooks` table with the following schema:
-
-```sql
-CREATE TABLE discord_webhooks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  webhook_url TEXT NOT NULL,
-  server_id TEXT,
-  event_types TEXT NOT NULL,
-  enabled INTEGER DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+See [LICENSE](LICENSE) file for details.
 
 ## Credits
-Heliactyl For building original Heliactyl
+
+- Built on the foundation of Heliactyl
+- Maintained by Matt James and contributors
+- Powered by Pterodactyl Panel
+
+## Support
+
+- GitHub Issues: Report bugs and request features
+- Documentation: Check the `/docs` directory for guides
+- Discord: Join our community server (if available)
+
+---
+
+**Helium 1.0.0 - Cascade Ridge**
+
+Built with ❤️ for the Pterodactyl community
