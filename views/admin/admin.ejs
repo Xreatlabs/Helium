@@ -1063,9 +1063,8 @@
               div.onclick = () => selectUser(user);
               div.innerHTML = `
                 <div class="flex items-center gap-3">
-                  <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-                    class="w-10 h-10 rounded-full" 
-                    onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                  <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
+                    class="w-10 h-10 rounded-full">
                   <div>
                     <p class="font-medium text-gray-900 dark:text-gray-100">${user.username}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">ID: ${user.id}</p>
@@ -1095,9 +1094,8 @@
       const detailsDiv = document.getElementById('user-details-display');
       detailsDiv.innerHTML = `
         <div class="flex items-center gap-3 mb-4">
-          <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-            class="w-16 h-16 rounded-full" 
-            onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
+            class="w-16 h-16 rounded-full">
           <div>
             <p class="text-lg font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
             <p class="text-sm text-gray-500 dark:text-gray-400">Discord ID: ${user.id}</p>
@@ -1248,9 +1246,8 @@
           div.innerHTML = `
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-                  class="w-10 h-10 rounded-full" 
-                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
+                  class="w-10 h-10 rounded-full">
                 <div>
                   <p class="font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">ID: ${user.id}</p>

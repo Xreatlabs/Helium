@@ -326,39 +326,69 @@ module.exports.load = async function (app, db) {
         return res.json({ users: [] });
       }
 
-      // Get all users from database
-      const allKeys = await db.list();
-      const userKeys = allKeys.filter(key => key.startsWith('users-'));
+      // Query database directly for all user keys
+      const sqlite3 = require('better-sqlite3');
+      const dbFile = new sqlite3(settings.database);
+      const rows = dbFile.prepare("SELECT key FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      dbFile.close();
+      
+      const userIds = rows.map(row => row.key.replace('helium:users-', ''));
       
       const users = [];
-      for (const key of userKeys) {
-        const userData = await db.get(key);
-        if (userData) {
-          const userId = key.replace('users-', '');
-          // Search by username or Discord ID
-          if (userData.username?.toLowerCase().includes(query.toLowerCase()) || 
-              userId.includes(query)) {
+      for (const discordId of userIds) {
+        // Get Pterodactyl user ID
+        const pteroId = await db.get(`users-${discordId}`);
+        if (!pteroId) continue;
+
+        try {
+          // Fetch user info from Pterodactyl
+          const userResponse = await fetch(
+            `${settings.pterodactyl.domain}/api/application/users/${pteroId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${settings.pterodactyl.key}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+
+          if (!userResponse.ok) continue;
+          
+          const userData = await userResponse.json();
+          const user = userData.attributes;
+
+          // Search by username, email or Discord ID
+          if (user.username?.toLowerCase().includes(query.toLowerCase()) || 
+              user.email?.toLowerCase().includes(query.toLowerCase()) ||
+              discordId.includes(query)) {
             
             // Get coins and resources
-            const coins = await db.get(`coins-${userId}`) || 0;
-            const ram = await db.get(`ram-${userId}`) || 0;
-            const disk = await db.get(`disk-${userId}`) || 0;
-            const cpu = await db.get(`cpu-${userId}`) || 0;
-            const servers = await db.get(`servers-${userId}`) || 0;
+            const coins = await db.get(`coins-${discordId}`) || 0;
+            const ram = await db.get(`ram-${discordId}`) || 0;
+            const disk = await db.get(`disk-${discordId}`) || 0;
+            const cpu = await db.get(`cpu-${discordId}`) || 0;
+            const servers = await db.get(`servers-${discordId}`) || 0;
             
             users.push({
-              id: userId,
-              username: userData.username,
-              discriminator: userData.discriminator,
-              avatar: userData.avatar,
+              id: discordId,
+              username: user.username,
+              discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
+              avatar: 'default', // Pterodactyl doesn't store Discord avatars
+              email: user.email,
               coins,
               resources: { ram, disk, cpu, servers }
             });
+
+            if (users.length >= 10) break; // Limit to 10 results
           }
+        } catch (err) {
+          console.error(`Failed to fetch user ${discordId}:`, err);
+          continue;
         }
       }
       
-      res.json({ users: users.slice(0, 10) }); // Limit to 10 results
+      res.json({ users });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to search users" });
@@ -376,33 +406,65 @@ module.exports.load = async function (app, db) {
     }
 
     try {
-      const allKeys = await db.list();
-      const userKeys = allKeys.filter(key => key.startsWith('users-'));
+      // Query database directly for all user keys
+      const sqlite3 = require('better-sqlite3');
+      const dbFile = new sqlite3(settings.database);
+      const rows = dbFile.prepare("SELECT key FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      dbFile.close();
+      
+      const userIds = rows.map(row => row.key.replace('helium:users-', ''));
+      console.log(`Found ${userIds.length} users in database`);
       
       const users = [];
-      for (const key of userKeys) {
-        const userData = await db.get(key);
-        if (userData) {
-          const userId = key.replace('users-', '');
+      for (const discordId of userIds) {
+        // Get Pterodactyl user ID
+        const pteroId = await db.get(`users-${discordId}`);
+        if (!pteroId) continue;
+
+        try {
+          // Fetch user info from Pterodactyl
+          const userResponse = await fetch(
+            `${settings.pterodactyl.domain}/api/application/users/${pteroId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${settings.pterodactyl.key}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+
+          if (!userResponse.ok) {
+            console.log(`Failed to fetch user ${discordId} from Pterodactyl`);
+            continue;
+          }
+          
+          const userData = await userResponse.json();
+          const user = userData.attributes;
           
           // Get coins and resources
-          const coins = await db.get(`coins-${userId}`) || 0;
-          const ram = await db.get(`ram-${userId}`) || 0;
-          const disk = await db.get(`disk-${userId}`) || 0;
-          const cpu = await db.get(`cpu-${userId}`) || 0;
-          const servers = await db.get(`servers-${userId}`) || 0;
+          const coins = await db.get(`coins-${discordId}`) || 0;
+          const ram = await db.get(`ram-${discordId}`) || 0;
+          const disk = await db.get(`disk-${discordId}`) || 0;
+          const cpu = await db.get(`cpu-${discordId}`) || 0;
+          const servers = await db.get(`servers-${discordId}`) || 0;
           
           users.push({
-            id: userId,
-            username: userData.username,
-            discriminator: userData.discriminator,
-            avatar: userData.avatar,
+            id: discordId,
+            username: user.username,
+            discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
+            avatar: 'default', // Pterodactyl doesn't store Discord avatars
+            email: user.email,
             coins,
             resources: { ram, disk, cpu, servers }
           });
+        } catch (err) {
+          console.error(`Failed to fetch user ${discordId}:`, err);
+          continue;
         }
       }
       
+      console.log(`Returning ${users.length} users`);
       res.json({ users });
     } catch (err) {
       console.error(err);
