@@ -278,6 +278,38 @@ module.exports.load = async function (app, db) {
     }
   });
 
+  // Save node display name
+  app.post("/admin/nodes/save", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { nodeId, displayName } = req.body;
+      
+      const settingsPath = "./settings.json";
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      if (!currentSettings.api.client.nodes) {
+        currentSettings.api.client.nodes = {};
+      }
+      
+      currentSettings.api.client.nodes[nodeId] = {
+        displayName: displayName
+      };
+      
+      fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+      res.json({ success: true, message: "Node display name saved successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to save node display name" });
+    }
+  });
+
   app.get("/settings/update", async (req, res) => {
     // Check if the user is authorized to make changes
     if (!req.session.userinfo || !req.session.userinfo.id) {

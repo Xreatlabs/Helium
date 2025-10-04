@@ -223,8 +223,13 @@
 
                       <div id="location-config-form" class="mt-6 space-y-4 hidden">
                         <div>
-                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Display Name</label>
-                          <input type="text" id="location-display-name" readonly class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Original Name</label>
+                          <input type="text" id="location-original-name" readonly class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Display Name</label>
+                          <input type="text" id="location-display-name" placeholder="e.g., US East - New York" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Custom name shown to users (leave empty to use original)</p>
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assigned Package (optional)</label>
@@ -252,9 +257,9 @@
                     <!-- Nodes Section -->
                     <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
                       <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Configure Nodes</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">View and manage nodes from your Pterodactyl Panel</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Customize display names for your nodes</p>
                       
-                      <div id="nodes-list" class="space-y-2"></div>
+                      <div id="nodes-config-list" class="space-y-3"></div>
                     </div>
                   </div>
                 </div>
@@ -629,56 +634,92 @@
         console.log('Nodes data received:', data);
         nodesData = data.data || [];
         
-        // Display nodes list
-        const nodesList = document.getElementById('nodes-list');
-        if (nodesData.length === 0) {
-          nodesList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes found</p>';
-          return;
-        }
+        // Display nodes configuration list
+        displayNodesConfig();
+        console.log('Loaded', nodesData.length, 'nodes');
+      } catch (err) {
+        console.error('Failed to load nodes:', err);
+        document.getElementById('nodes-config-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nodes. Check console for details.</p>';
+      }
+    }
 
-        nodesList.innerHTML = '';
-        nodesData.forEach(node => {
-          const div = document.createElement('div');
-          div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
-          
-          const statusColor = node.attributes.maintenance_mode 
-            ? 'text-yellow-600 dark:text-yellow-400' 
-            : 'text-green-600 dark:text-green-400';
-          
-          const statusText = node.attributes.maintenance_mode ? 'Maintenance' : 'Online';
-          
-          div.innerHTML = `
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
+    // Display nodes with editable names
+    function displayNodesConfig() {
+      const nodesList = document.getElementById('nodes-config-list');
+      
+      if (nodesData.length === 0) {
+        nodesList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes found</p>';
+        return;
+      }
+
+      nodesList.innerHTML = '';
+      nodesData.forEach(node => {
+        const customName = currentSettings.nodes?.[node.attributes.id]?.displayName || '';
+        
+        const div = document.createElement('div');
+        div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
+        
+        const statusColor = node.attributes.maintenance_mode 
+          ? 'text-yellow-600 dark:text-yellow-400' 
+          : 'text-green-600 dark:text-green-400';
+        
+        const statusText = node.attributes.maintenance_mode ? 'Maintenance' : 'Online';
+        
+        div.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
                 <div class="flex items-center gap-2">
                   <h5 class="font-medium text-gray-900 dark:text-gray-100">${node.attributes.name}</h5>
                   <span class="text-xs ${statusColor} font-medium">${statusText}</span>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Node ID: ${node.attributes.id} | FQDN: ${node.attributes.fqdn}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Location ID: ${node.attributes.location_id}</p>
-                <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <span class="text-gray-500 dark:text-gray-400">RAM:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.memory / 1024).toFixed(1)} GB</span>
-                  </div>
-                  <div>
-                    <span class="text-gray-500 dark:text-gray-400">Disk:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.disk / 1024).toFixed(1)} GB</span>
-                  </div>
-                  <div>
-                    <span class="text-gray-500 dark:text-gray-400">Allocated RAM:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.allocated_resources?.memory || 0) / 1024} GB</span>
-                  </div>
-                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Node ID: ${node.attributes.id} | Location ID: ${node.attributes.location_id}</p>
               </div>
             </div>
-          `;
-          nodesList.appendChild(div);
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Display Name</label>
+              <div class="flex gap-2">
+                <input type="text" 
+                  id="node-name-${node.attributes.id}" 
+                  value="${customName}"
+                  placeholder="e.g., US-Node-1 Premium"
+                  class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                <button onclick="saveNodeName(${node.attributes.id})" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">Save</button>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty to show original name to users</p>
+            </div>
+          </div>
+        `;
+        nodesList.appendChild(div);
+      });
+    }
+
+    // Save node display name
+    async function saveNodeName(nodeId) {
+      const displayName = document.getElementById(`node-name-${nodeId}`).value.trim();
+      
+      console.log('Saving node display name:', nodeId, displayName);
+
+      try {
+        const response = await fetch('/admin/nodes/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ nodeId, displayName })
         });
-        console.log('Loaded', nodesData.length, 'nodes');
+
+        const result = await response.json();
+        if (result.success) {
+          alert('Node display name saved successfully!');
+          if (!currentSettings.nodes) currentSettings.nodes = {};
+          currentSettings.nodes[nodeId] = { displayName };
+        } else {
+          alert('Failed to save node display name: ' + (result.error || 'Unknown error'));
+        }
       } catch (err) {
-        console.error('Failed to load nodes:', err);
-        document.getElementById('nodes-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nodes. Check console for details.</p>';
+        console.error('Failed to save node display name:', err);
+        alert('Failed to save node display name');
       }
     }
 
@@ -694,10 +735,17 @@
       if (!selectedLocationData) return;
 
       document.getElementById('location-config-form').classList.remove('hidden');
-      document.getElementById('location-display-name').value = `${selectedLocationData.attributes.short} - ${selectedLocationData.attributes.long}`;
       
-      // Load existing package if configured
+      // Set original name (readonly)
+      document.getElementById('location-original-name').value = `${selectedLocationData.attributes.short} - ${selectedLocationData.attributes.long}`;
+      
+      // Load existing configuration
       const existingLocation = currentSettings.locations?.[locationId];
+      
+      // Set custom display name (editable)
+      document.getElementById('location-display-name').value = existingLocation?.name || '';
+      
+      // Set package
       document.getElementById('location-package').value = existingLocation?.package || '';
       
       // Populate node checkboxes
