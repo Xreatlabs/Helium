@@ -1,0 +1,626 @@
+<html <% if (isDarkMode) { %> class="dark" <% } %>>
+<head>
+  <title><%= settings.name %> - Admin Settings</title>
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
+  <script>
+    (function() {
+      try {
+        var ls = localStorage.getItem('darkMode');
+        var preferDark = (ls === 'true') || (ls === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (preferDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/tailwind.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .tab-button {
+      position: relative;
+    }
+    .tab-button.active {
+      color: #3b82f6;
+    }
+    .dark .tab-button.active {
+      color: #60a5fa;
+    }
+    .tab-button.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #3b82f6;
+    }
+    .dark .tab-button.active::after {
+      background: #60a5fa;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200" style="font-family: 'Inter', sans-serif;">
+  <div>
+    <%- include('../components/navigation') %>
+    <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
+      <main class="flex-1 pb-8">
+        <div class="py-6">
+          <%- include('../components/darkmode-toggle') %>
+          <%- include('../components/skeleton') %>
+          <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
+            
+            <!-- Header -->
+            <div class="lg:flex lg:items-center lg:justify-between rounded-3xl mb-8">
+              <div class="min-w-0 flex-1">
+                <div class="flex">
+                  <div class="relative">
+                    <div class="bg-gray-200 dark:bg-gray-800 rounded-2xl h-11 w-11 text-center flex text-gray-400 dark:text-gray-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mt-3 ml-3">
+                        <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="relative ml-4">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 sm:truncate tracking-tight">Complete Settings</h2>
+                    <p class="text-xs font-thin text-gray-500 dark:text-gray-400">Manage all application settings from here.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <% if (req.query.success) { %>
+            <div class="rounded-3xl bg-green-50 dark:bg-green-900/20 p-8 mb-5 border border-green-200 dark:border-green-800">
+              <div class="flex">
+                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+                <div class="ml-3">
+                  <h3 class="text-md font-medium text-green-800 dark:text-green-200">Settings updated successfully!</h3>
+                  <p class="mt-1 text-sm text-green-700 dark:text-green-300">Changes may require a server restart to take effect.</p>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <% if (req.query.error) { %>
+            <div class="rounded-3xl bg-red-50 dark:bg-red-900/20 p-8 mb-5 border border-red-200 dark:border-red-800">
+              <div class="flex">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                </svg>
+                <div class="ml-3">
+                  <h3 class="text-md font-medium text-red-800 dark:text-red-200">Error updating settings</h3>
+                  <p class="mt-1 text-sm text-red-700 dark:text-red-300"><%= req.query.error %></p>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Tabs Navigation -->
+            <div class="border-b border-gray-200 dark:border-gray-700 mb-8">
+              <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                <button onclick="showTab('general')" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  General
+                </button>
+                <button onclick="showTab('pterodactyl')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Pterodactyl
+                </button>
+                <button onclick="showTab('oauth')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  OAuth2
+                </button>
+                <button onclick="showTab('coins')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Coins & Store
+                </button>
+                <button onclick="showTab('linkvertise')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Linkvertise
+                </button>
+                <button onclick="showTab('afk')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  AFK System
+                </button>
+                <button onclick="showTab('security')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Security
+                </button>
+                <button onclick="showTab('logging')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Logging
+                </button>
+              </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-general" class="tab-content">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h3>
+                <form id="form-general" onsubmit="saveSettings(event, 'general')">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Site Name</label>
+                      <input type="text" name="name" value="<%= settings.name %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Version</label>
+                      <input type="text" name="version" value="<%= settings.version %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
+                      <input type="text" name="timezone" value="<%= settings.timezone %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website Port</label>
+                      <input type="number" name="website.port" value="<%= settings.website.port %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website Secret</label>
+                      <input type="text" name="website.secret" value="<%= settings.website.secret %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="testing" <%= settings.testing ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Testing Mode</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.accountSwitcher" <%= settings.api?.client?.accountSwitcher ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Account Switcher</label>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save General Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-pterodactyl" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Pterodactyl Panel Settings</h3>
+                <form id="form-pterodactyl" onsubmit="saveSettings(event, 'pterodactyl')">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Panel Domain</label>
+                      <input type="text" name="pterodactyl.domain" value="<%= settings.pterodactyl?.domain || '' %>" 
+                        placeholder="https://panel.example.com"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Full URL including https://</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                      <input type="password" name="pterodactyl.key" value="<%= settings.pterodactyl?.key || '' %>" 
+                        placeholder="ptla_..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Application API key from your Pterodactyl panel</p>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Pterodactyl Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-oauth" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">OAuth2 Settings (Discord)</h3>
+                <form id="form-oauth" onsubmit="saveSettings(event, 'oauth')">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client ID</label>
+                      <input type="text" name="api.client.oauth2.id" value="<%= settings.api?.client?.oauth2?.id || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client Secret</label>
+                      <input type="password" name="api.client.oauth2.secret" value="<%= settings.api?.client?.oauth2?.secret || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Callback URL</label>
+                      <input type="text" name="api.client.oauth2.link" value="<%= settings.api?.client?.oauth2?.link || '' %>" 
+                        placeholder="https://dashboard.example.com"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Callback Path</label>
+                      <input type="text" name="api.client.oauth2.callbackpath" value="<%= settings.api?.client?.oauth2?.callbackpath || '/callback' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.oauth2.prompt" <%= settings.api?.client?.oauth2?.prompt ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Force Consent Prompt</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.oauth2.ip.trust x-forwarded-for" <%= settings.api?.client?.oauth2?.ip?.['trust x-forwarded-for'] ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Trust X-Forwarded-For Header</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.oauth2.ip.duplicate check" <%= settings.api?.client?.oauth2?.ip?.['duplicate check'] ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Duplicate IP Check</label>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save OAuth2 Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-coins" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Coins & Store Settings</h3>
+                <form id="form-coins" onsubmit="saveSettings(event, 'coins')">
+                  <div class="space-y-6">
+                    <div class="flex items-center mb-4">
+                      <input type="checkbox" name="api.client.coins.enabled" <%= settings.api?.client?.coins?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Coins System</label>
+                    </div>
+                    <div class="flex items-center mb-6">
+                      <input type="checkbox" name="api.client.coins.store.enabled" <%= settings.api?.client?.coins?.store?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Resource Store</label>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">RAM Store Pricing</h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
+                          <input type="number" name="api.client.coins.store.ram.cost" value="<%= settings.api?.client?.coins?.store?.ram?.cost || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (MB)</label>
+                          <input type="number" name="api.client.coins.store.ram.per" value="<%= settings.api?.client?.coins?.store?.ram?.per || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Disk Store Pricing</h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
+                          <input type="number" name="api.client.coins.store.disk.cost" value="<%= settings.api?.client?.coins?.store?.disk?.cost || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (MB)</label>
+                          <input type="number" name="api.client.coins.store.disk.per" value="<%= settings.api?.client?.coins?.store?.disk?.per || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">CPU Store Pricing</h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
+                          <input type="number" name="api.client.coins.store.cpu.cost" value="<%= settings.api?.client?.coins?.store?.cpu?.cost || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (%)</label>
+                          <input type="number" name="api.client.coins.store.cpu.per" value="<%= settings.api?.client?.coins?.store?.cpu?.per || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Server Slots Pricing</h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
+                          <input type="number" name="api.client.coins.store.servers.cost" value="<%= settings.api?.client?.coins?.store?.servers?.cost || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (slots)</label>
+                          <input type="number" name="api.client.coins.store.servers.per" value="<%= settings.api?.client?.coins?.store?.servers?.per || 0 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Coins Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-linkvertise" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Linkvertise Settings</h3>
+                <form id="form-linkvertise" onsubmit="saveSettings(event, 'linkvertise')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.linkvertise.enabled" <%= settings.api?.client?.linkvertise?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Linkvertise</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User ID</label>
+                      <input type="text" name="api.client.linkvertise.userId" value="<%= settings.api?.client?.linkvertise?.userId || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
+                      <input type="text" name="api.client.linkvertise.baseUrl" value="<%= settings.api?.client?.linkvertise?.baseUrl || 'https://link-to.net' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Domain</label>
+                      <input type="text" name="api.client.linkvertise.domain" value="<%= settings.api?.client?.linkvertise?.domain || '' %>" 
+                        placeholder="https://dashboard.example.com"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reward Coins</label>
+                      <input type="number" name="api.client.linkvertise.rewardCoins" value="<%= settings.api?.client?.linkvertise?.rewardCoins || 10 %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Linkvertise Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-afk" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">AFK System Settings</h3>
+                <form id="form-afk" onsubmit="saveSettings(event, 'afk')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.afk.enabled" <%= settings.api?.afk?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable AFK System</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">WebSocket Path</label>
+                      <input type="text" name="api.afk.path" value="<%= settings.api?.afk?.path || 'ws' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Interval (seconds)</label>
+                      <input type="number" name="api.afk.every" value="<%= settings.api?.afk?.every || 60 %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How often to award coins (in seconds)</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Coins per Interval</label>
+                      <input type="number" name="api.afk.coins" value="<%= settings.api?.afk?.coins || 1 %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save AFK Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-security" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Anti-VPN Settings</h3>
+                <form id="form-antivpn" onsubmit="saveSettings(event, 'antivpn')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="antivpn.status" <%= settings.antivpn?.status ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Anti-VPN</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ProxyCheck.io API Key</label>
+                      <input type="password" name="antivpn.APIKey" value="<%= settings.antivpn?.APIKey || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Get your key from proxycheck.io</p>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Anti-VPN Settings
+                  </button>
+                </form>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Whitelist Settings</h3>
+                <form id="form-whitelist" onsubmit="saveSettings(event, 'whitelist')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="whitelist.status" <%= settings.whitelist?.status ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Whitelist Mode</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted User IDs</label>
+                      <textarea name="whitelist.users" rows="4" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="One Discord User ID per line"><%= settings.whitelist?.users?.join('\n') || '' %></textarea>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter Discord User IDs, one per line</p>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Whitelist Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-logging" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Webhook Logging Settings</h3>
+                <form id="form-logging" onsubmit="saveSettings(event, 'logging')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="logging.status" <%= settings.logging?.status ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Webhook Logging</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discord Webhook URL</label>
+                      <input type="text" name="logging.webhook" value="<%= settings.logging?.webhook || '' %>" 
+                        placeholder="https://discord.com/api/webhooks/..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">User Actions to Log</h4>
+                      <div class="space-y-2">
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.signup" <%= settings.logging?.actions?.user?.signup ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">User Signup</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.create server" <%= settings.logging?.actions?.user?.['create server'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Create Server</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.modify server" <%= settings.logging?.actions?.user?.['modify server'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Modify Server</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.buy ram" <%= settings.logging?.actions?.user?.['buy ram'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Buy RAM</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.buy cpu" <%= settings.logging?.actions?.user?.['buy cpu'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Buy CPU</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.buy disk" <%= settings.logging?.actions?.user?.['buy disk'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Buy Disk</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Admin Actions to Log</h4>
+                      <div class="space-y-2">
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.admin.set coins" <%= settings.logging?.actions?.admin?.['set coins'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set Coins</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.admin.add coins" <%= settings.logging?.actions?.admin?.['add coins'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Add Coins</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.admin.set resources" <%= settings.logging?.actions?.admin?.['set resources'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Set Resources</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.admin.remove account" <%= settings.logging?.actions?.admin?.['remove account'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Remove Account</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Logging Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+      <%- include('../components/footer') %>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+      });
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      
+      // Add active class to clicked button
+      event.target.classList.add('active');
+    }
+
+    async function saveSettings(event, category) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const updates = [];
+
+      for (let [key, value] of formData.entries()) {
+        // Handle checkboxes
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input && input.type === 'checkbox') {
+          value = input.checked;
+        }
+        
+        // Handle textareas with array data (like whitelist.users)
+        if (input && input.tagName === 'TEXTAREA' && key.includes('users')) {
+          value = value.split('\n').filter(line => line.trim()).map(line => line.trim());
+          value = JSON.stringify(value);
+        }
+
+        // Handle number inputs
+        if (input && input.type === 'number') {
+          value = parseInt(value) || 0;
+        }
+
+        updates.push({ key, value });
+      }
+
+      // Show loading state
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      try {
+        for (const update of updates) {
+          const response = await fetch(`/settings/update?setting=${encodeURIComponent(update.key)}&value=${encodeURIComponent(update.value)}`);
+          if (!response.ok) {
+            throw new Error(`Failed to update ${update.key}`);
+          }
+        }
+        
+        window.location.href = '/settings-full?success=1';
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        window.location.href = '/settings-full?error=' + encodeURIComponent(error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>

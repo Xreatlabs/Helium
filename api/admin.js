@@ -55,15 +55,37 @@ module.exports.load = async function (app, db) {
     }
 
     const setting = req.query.setting;
-    const value = req.query.value;
+    let value = req.query.value;
 
-    if (!setting || !value) {
+    if (!setting || value === undefined) {
       return res.status(400).send("Missing setting or value parameter");
     }
 
     try {
       const settingsPath = "./settings.json";
       const settings = JSON.parse(fs.readFileSync(settingsPath));
+
+      // Parse value to appropriate type
+      if (value === 'true') {
+        value = true;
+      } else if (value === 'false') {
+        value = false;
+      } else if (value === 'null') {
+        value = null;
+      } else if (!isNaN(value) && value !== '') {
+        // Try to parse as number if it looks like a number
+        const numValue = Number(value);
+        if (!isNaN(numValue)) {
+          value = numValue;
+        }
+      } else if (value.startsWith('[') || value.startsWith('{')) {
+        // Try to parse JSON for arrays and objects
+        try {
+          value = JSON.parse(value);
+        } catch (e) {
+          // Keep as string if JSON parsing fails
+        }
+      }
 
       // Split the setting path by dots and set the value
       const keys = setting.split(".");
