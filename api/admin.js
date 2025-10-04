@@ -310,6 +310,106 @@ module.exports.load = async function (app, db) {
     }
   });
 
+  // Search users
+  app.get("/admin/users/search", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const query = req.query.q || '';
+      if (query.length < 2) {
+        return res.json({ users: [] });
+      }
+
+      // Get all users from database
+      const allKeys = await db.list();
+      const userKeys = allKeys.filter(key => key.startsWith('users-'));
+      
+      const users = [];
+      for (const key of userKeys) {
+        const userData = await db.get(key);
+        if (userData) {
+          const userId = key.replace('users-', '');
+          // Search by username or Discord ID
+          if (userData.username?.toLowerCase().includes(query.toLowerCase()) || 
+              userId.includes(query)) {
+            
+            // Get coins and resources
+            const coins = await db.get(`coins-${userId}`) || 0;
+            const ram = await db.get(`ram-${userId}`) || 0;
+            const disk = await db.get(`disk-${userId}`) || 0;
+            const cpu = await db.get(`cpu-${userId}`) || 0;
+            const servers = await db.get(`servers-${userId}`) || 0;
+            
+            users.push({
+              id: userId,
+              username: userData.username,
+              discriminator: userData.discriminator,
+              avatar: userData.avatar,
+              coins,
+              resources: { ram, disk, cpu, servers }
+            });
+          }
+        }
+      }
+      
+      res.json({ users: users.slice(0, 10) }); // Limit to 10 results
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to search users" });
+    }
+  });
+
+  // Get all users
+  app.get("/admin/users/all", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const allKeys = await db.list();
+      const userKeys = allKeys.filter(key => key.startsWith('users-'));
+      
+      const users = [];
+      for (const key of userKeys) {
+        const userData = await db.get(key);
+        if (userData) {
+          const userId = key.replace('users-', '');
+          
+          // Get coins and resources
+          const coins = await db.get(`coins-${userId}`) || 0;
+          const ram = await db.get(`ram-${userId}`) || 0;
+          const disk = await db.get(`disk-${userId}`) || 0;
+          const cpu = await db.get(`cpu-${userId}`) || 0;
+          const servers = await db.get(`servers-${userId}`) || 0;
+          
+          users.push({
+            id: userId,
+            username: userData.username,
+            discriminator: userData.discriminator,
+            avatar: userData.avatar,
+            coins,
+            resources: { ram, disk, cpu, servers }
+          });
+        }
+      }
+      
+      res.json({ users });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   app.get("/settings/update", async (req, res) => {
     // Check if the user is authorized to make changes
     if (!req.session.userinfo || !req.session.userinfo.id) {

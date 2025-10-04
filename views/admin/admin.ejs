@@ -134,6 +134,9 @@
                   <button onclick="showConfigTab('nests')" id="tab-btn-nests" class="config-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                     Nests
                   </button>
+                  <button onclick="showConfigTab('users')" id="tab-btn-users" class="config-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                    Users
+                  </button>
                 </nav>
               </div>
 
@@ -274,6 +277,111 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Users Tab -->
+                <div id="config-tab-users" class="config-tab-content hidden">
+                  <div class="space-y-8">
+                    <!-- User Search Section -->
+                    <div>
+                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Manage Users</h3>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Search and manage user accounts, coins, and resources</p>
+                      
+                      <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search User</label>
+                        <div class="relative">
+                          <input type="text" 
+                            id="user-search-input" 
+                            placeholder="Type username or Discord ID..." 
+                            oninput="searchUsers()"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <div id="user-search-results" class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto"></div>
+                        </div>
+                      </div>
+
+                      <!-- Selected User Info -->
+                      <div id="selected-user-info" class="hidden">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg mb-6">
+                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Selected User</h4>
+                          <div id="user-details-display" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Manage Coins -->
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
+                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Manage Coins</h4>
+                          <div class="grid grid-cols-2 gap-4">
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add Coins</label>
+                              <input type="number" 
+                                id="add-coins-amount" 
+                                placeholder="100"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Set Coins</label>
+                              <input type="number" 
+                                id="set-coins-amount" 
+                                placeholder="500"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                          </div>
+                          <div class="flex gap-3 mt-4">
+                            <button onclick="addCoinsToUser()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                              Add Coins
+                            </button>
+                            <button onclick="setCoinsForUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                              Set Coins
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Manage Resources -->
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Add Resources</h4>
+                          <div class="grid grid-cols-2 gap-4">
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RAM (MB)</label>
+                              <input type="number" 
+                                id="add-ram-amount" 
+                                placeholder="1024"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
+                              <input type="number" 
+                                id="add-disk-amount" 
+                                placeholder="2048"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
+                              <input type="number" 
+                                id="add-cpu-amount" 
+                                placeholder="100"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server Slots</label>
+                              <input type="number" 
+                                id="add-servers-amount" 
+                                placeholder="1"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                          </div>
+                          <button onclick="addResourcesToUser()" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                            Add Resources
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- All Users List -->
+                    <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
+                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">All Users</h3>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">View and manage all registered users</p>
+                      <div id="all-users-list" class="space-y-2"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -389,6 +497,8 @@
         loadNodes();
       } else if (tabName === 'nests' && nestsData.length === 0) {
         loadNestsDisplay();
+      } else if (tabName === 'users') {
+        loadAllUsers();
       }
     }
 
@@ -924,6 +1034,269 @@
         document.getElementById('nests-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nests</p>';
       }
     }
+
+    // Global variable for selected user
+    let selectedUser = null;
+
+    // Search users with autocomplete
+    let searchTimeout = null;
+    async function searchUsers() {
+      const query = document.getElementById('user-search-input').value.trim();
+      const resultsDiv = document.getElementById('user-search-results');
+      
+      if (query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+      }
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async () => {
+        try {
+          const response = await fetch(`/admin/users/search?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+          
+          if (data.users && data.users.length > 0) {
+            resultsDiv.innerHTML = '';
+            data.users.forEach(user => {
+              const div = document.createElement('div');
+              div.className = 'px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-0';
+              div.onclick = () => selectUser(user);
+              div.innerHTML = `
+                <div class="flex items-center gap-3">
+                  <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
+                    class="w-10 h-10 rounded-full" 
+                    onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-gray-100">${user.username}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">ID: ${user.id}</p>
+                  </div>
+                </div>
+              `;
+              resultsDiv.appendChild(div);
+            });
+            resultsDiv.classList.remove('hidden');
+          } else {
+            resultsDiv.innerHTML = '<p class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No users found</p>';
+            resultsDiv.classList.remove('hidden');
+          }
+        } catch (err) {
+          console.error('Failed to search users:', err);
+        }
+      }, 300);
+    }
+
+    // Select user
+    function selectUser(user) {
+      selectedUser = user;
+      document.getElementById('user-search-results').classList.add('hidden');
+      document.getElementById('user-search-input').value = user.username;
+      document.getElementById('selected-user-info').classList.remove('hidden');
+      
+      const detailsDiv = document.getElementById('user-details-display');
+      detailsDiv.innerHTML = `
+        <div class="flex items-center gap-3 mb-4">
+          <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
+            class="w-16 h-16 rounded-full" 
+            onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          <div>
+            <p class="text-lg font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Discord ID: ${user.id}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.coins}</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.ram} MB</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.disk} MB</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.cpu}%</p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Servers</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.servers}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Add coins to user
+    async function addCoinsToUser() {
+      if (!selectedUser) {
+        alert('Please select a user first');
+        return;
+      }
+      
+      const amount = parseInt(document.getElementById('add-coins-amount').value);
+      if (isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/addcoins?id=${selectedUser.id}&coins=${amount}`);
+        if (response.redirected || response.ok) {
+          alert(`Successfully added ${amount} coins to ${selectedUser.username}`);
+          document.getElementById('add-coins-amount').value = '';
+          // Refresh user data
+          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
+          const data = await searchResponse.json();
+          if (data.users && data.users.length > 0) {
+            selectUser(data.users[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to add coins:', err);
+        alert('Failed to add coins');
+      }
+    }
+
+    // Set coins for user
+    async function setCoinsForUser() {
+      if (!selectedUser) {
+        alert('Please select a user first');
+        return;
+      }
+      
+      const amount = parseInt(document.getElementById('set-coins-amount').value);
+      if (isNaN(amount) || amount < 0) {
+        alert('Please enter a valid amount');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/setcoins?id=${selectedUser.id}&coins=${amount}`);
+        if (response.redirected || response.ok) {
+          alert(`Successfully set coins to ${amount} for ${selectedUser.username}`);
+          document.getElementById('set-coins-amount').value = '';
+          // Refresh user data
+          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
+          const data = await searchResponse.json();
+          if (data.users && data.users.length > 0) {
+            selectUser(data.users[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to set coins:', err);
+        alert('Failed to set coins');
+      }
+    }
+
+    // Add resources to user
+    async function addResourcesToUser() {
+      if (!selectedUser) {
+        alert('Please select a user first');
+        return;
+      }
+      
+      const ram = parseInt(document.getElementById('add-ram-amount').value) || 0;
+      const disk = parseInt(document.getElementById('add-disk-amount').value) || 0;
+      const cpu = parseInt(document.getElementById('add-cpu-amount').value) || 0;
+      const servers = parseInt(document.getElementById('add-servers-amount').value) || 0;
+
+      if (ram === 0 && disk === 0 && cpu === 0 && servers === 0) {
+        alert('Please enter at least one resource amount');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/addresources?id=${selectedUser.id}&ram=${ram}&disk=${disk}&cpu=${cpu}&servers=${servers}`);
+        if (response.redirected || response.ok) {
+          alert(`Successfully added resources to ${selectedUser.username}`);
+          document.getElementById('add-ram-amount').value = '';
+          document.getElementById('add-disk-amount').value = '';
+          document.getElementById('add-cpu-amount').value = '';
+          document.getElementById('add-servers-amount').value = '';
+          // Refresh user data
+          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
+          const data = await searchResponse.json();
+          if (data.users && data.users.length > 0) {
+            selectUser(data.users[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to add resources:', err);
+        alert('Failed to add resources');
+      }
+    }
+
+    // Load all users
+    async function loadAllUsers() {
+      try {
+        console.log('Loading all users...');
+        const response = await fetch('/admin/users/all');
+        const data = await response.json();
+        
+        const usersList = document.getElementById('all-users-list');
+        if (!data.users || data.users.length === 0) {
+          usersList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No users found</p>';
+          return;
+        }
+
+        usersList.innerHTML = '';
+        data.users.forEach(user => {
+          const div = document.createElement('div');
+          div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
+                  class="w-10 h-10 rounded-full" 
+                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">ID: ${user.id}</p>
+                </div>
+              </div>
+              <div class="flex gap-4 text-sm">
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.coins}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.ram}MB</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.disk}MB</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.cpu}%</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Servers</p>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.servers}</p>
+                </div>
+              </div>
+            </div>
+          `;
+          usersList.appendChild(div);
+        });
+        console.log('Loaded', data.users.length, 'users');
+      } catch (err) {
+        console.error('Failed to load users:', err);
+        document.getElementById('all-users-list').innerHTML = '<p class="text-sm text-red-500">Failed to load users</p>';
+      }
+    }
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(event) {
+      const searchInput = document.getElementById('user-search-input');
+      const searchResults = document.getElementById('user-search-results');
+      if (searchInput && searchResults && !searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+        searchResults.classList.add('hidden');
+      }
+    });
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
