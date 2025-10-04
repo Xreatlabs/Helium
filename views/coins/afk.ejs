@@ -1,6 +1,6 @@
 <html<% if (isDarkMode) { %> class="dark"<% } %>>
 <head>
-  <title><%= settings.name %></title>
+  <title><%= settings.name %> - AFK Page</title>
   <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
   <script>
     (function() {
@@ -14,11 +14,27 @@
   </script>
   <link rel="stylesheet" href="../assets/tailwind.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/@popperjs/core@2.10.1/dist/umd/popper.min.js"></script>
 
   <!-- Inter font -->
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes slide-up {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .coin-notification {
+      animation: slide-up 0.5s ease-out;
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200" style="font-family: 'Inter', sans-serif;">
@@ -28,38 +44,323 @@
       <main class="flex-1 pb-8">
         <div class="py-6">
           <%- include('../components/darkmode-toggle') %>
-        <% /* Skeleton loader, lasts about 0.3s to let the page content load */ %>
-        <%- include('../components/skeleton') %>
-        <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
-          <div class="lg:flex lg:items-center lg:justify-between rounded-3xl mb-8">
-            <div class="min-w-0 flex-1">
-              <div class="flex">
-                <div class="relative">
-                  <div class="bg-gray-200 rounded-2xl h-11 w-11 text-center flex text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mt-3 ml-3">
-                      <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z" />
-                    </svg>
-                  </div>
+          <%- include('../components/skeleton') %>
+          <div class="hidden max-w-5xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
+            
+            <!-- Header -->
+            <div class="mb-8">
+              <div class="flex items-center gap-4">
+                <div class="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-3 shadow-lg animate-pulse-slow">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white">
+                    <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z" />
+                  </svg>
                 </div>
-                <div class="relative ml-4">
-                  <h2 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight">AFK Page</h2>
-                  <p class="text-xs font-thin text-gray-500">You'll automatically get coins for leaving this page open.</p>
+                <div>
+                  <h1 class="text-3xl font-bold text-gray-900 dark:text-white">AFK Earnings</h1>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Earn coins automatically while you're here</p>
                 </div>
               </div>
             </div>
-          </div>
-          <p class="text-gray-500 text-sm">Countdown: <span id="arciotimer"></span> seconds</p>
-          <p class="text-gray-500 text-sm">Earnings: <span id="arciogainedcoins">0</span> coins</p>
-          <p class="text-gray-500 text-sm">Duration: <span id="sessionDuration">-</span></p>
 
-          <script>
-            <%- arcioafktext %>
-          </script>
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <!-- Active Users Card -->
+              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="bg-blue-500 dark:bg-blue-600 rounded-xl p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-white">
+                      <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wide">Active Users</p>
+                    <p id="activeUsers" class="text-2xl font-bold text-blue-900 dark:text-blue-100">--</p>
+                  </div>
+                </div>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">More users = higher multiplier!</p>
+              </div>
+
+              <!-- Multiplier Card -->
+              <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-white">
+                      <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 9a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V15a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V9z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-purple-700 dark:text-purple-400 uppercase tracking-wide">Multiplier</p>
+                    <p id="multiplier" class="text-2xl font-bold text-purple-900 dark:text-purple-100">x1.0</p>
+                  </div>
+                </div>
+                <div id="multiplier-bar" class="mt-2 h-2 bg-purple-200 dark:bg-purple-900/50 rounded-full overflow-hidden">
+                  <div id="multiplier-progress" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Earnings Card -->
+              <div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="bg-yellow-500 dark:bg-yellow-600 rounded-xl p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-white">
+                      <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+                      <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 01-.921-.421l-.879-.66a.75.75 0 00-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 001.5 0v-.81a4.124 4.124 0 001.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 00-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 00.933-1.175l-.415-.33a3.836 3.836 0 00-1.719-.755V6z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-yellow-700 dark:text-yellow-400 uppercase tracking-wide">Session Earnings</p>
+                    <p id="sessionEarnings" class="text-2xl font-bold text-yellow-900 dark:text-yellow-100">0</p>
+                  </div>
+                </div>
+                <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2">Total coins earned this session</p>
+              </div>
+            </div>
+
+            <!-- Main AFK Display -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-lg mb-6">
+              <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4 animate-pulse-slow shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-white">
+                    <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+                    <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 01-.921-.421l-.879-.66a.75.75 0 00-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 001.5 0v-.81a4.124 4.124 0 001.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 00-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 00.933-1.175l-.415-.33a3.836 3.836 0 00-1.719-.755V6z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">You're earning coins!</h2>
+                <p class="text-gray-600 dark:text-gray-400">Keep this tab open to continue earning</p>
+              </div>
+
+              <!-- Timer Display -->
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Next reward in</span>
+                  <span id="countdown" class="text-3xl font-bold text-gray-900 dark:text-white">--</span>
+                </div>
+                <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Earnings Info -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Base Rate</p>
+                  <p id="baseRate" class="text-xl font-bold text-gray-900 dark:text-white">-- coins/min</p>
+                </div>
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Current Rate</p>
+                  <p id="currentRate" class="text-xl font-bold text-gray-900 dark:text-white">-- coins/min</p>
+                </div>
+              </div>
+
+              <!-- Session Duration -->
+              <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Session Duration: <span id="sessionDuration" class="font-semibold text-gray-700 dark:text-gray-300">00:00:00</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Multiplier Tiers Info -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-6">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-indigo-600 dark:text-indigo-400">
+                  <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+                </svg>
+                Multiplier Tiers
+              </h3>
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">1-5 users</p>
+                  <p class="text-lg font-bold text-gray-900 dark:text-white">x1.0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-indigo-200 dark:border-indigo-700 text-center">
+                  <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-1">6-10 users</p>
+                  <p class="text-lg font-bold text-indigo-900 dark:text-indigo-100">x1.25</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-700 text-center">
+                  <p class="text-xs text-purple-600 dark:text-purple-400 mb-1">11-20 users</p>
+                  <p class="text-lg font-bold text-purple-900 dark:text-purple-100">x1.5</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-pink-200 dark:border-pink-700 text-center">
+                  <p class="text-xs text-pink-600 dark:text-pink-400 mb-1">21-50 users</p>
+                  <p class="text-lg font-bold text-pink-900 dark:text-pink-100">x2.0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-red-200 dark:border-red-700 text-center">
+                  <p class="text-xs text-red-600 dark:text-red-400 mb-1">51+ users</p>
+                  <p class="text-lg font-bold text-red-900 dark:text-red-100">x2.5</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating Notifications Container -->
+            <div id="notifications" class="fixed bottom-8 right-8 space-y-2 z-50"></div>
+
+          </div>
         </div>
-      </div>
-    </main>
-    <%- include('../components/footer') %>
+      </main>
+      <%- include('../components/footer') %>
+    </div>
   </div>
-  </div>
+
+  <script>
+    <%- arcioafktext %>
+    
+    // AFK System Variables
+    let ws;
+    let sessionStartTime = Date.now();
+    let totalEarned = 0;
+    let countdownInterval;
+    let durationInterval;
+    let currentMultiplier = 1.0;
+    let baseCoinsPerInterval = 1;
+    let intervalSeconds = 60;
+
+    // Initialize WebSocket
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}/<%= settings.api.afk.path %>`);
+
+      ws.onopen = () => {
+        console.log('AFK WebSocket connected');
+        startDurationTimer();
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'stats') {
+          updateStats(data);
+        } else if (data.type === 'coins') {
+          handleCoinEarned(data);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        showNotification('Connection error', 'error');
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+      };
+    }
+
+    // Update stats display
+    function updateStats(data) {
+      document.getElementById('activeUsers').textContent = data.activeUsers;
+      document.getElementById('multiplier').textContent = `x${data.multiplier.toFixed(2)}`;
+      
+      currentMultiplier = data.multiplier;
+      baseCoinsPerInterval = data.baseCoins;
+      intervalSeconds = data.interval;
+      
+      // Update rates
+      const baseRate = (baseCoinsPerInterval / intervalSeconds * 60).toFixed(2);
+      const currentRate = (baseCoinsPerInterval * data.multiplier / intervalSeconds * 60).toFixed(2);
+      document.getElementById('baseRate').textContent = `${baseRate} coins/min`;
+      document.getElementById('currentRate').textContent = `${currentRate} coins/min`;
+      
+      // Update multiplier progress bar
+      const maxMultiplier = 2.5;
+      const progress = ((data.multiplier - 1.0) / (maxMultiplier - 1.0)) * 100;
+      document.getElementById('multiplier-progress').style.width = `${progress}%`;
+      
+      // Start countdown if not already running
+      if (!countdownInterval) {
+        startCountdown(intervalSeconds);
+      }
+    }
+
+    // Handle coin earned
+    function handleCoinEarned(data) {
+      totalEarned += data.earned;
+      document.getElementById('sessionEarnings').textContent = totalEarned.toFixed(2);
+      
+      // Update stats
+      document.getElementById('activeUsers').textContent = data.activeUsers;
+      document.getElementById('multiplier').textContent = `x${data.multiplier.toFixed(2)}`;
+      
+      // Show notification
+      showNotification(`+${data.earned.toFixed(2)} coins earned! (x${data.multiplier.toFixed(2)} multiplier)`, 'success');
+      
+      // Restart countdown
+      startCountdown(intervalSeconds);
+    }
+
+    // Start countdown timer
+    function startCountdown(seconds) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      let remaining = seconds;
+      const totalSeconds = seconds;
+      
+      const updateTimer = () => {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        document.getElementById('countdown').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        // Update progress bar
+        const progress = ((totalSeconds - remaining) / totalSeconds) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        
+        remaining--;
+        
+        if (remaining < 0) {
+          remaining = totalSeconds;
+          document.getElementById('progress-bar').style.width = '0%';
+        }
+      };
+      
+      updateTimer();
+      countdownInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Start session duration timer
+    function startDurationTimer() {
+      durationInterval = setInterval(() => {
+        const elapsed = Date.now() - sessionStartTime;
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        
+        document.getElementById('sessionDuration').textContent = 
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    // Show floating notification
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `coin-notification px-6 py-4 rounded-xl shadow-2xl ${
+        type === 'success' 
+          ? 'bg-gradient-to-r from-emerald-500 to-green-500' 
+          : 'bg-gradient-to-r from-red-500 to-pink-500'
+      } text-white font-semibold`;
+      notification.textContent = message;
+      
+      document.getElementById('notifications').appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        notification.style.transition = 'all 0.5s ease-out';
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+    }
+
+    // Initialize when content is shown
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        initWebSocket();
+      }, 500);
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (ws) ws.close();
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (durationInterval) clearInterval(durationInterval);
+    });
+  </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <html<% if (isDarkMode) { %> class="dark"<% } %>>
 <head>
-  <title><%= settings.name %></title>
+  <title><%= settings.name %> - Transfer Coins</title>
   <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
   <script>
     (function() {
@@ -14,7 +14,6 @@
   </script>
   <link rel="stylesheet" href="../assets/tailwind.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/@popperjs/core@2.10.1/dist/umd/popper.min.js"></script>
 
   <!-- Inter font -->
   <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -23,99 +22,187 @@
 
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200" style="font-family: 'Inter', sans-serif;">
   <div>
-  <%
-    let ram = 0;
-    let disk = 0;
-    let cpu = 0;
-    let servers = pterodactyl.relationships.servers.data.length;
-    for (let i = 0, len = pterodactyl.relationships.servers.data.length; i < len; i++) {
-      ram = ram + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.memory == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.memory : 0);
-      disk = disk + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.disk == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.disk : 0);
-      cpu = cpu + (typeof pterodactyl.relationships.servers.data[i].attributes.limits.cpu == "number" ? pterodactyl.relationships.servers.data[i].attributes.limits.cpu : 0);
-  }
-  %>
   <%- include('../components/navigation') %>
   <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
     <main class="flex-1 pb-8">
       <div class="py-6">
         <%- include('../components/darkmode-toggle') %>
-        <% /* Skeleton loader, lasts about 0.3s to let the page content load */ %>
         <%- include('../components/skeleton') %>
-        <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
+        <div class="hidden max-w-4xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
+          <!-- Success Message -->
           <% if (req.query.err == "SUCCESS") { %>
-          <div class="rounded-3xl bg-white dark:bg-gray-800 p-8 mb-5">
-            <div class="flex">
+          <div class="rounded-2xl bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-800 p-6 mb-6">
+            <div class="flex items-start gap-3">
               <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
                 </svg>
               </div>
-              <div class="ml-3">
-                <h3 class="text-md font-medium tracking-tight text-gray-700">Transfer complete</h3>
-                <div class="mt-1 text-sm text-gray-500">
-                  <p>The requested user has now received the coins.</p>
-                </div>
+              <div class="flex-1">
+                <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Transfer Complete!</h3>
+                <p class="mt-1 text-sm text-emerald-700 dark:text-emerald-400">The requested user has now received the coins.</p>
               </div>
             </div>
           </div>
           <% } %>
-          <div class="lg:flex lg:items-center lg:justify-between rounded-3xl mb-8">
-            <div class="min-w-0 flex-1">
-              <div class="flex">
-                <div class="relative">
-                  <div class="bg-gray-200 rounded-2xl h-11 w-11 text-center flex text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mt-3 ml-3">
-                      <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="relative ml-4">
-                  <h2 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight">Transfer</h2>
-                  <p class="text-xs font-thin text-gray-500">Send your coins to another user.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <% /* Error message implemented again */ %>
-          <% if (req.query.err) { %>
-          <div class="rounded-3xl bg-gray-200 p-8 mb-5">
-            <div class="flex">
+
+          <!-- Error Message -->
+          <% if (req.query.err && req.query.err !== "SUCCESS") { %>
+          <div class="rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 mb-6">
+            <div class="flex items-start gap-3">
               <div class="flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
               </div>
-              <div class="ml-3">
-                <h3 class="text-md font-medium tracking-tight text-gray-700">An error was encountered</h3>
-                <div class="mt-1 text-sm text-gray-500">
-                  <p>Error code: <code><%= req.query.err %></code></p>
-                </div>
+              <div class="flex-1">
+                <h3 class="text-sm font-semibold text-red-800 dark:text-red-300">Error Encountered</h3>
+                <p class="mt-1 text-sm text-red-700 dark:text-red-400">Error code: <code class="bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded font-mono text-xs"><%= req.query.err %></code></p>
               </div>
             </div>
           </div>
           <% } %>
-          <div class="card mt-5">
-            <div class="card-body">
-              <% /* User ID */ %>
-              <label for="ram" class="text-sm font-medium text-gray-600">User ID</label>
-              <input type="text" class="mb-4 mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="dc" placeholder="00000000000000000">
 
-              <% /* Amount */ %>
-              <label for="disk" class="text-sm font-medium text-gray-600">Amount</label>
-              <input type="text" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="amount" placeholder="<%= coins.toFixed(2) %>">
-
-              <% /* Submit form */ %>
-              <a href="javascript:submitForm()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 px-8 py-2 text-sm font-medium text-gray-600 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                Transfer
-              </a>
-              <br>
+          <!-- Header -->
+          <div class="mb-8">
+            <div class="flex items-center gap-4">
+              <div class="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-3 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white">
+                  <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                </svg>
+              </div>
+              <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Transfer Coins</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Send coins to another user instantly</p>
+              </div>
             </div>
+          </div>
+
+          <!-- Balance Card -->
+          <div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6 mb-6">
+            <div class="flex items-center gap-3">
+              <div class="bg-yellow-500 dark:bg-yellow-600 rounded-xl p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-white">
+                  <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+                  <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 01-.921-.421l-.879-.66a.75.75 0 00-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 001.5 0v-.81a4.124 4.124 0 001.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 00-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 00.933-1.175l-.415-.33a3.836 3.836 0 00-1.719-.755V6z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-yellow-700 dark:text-yellow-400 uppercase tracking-wide">Your Balance</p>
+                <p class="text-2xl font-bold text-yellow-900 dark:text-yellow-100"><%= coins.toFixed(2) %> coins</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transfer Form -->
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-lg">
+            <form onsubmit="submitForm(event)" class="space-y-6">
+              <!-- User ID Input -->
+              <div>
+                <label for="dc" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Recipient User ID
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400">
+                      <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <input 
+                    type="text" 
+                    id="dc" 
+                    placeholder="Enter Discord User ID"
+                    class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  >
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Enter the Discord User ID of the recipient</p>
+              </div>
+
+              <!-- Amount Input -->
+              <div>
+                <label for="amount" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Amount
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400">
+                      <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 01-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004zM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 01-.921.42z" />
+                      <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.816a3.836 3.836 0 00-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 01-.921-.421l-.879-.66a.75.75 0 00-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 001.5 0v-.81a4.124 4.124 0 001.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 00-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 00.933-1.175l-.415-.33a3.836 3.836 0 00-1.719-.755V6z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <input 
+                    type="number" 
+                    id="amount" 
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0.01"
+                    max="<%= coins %>"
+                    class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  >
+                </div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Maximum: <%= coins.toFixed(2) %> coins</p>
+              </div>
+
+              <!-- Quick Amount Buttons -->
+              <div class="flex gap-2">
+                <button type="button" onclick="setAmount(25)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                  25%
+                </button>
+                <button type="button" onclick="setAmount(50)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                  50%
+                </button>
+                <button type="button" onclick="setAmount(75)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                  75%
+                </button>
+                <button type="button" onclick="setAmount(100)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                  Max
+                </button>
+              </div>
+
+              <!-- Submit Button -->
+              <button 
+                type="submit"
+                class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                  <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                </svg>
+                Transfer Coins
+              </button>
+            </form>
+
             <script>
-              async function submitForm() {
-                let id = encodeURIComponent(document.getElementById("dc").value);
-                let coins = encodeURIComponent(document.getElementById("amount").value);
+              const maxCoins = <%= coins %>;
+              
+              function setAmount(percentage) {
+                const amount = (maxCoins * percentage / 100).toFixed(2);
+                document.getElementById('amount').value = amount;
+              }
+
+              function submitForm(event) {
+                event.preventDefault();
+                const id = encodeURIComponent(document.getElementById("dc").value);
+                const coins = encodeURIComponent(document.getElementById("amount").value);
+                
+                if (!id || !coins) {
+                  alert('Please fill in all fields');
+                  return;
+                }
+                
+                if (parseFloat(coins) > maxCoins) {
+                  alert('Amount exceeds your balance');
+                  return;
+                }
+                
+                if (parseFloat(coins) <= 0) {
+                  alert('Amount must be greater than 0');
+                  return;
+                }
+                
                 document.location.href = `/giftcoins?id=${id}&coins=${coins}`;
-              };
+              }
             </script>
           </div>
         </div>
