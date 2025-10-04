@@ -60,12 +60,14 @@
     "/dashboard",
     "/servers/new",
     "/edit",
+    "/profile",
     "/security",
-    "/servers",
+    "/transfer",
+    "/afk",
     "/store",
     "/linkvertise",
-    "/coins",
-    "/afk"
+    "/servers",
+    "/accounts"
   ],
   "mustbeadmin": [
     "/admin",
