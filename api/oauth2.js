@@ -229,13 +229,31 @@ module.exports.load = function (app, db) {
         username: discordUser.username,
         discriminator: discordUser.discriminator,
         avatar: discordUser.avatar,
-        email: discordUser.email
+        email: discordUser.email,
+        global_name: discordUser.global_name || discordUser.username
       };
       req.session.pterodactylId = pterodactylUser.id;
       
       // Check if user is root admin and store in database
       const isRootAdmin = pterodactylUser.root_admin === true;
       await db.set(`admin-${discordUser.id}`, isRootAdmin ? 1 : 0);
+      
+      // Store user data for leaderboard
+      await db.set(`users-${discordUser.id}`, {
+        id: discordUser.id,
+        username: discordUser.username,
+        discriminator: discordUser.discriminator || '0',
+        global_name: discordUser.global_name || discordUser.username,
+        avatar: discordUser.avatar,
+        email: discordUser.email
+      });
+      
+      // Add user to users list if not already there
+      let usersList = await db.get('users') || [];
+      if (!usersList.includes(discordUser.id)) {
+        usersList.push(discordUser.id);
+        await db.set('users', usersList);
+      }
       
       // Structure pterodactyl data to match template expectations
       req.session.pterodactyl = {

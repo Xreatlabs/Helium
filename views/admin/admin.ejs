@@ -19,45 +19,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
-    // Fetch the latest version from the site
-    fetch('https://atqr.pages.dev/heliactyl.json')
-      .then(response => response.json())
-      .then(data => {
-        const currentVersion = '<%= settings.version %>';
-        const latestVersion = data.latest;
+    // Show version information and make it clickable to go to Helium GitHub
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentVersion = '<%= settings.version %>';
+      const versionSpan = document.getElementById('currentVersion');
+      const versionStatusSpan = document.getElementById('versionStatus');
 
-        // Update the version information in the content
-        const versionSpan = document.getElementById('currentVersion');
-        const versionStatusSpan = document.getElementById('versionStatus');
+      if (versionSpan) versionSpan.textContent = 'v' + currentVersion;
+      if (versionStatusSpan) {
+        versionStatusSpan.innerHTML = 'Click to view on GitHub';
+        versionStatusSpan.style.cursor = 'pointer';
+      }
+      
+      // Make the whole card clickable to go to GitHub
+      const versionCard = versionSpan?.closest('.bg-gradient-to-br');
+      if (versionCard) {
+        versionCard.style.cursor = 'pointer';
+        versionCard.title = 'View Helium on GitHub';
+        versionCard.onclick = () => {
+          window.open('https://github.com/xreatlabs/helium', '_blank');
+        };
+      }
 
-        versionSpan.textContent = 'v' + currentVersion;
-
-        if (currentVersion === latestVersion) {
-          versionStatusSpan.innerHTML = '✓ Latest version';
-        } else {
-          versionStatusSpan.innerHTML = `⚠ Update available: v${latestVersion}`;
-          // Make the whole card clickable to update
-          const versionCard = versionSpan.closest('.bg-gradient-to-br');
-          if (versionCard) {
-            versionCard.style.cursor = 'pointer';
-            versionCard.onclick = () => {
-              window.open('https://github.com/heliactyloss/heliactyl/releases/tag/' + latestVersion, '_blank');
-            };
-          }
-        }
-
-        // Show the content
-        document.getElementById('content').classList.remove('hidden');
-      })
-      .catch(error => {
-        console.error('Error fetching latest version:', error);
-        // Show the content even if the fetch fails
-        const versionSpan = document.getElementById('currentVersion');
-        const versionStatusSpan = document.getElementById('versionStatus');
-        if (versionSpan) versionSpan.textContent = 'v<%= settings.version %>';
-        if (versionStatusSpan) versionStatusSpan.textContent = 'Unable to check updates';
-        document.getElementById('content').classList.remove('hidden');
-      });
+      // Show the content
+      document.getElementById('content')?.classList.remove('hidden');
+    });
   </script>
 </head>
 

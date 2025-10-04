@@ -71,6 +71,11 @@ module.exports.load = async function(app, db) {
         usercoins = usercoins + coinsToAdd;
         await db.set("coins-" + req.session.userinfo.id, usercoins);
         
+        // Track AFK time (in minutes)
+        let afkTime = await db.get("afk-time-" + req.session.userinfo.id) || 0;
+        afkTime = afkTime + (newsettings.api.afk.every / 60); // Convert seconds to minutes
+        await db.set("afk-time-" + req.session.userinfo.id, afkTime);
+        
         // Trigger webhook event for coins added
         const { onCoinsAdded } = require('../lib/integrations');
         onCoinsAdded(
