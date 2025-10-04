@@ -203,8 +203,6 @@
   </div>
 
   <script>
-    <%- arcioafktext %>
-    
     // AFK System Variables
     let ws;
     let sessionStartTime = Date.now();
@@ -212,37 +210,58 @@
     let countdownInterval;
     let durationInterval;
     let currentMultiplier = 1.0;
-    let baseCoinsPerInterval = 1;
-    let intervalSeconds = 60;
+    let baseCoinsPerInterval = <%= settings.api.afk.coins %>;
+    let intervalSeconds = <%= settings.api.afk.every %>;
 
     // Initialize WebSocket
     function initWebSocket() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${protocol}//${window.location.host}/<%= settings.api.afk.path %>`);
-
-      ws.onopen = () => {
-        console.log('AFK WebSocket connected');
-        startDurationTimer();
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/<%= settings.api.afk.path %>`;
+        console.log('Connecting to WebSocket:', wsUrl);
         
-        if (data.type === 'stats') {
-          updateStats(data);
-        } else if (data.type === 'coins') {
-          handleCoinEarned(data);
-        }
-      };
+        ws = new WebSocket(wsUrl);
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        showNotification('Connection error', 'error');
-      };
+        ws.onopen = () => {
+          console.log('AFK WebSocket connected');
+          showNotification('Connected! You are now earning coins', 'success');
+          startDurationTimer();
+        };
 
-      ws.onclose = () => {
-        console.log('WebSocket closed');
-      };
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Received data:', data);
+            
+            if (data.type === 'stats') {
+              updateStats(data);
+            } else if (data.type === 'coins') {
+              handleCoinEarned(data);
+            }
+          } catch (err) {
+            console.error('Error parsing message:', err);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          showNotification('Connection error - trying to reconnect...', 'error');
+          // Try to reconnect after 5 seconds
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.CLOSED) {
+              initWebSocket();
+            }
+          }, 5000);
+        };
+
+        ws.onclose = () => {
+          console.log('WebSocket closed');
+          showNotification('Connection closed', 'error');
+        };
+      } catch (err) {
+        console.error('Error initializing WebSocket:', err);
+        showNotification('Failed to connect', 'error');
+      }
     }
 
     // Update stats display
@@ -348,19 +367,41 @@
       }, 3000);
     }
 
-    // Initialize when content is shown
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize WebSocket immediately when page loads
+    window.addEventListener('load', () => {
+      // Wait for skeleton to hide
+      const checkContent = setInterval(() => {
+        const content = document.getElementById('content');
+        if (content && !content.classList.contains('hidden')) {
+          clearInterval(checkContent);
+          initWebSocket();
+        }
+      }, 100);
+      
+      // Timeout after 5 seconds if skeleton doesn't hide
       setTimeout(() => {
-        initWebSocket();
-      }, 500);
+        clearInterval(checkContent);
+        const content = document.getElementById('content');
+        if (content) {
+          content.classList.remove('hidden');
+          initWebSocket();
+        }
+      }, 5000);
     });
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
-      if (ws) ws.close();
+      if (ws) {
+        ws.close();
+      }
       if (countdownInterval) clearInterval(countdownInterval);
       if (durationInterval) clearInterval(durationInterval);
     });
+    
+    // Keep page alive - prevent sleep
+    let keepAliveInterval = setInterval(() => {
+      document.title = '<%= settings.name %> - AFK Page';
+    }, 30000);
   </script>
 </body>
 </html>

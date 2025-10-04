@@ -6,7 +6,7 @@
 "use strict";
 
 const fetch = require("node-fetch");
-const settings = require("../settings.json");
+const fs = require("fs");
 const log = require("../misc/log");
 const vpnCheck = require("../misc/vpnCheck");
 
@@ -15,12 +15,22 @@ const normalizeUrl = (url) => url.replace(/\/$/, '');
 const normalizePath = (path) => path.startsWith('/') ? path : `/${path}`;
 
 const DISCORD_API = "https://discord.com/api";
-const OAUTH_CONFIG = {
-  domain: normalizeUrl(settings.api.client.oauth2.link),
-  callbackPath: normalizePath(settings.api.client.oauth2.callbackpath),
-  clientId: settings.api.client.oauth2.id,
-  clientSecret: settings.api.client.oauth2.secret,
-};
+
+// Function to get fresh settings
+function getFreshSettings() {
+  return JSON.parse(fs.readFileSync("./settings.json", "utf8"));
+}
+
+// Function to get fresh OAuth config
+function getOAuthConfig() {
+  const settings = getFreshSettings();
+  return {
+    domain: normalizeUrl(settings.api.client.oauth2.link),
+    callbackPath: normalizePath(settings.api.client.oauth2.callbackpath),
+    clientId: settings.api.client.oauth2.id,
+    clientSecret: settings.api.client.oauth2.secret,
+  };
+}
 
 module.exports.load = function (app, db) {
   
@@ -39,6 +49,13 @@ module.exports.load = function (app, db) {
       req.session.oauthRedirect = `/${req.query.redirect}`;
     }
     
+    // Get fresh OAuth config
+    const OAUTH_CONFIG = getOAuthConfig();
+    const settings = getFreshSettings();
+    
+    // Debug: Log the client ID being used
+    console.log(`[OAuth] Using Client ID: ${OAUTH_CONFIG.clientId}`);
+    
     // Build OAuth URL
     const redirectUri = encodeURIComponent(OAUTH_CONFIG.domain + OAUTH_CONFIG.callbackPath);
     
@@ -50,6 +67,7 @@ module.exports.load = function (app, db) {
     const authUrl = `${DISCORD_API}/oauth2/authorize?client_id=${OAUTH_CONFIG.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopeString}`;
     
     console.log(`[OAuth] Redirecting to Discord for authentication`);
+    console.log(`[OAuth] Auth URL: ${authUrl}`);
     res.redirect(authUrl);
   });
 
@@ -57,6 +75,7 @@ module.exports.load = function (app, db) {
    * Logout Route
    */
   app.get("/logout", (req, res) => {
+    const settings = getFreshSettings();
     const redirectUrl = settings.pages?.redirect?.logout || "/";
     req.session.destroy((err) => {
       if (err) console.error("[OAuth] Logout error:", err);
@@ -68,8 +87,12 @@ module.exports.load = function (app, db) {
   /**
    * OAuth Callback - Handles Discord redirect
    */
-  app.get(OAUTH_CONFIG.callbackPath, async (req, res) => {
+  app.get(getOAuthConfig().callbackPath, async (req, res) => {
     try {
+      // Get fresh OAuth config and settings
+      const OAUTH_CONFIG = getOAuthConfig();
+      const settings = getFreshSettings();
+      
       // Handle OAuth errors
       if (req.query.error) {
         console.error(`[OAuth] Discord error: ${req.query.error}`);
@@ -255,7 +278,7 @@ module.exports.load = function (app, db) {
  * Get or create Pterodactyl account for user
  */
 async function getOrCreatePterodactylAccount(discordUser, db) {
-  const settings = require('../settings.json');
+  const settings = getFreshSettings();
   
   // Check if user already has an account
   const existingId = await db.get(`users-${discordUser.id}`);
@@ -415,7 +438,7 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
  * Handle Join-for-Rewards
  */
 async function handleJ4R(userId, accessToken, db) {
-  const settings = require('../settings.json');
+  const settings = getFreshSettings();
   
   try {
     const guildsResponse = await fetch(`${DISCORD_API}/users/@me/guilds`, {
@@ -461,7 +484,7 @@ async function handleJ4R(userId, accessToken, db) {
  * Auto-join Discord guild
  */
 async function autoJoinGuild(userId, accessToken) {
-  const settings = require('../settings.json');
+  const settings = getFreshSettings();
   const guildIds = Array.isArray(settings.api.client.bot.joinguild.guildid)
     ? settings.api.client.bot.joinguild.guildid
     : [settings.api.client.bot.joinguild.guildid];
@@ -487,7 +510,7 @@ async function autoJoinGuild(userId, accessToken) {
  * Give role to user
  */
 async function giveRole(userId) {
-  const settings = require('../settings.json');
+  const settings = getFreshSettings();
   
   try {
     await fetch(
@@ -510,7 +533,7 @@ async function giveRole(userId) {
  * Handle role-based packages
  */
 async function handleRolePackages(userId, db) {
-  const settings = require('../settings.json');
+  const settings = getFreshSettings();
   
   try {
     const memberResponse = await fetch(
