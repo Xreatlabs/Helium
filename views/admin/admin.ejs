@@ -208,7 +208,8 @@
 
                 <!-- Locations Tab -->
                 <div id="config-tab-locations" class="config-tab-content hidden">
-                  <div class="space-y-6">
+                  <div class="space-y-8">
+                    <!-- Locations Section -->
                     <div>
                       <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Configure Locations</h3>
                       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Map Pterodactyl locations to packages</p>
@@ -239,6 +240,14 @@
                         <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Configured Locations</h4>
                         <div id="locations-list" class="space-y-2"></div>
                       </div>
+                    </div>
+
+                    <!-- Nodes Section -->
+                    <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
+                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Configure Nodes</h3>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">View and manage nodes from your Pterodactyl Panel</p>
+                      
+                      <div id="nodes-list" class="space-y-2"></div>
                     </div>
                   </div>
                 </div>
@@ -364,6 +373,7 @@
       } else if (tabName === 'locations' && locationsData.length === 0) {
         loadLocations();
         loadExistingLocations();
+        loadNodes();
       } else if (tabName === 'nests' && nestsData.length === 0) {
         loadNestsDisplay();
       }
@@ -569,8 +579,16 @@
     // Load locations
     async function loadLocations() {
       try {
+        console.log('Loading locations from Pterodactyl Panel...');
         const response = await fetch('/admin/pterodactyl/locations');
+        console.log('Locations response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Locations data received:', data);
         locationsData = data.data || [];
         
         const locationSelect = document.getElementById('location-select');
@@ -581,9 +599,77 @@
           option.textContent = `${location.attributes.short} - ${location.attributes.long}`;
           locationSelect.appendChild(option);
         });
+        console.log('Loaded', locationsData.length, 'locations');
       } catch (err) {
         console.error('Failed to load locations:', err);
-        alert('Failed to load locations from Pterodactyl Panel');
+        alert('Failed to load locations from Pterodactyl Panel. Check console for details.');
+      }
+    }
+
+    // Load nodes
+    async function loadNodes() {
+      try {
+        console.log('Loading nodes from Pterodactyl Panel...');
+        const response = await fetch('/admin/pterodactyl/nodes');
+        console.log('Nodes response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Nodes data received:', data);
+        const nodes = data.data || [];
+        
+        const nodesList = document.getElementById('nodes-list');
+        if (nodes.length === 0) {
+          nodesList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes found</p>';
+          return;
+        }
+
+        nodesList.innerHTML = '';
+        nodes.forEach(node => {
+          const div = document.createElement('div');
+          div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
+          
+          const statusColor = node.attributes.maintenance_mode 
+            ? 'text-yellow-600 dark:text-yellow-400' 
+            : 'text-green-600 dark:text-green-400';
+          
+          const statusText = node.attributes.maintenance_mode ? 'Maintenance' : 'Online';
+          
+          div.innerHTML = `
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h5 class="font-medium text-gray-900 dark:text-gray-100">${node.attributes.name}</h5>
+                  <span class="text-xs ${statusColor} font-medium">${statusText}</span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Node ID: ${node.attributes.id} | FQDN: ${node.attributes.fqdn}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Location ID: ${node.attributes.location_id}</p>
+                <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">RAM:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.memory / 1024).toFixed(1)} GB</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Disk:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.disk / 1024).toFixed(1)} GB</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">Allocated RAM:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">${(node.attributes.allocated_resources?.memory || 0) / 1024} GB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          nodesList.appendChild(div);
+        });
+        console.log('Loaded', nodes.length, 'nodes');
+      } catch (err) {
+        console.error('Failed to load nodes:', err);
+        document.getElementById('nodes-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nodes. Check console for details.</p>';
       }
     }
 

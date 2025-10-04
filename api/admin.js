@@ -102,7 +102,7 @@ module.exports.load = async function (app, db) {
     }
   });
 
-  // Fetch locations (nodes) from Pterodactyl Panel
+  // Fetch locations from Pterodactyl Panel
   app.get("/admin/pterodactyl/locations", async (req, res) => {
     if (!req.session.userinfo || !req.session.userinfo.id) {
       return res.status(403).json({ error: "Unauthorized" });
@@ -128,6 +128,35 @@ module.exports.load = async function (app, db) {
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to fetch locations" });
+    }
+  });
+
+  // Fetch nodes from Pterodactyl Panel
+  app.get("/admin/pterodactyl/nodes", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/nodes`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch nodes" });
     }
   });
 
