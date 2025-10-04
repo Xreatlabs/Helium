@@ -326,6 +326,9 @@ module.exports.load = async function (app, db) {
         return res.json({ users: [] });
       }
 
+      // Read fresh settings to get latest package configurations
+      const freshSettings = JSON.parse(fs.readFileSync('./settings.json', 'utf8'));
+
       // Build a map of Pterodactyl ID -> Discord ID from local database
       const sqlite3 = require('better-sqlite3');
       const dbPath = settings.database.replace('sqlite://', './');
@@ -390,8 +393,8 @@ module.exports.load = async function (app, db) {
             coins = await db.get(`coins-${discordId}`) || 0;
             
             // Get user's package or use default
-            const packageName = await db.get(`package-${discordId}`) || settings.api.client.packages.default;
-            const packageData = settings.api.client.packages.list[packageName] || {
+            const packageName = await db.get(`package-${discordId}`) || freshSettings.api.client.packages.default;
+            const packageData = freshSettings.api.client.packages.list[packageName] || {
               ram: 0,
               disk: 0,
               cpu: 0,
@@ -415,7 +418,7 @@ module.exports.load = async function (app, db) {
           
           // For users without Discord ID, still show default package resources
           if (!discordId) {
-            const defaultPackageData = settings.api.client.packages.list[settings.api.client.packages.default] || {
+            const defaultPackageData = freshSettings.api.client.packages.list[freshSettings.api.client.packages.default] || {
               ram: 0,
               disk: 0,
               cpu: 0,
@@ -436,7 +439,7 @@ module.exports.load = async function (app, db) {
             coins,
             resources: { ram, disk, cpu, servers },
             pterodactylId: user.id,
-            package: discordId ? (await db.get(`package-${discordId}`) || settings.api.client.packages.default) : settings.api.client.packages.default
+            package: discordId ? (await db.get(`package-${discordId}`) || freshSettings.api.client.packages.default) : freshSettings.api.client.packages.default
           });
 
           if (users.length >= 10) break;
@@ -461,6 +464,9 @@ module.exports.load = async function (app, db) {
     }
 
     try {
+      // Read fresh settings to get latest package configurations
+      const freshSettings = JSON.parse(fs.readFileSync('./settings.json', 'utf8'));
+
       // Build a map of Pterodactyl ID -> Discord ID from local database
       const sqlite3 = require('better-sqlite3');
       const dbPath = settings.database.replace('sqlite://', './');
@@ -527,8 +533,8 @@ module.exports.load = async function (app, db) {
           coins = await db.get(`coins-${discordId}`) || 0;
           
           // Get user's package or use default
-          const packageName = await db.get(`package-${discordId}`) || settings.api.client.packages.default;
-          const packageData = settings.api.client.packages.list[packageName] || {
+          const packageName = await db.get(`package-${discordId}`) || freshSettings.api.client.packages.default;
+          const packageData = freshSettings.api.client.packages.list[packageName] || {
             ram: 0,
             disk: 0,
             cpu: 0,
@@ -552,7 +558,7 @@ module.exports.load = async function (app, db) {
         
         // For users without Discord ID, still show default package resources
         if (!discordId) {
-          const defaultPackageData = settings.api.client.packages.list[settings.api.client.packages.default] || {
+          const defaultPackageData = freshSettings.api.client.packages.list[freshSettings.api.client.packages.default] || {
             ram: 0,
             disk: 0,
             cpu: 0,
@@ -573,7 +579,7 @@ module.exports.load = async function (app, db) {
           coins,
           resources: { ram, disk, cpu, servers },
           pterodactylId: user.id,
-          package: discordId ? (await db.get(`package-${discordId}`) || settings.api.client.packages.default) : settings.api.client.packages.default
+          package: discordId ? (await db.get(`package-${discordId}`) || freshSettings.api.client.packages.default) : freshSettings.api.client.packages.default
         });
       }
       
