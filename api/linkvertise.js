@@ -83,68 +83,6 @@ module.exports.load = function(app, db) {
     }
 
     const userId = req.session.userinfo.id;
-    const cooldownSeconds = parseInt(cfg.cooldownTime || 3600);
-
-    const cooldownKey = `linkvertise-cooldown-${userId}`;
-    const lastClick = await db.get(cooldownKey);
-    const now = Date.now();
-
-    if (lastClick && now - lastClick < cooldownSeconds * 1000) {
-      const remainingSeconds = Math.ceil((cooldownSeconds * 1000 - (now - lastClick)) / 1000);
-      return res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Please Wait</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 0;
-              background-color: #111827;
-              height: 100vh;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-family: system-ui, -apple-system, sans-serif;
-            }
-            .container {
-              text-align: center;
-            }
-            h1 {
-              color: #ffffff;
-              font-size: 1.875rem;
-              font-weight: bold;
-              margin-bottom: 1.5rem;
-            }
-            p {
-              color: #9CA3AF;
-              margin-bottom: 2rem;
-            }
-            .button {
-              background-color: #6B7280;
-              color: #ffffff;
-              padding: 0.75rem 1.5rem;
-              border-radius: 0.5rem;
-              text-decoration: none;
-              font-weight: bold;
-              transition: background-color 0.2s;
-              display: inline-block;
-            }
-            .button:hover {
-              background-color: #4B5563;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Please Wait</h1>
-            <p>You need to wait ${remainingSeconds} seconds before creating another link</p>
-            <a href="/linkvertise" class="button">Go back</a>
-          </div>
-        </body>
-        </html>
-      `);
-    }
 
     const token = await linkvertiseService.createCallbackToken(userId);
     if (!token) {
@@ -152,7 +90,6 @@ module.exports.load = function(app, db) {
     }
 
     console.log(`[Linkvertise] Token created for user ${userId}: ${token}`);
-    await db.set(cooldownKey, now);
 
     const domain = cfg.domain || settings.oauth2?.link || 'http://localhost:3000';
     const callbackUrl = linkvertiseClient.generateCallbackUrl(domain, userId, token);

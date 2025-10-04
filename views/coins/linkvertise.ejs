@@ -92,9 +92,6 @@
                   <dt class="text-md tracking-tight font-semibold text-gray-600 dark:text-gray-300">Complete Linkvertise</dt>
                   <dd class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     <p>Complete a Linkvertise link to earn <%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins.</p>
-                    <% if (linkvertise.cooldownTime) { %>
-                      <p class="mt-1 text-xs">Cooldown: <%= Math.floor(linkvertise.cooldownTime / 60) %> minutes between uses.</p>
-                    <% } %>
                   </dd>
                   <dd class="mt-3 flex justify-between items-baseline md:block lg:flex">
                     <div class="mt-1 flex rounded-md">
