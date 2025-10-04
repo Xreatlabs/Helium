@@ -28,25 +28,22 @@
 
         // Update the version information in the content
         const versionSpan = document.getElementById('currentVersion');
-        const releaseSpan = document.getElementById('releaseInfo');
         const versionStatusSpan = document.getElementById('versionStatus');
 
-        versionSpan.textContent = currentVersion;
+        versionSpan.textContent = 'v' + currentVersion;
 
         if (currentVersion === latestVersion) {
-          versionStatusSpan.textContent = 'You are running the latest version. Good job!';
-          versionStatusSpan.classList.add('text-gray-600', 'text-xs', 'pt-2');
+          versionStatusSpan.innerHTML = '✓ Latest version';
         } else {
-          const link = document.createElement('a');
-          link.href = 'https://github.com/heliactyloss/heliactyl/releases/tag/' + latestVersion;
-          link.classList.add('text-amber-500', 'transition', 'hover:text-amber-600', 'font-medium');
-          link.textContent = 'here';
-
-          const linkText = document.createTextNode(`Helium ${latestVersion} is ready to be updated to. Please click `);
-          versionStatusSpan.appendChild(linkText);
-          versionStatusSpan.appendChild(link);
-          versionStatusSpan.appendChild(document.createTextNode(' to download it'));
-          versionStatusSpan.classList.add('text-amber-500', 'text-xs', 'pt-2');
+          versionStatusSpan.innerHTML = `⚠ Update available: v${latestVersion}`;
+          // Make the whole card clickable to update
+          const versionCard = versionSpan.closest('.bg-gradient-to-br');
+          if (versionCard) {
+            versionCard.style.cursor = 'pointer';
+            versionCard.onclick = () => {
+              window.open('https://github.com/heliactyloss/heliactyl/releases/tag/' + latestVersion, '_blank');
+            };
+          }
         }
 
         // Show the content
@@ -55,6 +52,10 @@
       .catch(error => {
         console.error('Error fetching latest version:', error);
         // Show the content even if the fetch fails
+        const versionSpan = document.getElementById('currentVersion');
+        const versionStatusSpan = document.getElementById('versionStatus');
+        if (versionSpan) versionSpan.textContent = 'v<%= settings.version %>';
+        if (versionStatusSpan) versionStatusSpan.textContent = 'Unable to check updates';
         document.getElementById('content').classList.remove('hidden');
       });
   </script>
@@ -70,53 +71,95 @@
           <% /* Skeleton loader, lasts about 0.3s to let the page content load */ %>
           <%- include('../components/skeleton') %>
           <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
-            <!-- Content -->
-            <div class="lg:flex lg:items-center lg:justify-between rounded-3xl mb-8">
-              <div class="min-w-0 flex-1">
-                <div class="flex">
-                  <div class="relative">
-                    <div class="bg-gray-200 rounded-2xl h-11 w-11 text-center flex text-gray-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mt-3 ml-3">
-                        <path fill-rule="evenodd" d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm14.25 6a.75.75 0 0 1-.22.53l-2.25 2.25a.75.75 0 1 1-1.06-1.06L15.44 12l-1.72-1.72a.75.75 0 1 1 1.06-1.06l2.25 2.25c.141.14.22.331.22.53Zm-10.28-.53a.75.75 0 0 0 0 1.06l2.25 2.25a.75.75 0 1 0 1.06-1.06L8.56 12l1.72-1.72a.75.75 0 1 0-1.06-1.06l-2.25 2.25Z" clip-rule="evenodd" />
-                      </svg>
-                    </div>
+            <!-- Header -->
+            <div class="mb-8">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="relative">
+                  <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl h-16 w-16 flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white">
+                      <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 00-2.282.819l-.922 1.597a1.875 1.875 0 00.432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 000 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 00-.432 2.385l.922 1.597a1.875 1.875 0 002.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 002.28-.819l.923-1.597a1.875 1.875 0 00-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 000-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 00-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 00-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 00-1.85-1.567h-1.843zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" />
+                    </svg>
                   </div>
-                  <div class="relative ml-4">
-                    <h2 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight">Admin</h2>
-                    <p class="text-xs font-thin text-gray-500">Perform admin actions on the Helium dashboard.</p>
-                  </div>
+                </div>
+                <div class="flex-1">
+                  <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Admin Dashboard</h1>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your Helium panel, users, and configurations</p>
                 </div>
               </div>
             </div>
+
+            <!-- Error Message -->
             <% if (req.query.err) { %>
-            <div class="rounded-3xl bg-gray-200 p-8 mb-5">
-              <div class="flex">
+            <div class="rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 mb-6">
+              <div class="flex items-start gap-3">
                 <div class="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
                 </div>
-                <div class="ml-3">
-                  <h3 class="text-md font-medium tracking-tight text-gray-700">An error was encountered</h3>
-                  <div class="mt-1 text-sm text-gray-500">
-                    <p>Error code: <code><%= req.query.err %></code></p>
-                  </div>
+                <div class="flex-1">
+                  <h3 class="text-sm font-semibold text-red-800 dark:text-red-300">An error was encountered</h3>
+                  <p class="mt-1 text-sm text-red-700 dark:text-red-400">
+                    Error code: <code class="bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded font-mono text-xs"><%= req.query.err %></code>
+                  </p>
                 </div>
               </div>
             </div>
             <% } %>
-            <div class="lg:flex lg:items-center lg:justify-between p-8 border border-gray-200 rounded-3xl">
-              <div class="min-w-0 flex-1 ml-4">
-                <h2 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight">Helium version 1</h2>
-                <p class="text-xs mt-2 font-thin text-gray-500 mb-2">
-                  This dashboard is running Helium version <span class="bg-gray-200 px-2 py-1 mb-2 rounded-full" id="currentVersion"></span>
-                </p>
-                <span id="versionStatus"></span>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <!-- Version Card -->
+              <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <svg class="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full" id="currentVersion">Loading...</span>
+                </div>
+                <p class="text-2xl font-bold">Helium</p>
+                <p class="text-xs opacity-90 mt-1" id="versionStatus">Checking for updates...</p>
               </div>
-              <div class="mt-5 flex lg:ml-4 lg:mt-0">
-                <span class="sm:ml-3 mr-3">
-                  <img src="https://atqr.pages.dev/v2Favicon.png" class="h-20 rounded-3xl bg-gray-200 p-3">
-                </span>
+
+              <!-- System Status -->
+              <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <svg class="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                  </svg>
+                  <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Online</span>
+                </div>
+                <p class="text-2xl font-bold">System</p>
+                <p class="text-xs opacity-90 mt-1">All services operational</p>
+              </div>
+
+              <!-- Panel Link -->
+              <div class="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <svg class="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <p class="text-2xl font-bold">Pterodactyl</p>
+                <a href="<%= settings.pterodactyl.domain %>" target="_blank" class="text-xs opacity-90 mt-1 hover:opacity-100 inline-flex items-center gap-1">
+                  Open Panel
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <svg class="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                  </svg>
+                </div>
+                <p class="text-2xl font-bold">Actions</p>
+                <button onclick="showConfigTab('users')" class="text-xs opacity-90 mt-1 hover:opacity-100 inline-flex items-center gap-1">
+                  Manage Users →
+                </button>
               </div>
             </div>
 
@@ -130,9 +173,6 @@
                   </button>
                   <button onclick="showConfigTab('locations')" id="tab-btn-locations" class="config-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                     Locations
-                  </button>
-                  <button onclick="showConfigTab('nests')" id="tab-btn-nests" class="config-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                    Nests
                   </button>
                   <button onclick="showConfigTab('users')" id="tab-btn-users" class="config-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                     Users
@@ -267,190 +307,175 @@
                   </div>
                 </div>
 
-                <!-- Nests Tab -->
-                <div id="config-tab-nests" class="config-tab-content hidden">
-                  <div class="space-y-6">
-                    <div>
-                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Available Nests</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">View nests available in your Pterodactyl Panel</p>
-                      <div id="nests-list" class="space-y-2"></div>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Users Tab -->
                 <div id="config-tab-users" class="config-tab-content hidden">
-                  <div class="space-y-8">
-                    <!-- User Search Section -->
-                    <div>
-                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Manage Users</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Search and manage user accounts, coins, and resources</p>
-                      
-                      <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search User</label>
-                        <div class="relative">
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column: User Search & Selection -->
+                    <div class="lg:col-span-1">
+                      <div class="sticky top-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">User Search</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Search by username, email or Discord ID</p>
+                        
+                        <div class="relative mb-4">
                           <input type="text" 
                             id="user-search-input" 
-                            placeholder="Type username or Discord ID..." 
+                            placeholder="Search users..." 
                             oninput="searchUsers()"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                          <div id="user-search-results" class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto"></div>
-                        </div>
-                      </div>
-
-                      <!-- Selected User Info -->
-                      <div id="selected-user-info" class="hidden">
-                        <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg mb-6">
-                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Selected User</h4>
-                          <div id="user-details-display" class="space-y-2"></div>
+                            class="w-full px-4 py-2.5 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                          <svg class="absolute left-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                          </svg>
+                          <div id="user-search-results" class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl hidden max-h-80 overflow-y-auto"></div>
                         </div>
 
-                        <!-- Manage Coins -->
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Manage Coins</h4>
-                          <div class="grid grid-cols-2 gap-4">
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add Coins</label>
-                              <input type="number" 
-                                id="add-coins-amount" 
-                                placeholder="100"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <!-- Selected User Card -->
+                        <div id="selected-user-card" class="hidden">
+                          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 p-5 rounded-xl border border-blue-100 dark:border-gray-600">
+                            <div class="flex items-center gap-3 mb-4">
+                              <img id="selected-user-avatar" src="" class="w-14 h-14 rounded-full border-2 border-white dark:border-gray-700 shadow-md">
+                              <div class="flex-1 min-w-0">
+                                <p id="selected-user-name" class="font-semibold text-gray-900 dark:text-gray-100 truncate"></p>
+                                <p id="selected-user-id" class="text-xs text-gray-500 dark:text-gray-400 truncate"></p>
+                              </div>
                             </div>
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Set Coins</label>
-                              <input type="number" 
-                                id="set-coins-amount" 
-                                placeholder="500"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            
+                            <div class="mb-3">
+                              <span id="selected-user-package" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                                📦 default
+                              </span>
                             </div>
-                          </div>
-                          <div class="flex gap-3 mt-4">
-                            <button onclick="addCoinsToUser()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
-                              Add Coins
-                            </button>
-                            <button onclick="setCoinsForUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
-                              Set Coins
-                            </button>
-                          </div>
-                        </div>
-
-                        <!-- Manage Resources -->
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Add Resources</h4>
-                          <div class="grid grid-cols-2 gap-4">
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RAM (MB)</label>
-                              <input type="number" 
-                                id="add-ram-amount" 
-                                placeholder="1024"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
-                              <input type="number" 
-                                id="add-disk-amount" 
-                                placeholder="2048"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
-                              <input type="number" 
-                                id="add-cpu-amount" 
-                                placeholder="100"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server Slots</label>
-                              <input type="number" 
-                                id="add-servers-amount" 
-                                placeholder="1"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                              <div class="bg-white dark:bg-gray-800 p-2.5 rounded-lg">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
+                                <p id="selected-user-coins" class="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
+                              </div>
+                              <div class="bg-white dark:bg-gray-800 p-2.5 rounded-lg">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Servers</p>
+                                <p id="selected-user-servers" class="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
+                              </div>
+                              <div class="bg-white dark:bg-gray-800 p-2.5 rounded-lg">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
+                                <p id="selected-user-ram" class="text-sm font-semibold text-gray-900 dark:text-gray-100">0 MB</p>
+                              </div>
+                              <div class="bg-white dark:bg-gray-800 p-2.5 rounded-lg">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
+                                <p id="selected-user-disk" class="text-sm font-semibold text-gray-900 dark:text-gray-100">0 MB</p>
+                              </div>
+                              <div class="bg-white dark:bg-gray-800 p-2.5 rounded-lg col-span-2">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
+                                <p id="selected-user-cpu" class="text-sm font-semibold text-gray-900 dark:text-gray-100">0%</p>
+                              </div>
                             </div>
                           </div>
-                          <button onclick="addResourcesToUser()" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
-                            Add Resources
-                          </button>
                         </div>
                       </div>
                     </div>
 
-                    <!-- All Users List -->
-                    <div class="pt-8 border-t border-gray-200 dark:border-gray-700">
-                      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">All Users</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">View and manage all registered users</p>
-                      <div id="all-users-list" class="space-y-2"></div>
+                    <!-- Right Column: Management Actions -->
+                    <div class="lg:col-span-2 space-y-4">
+                      <div id="user-management-panel" class="hidden space-y-4">
+                        <!-- Coins Management -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                          <div class="bg-gradient-to-r from-yellow-500 to-orange-500 px-5 py-3">
+                            <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                              </svg>
+                              Coins Management
+                            </h4>
+                          </div>
+                          <div class="p-5">
+                            <div class="flex gap-3">
+                              <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Amount</label>
+                                <input type="number" id="coins-amount" placeholder="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-yellow-500 text-sm">
+                              </div>
+                              <div class="flex items-end gap-2">
+                                <button onclick="addCoinsToUser()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition text-sm flex items-center gap-1.5 shadow-sm">
+                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                  </svg>
+                                  Add
+                                </button>
+                                <button onclick="setCoinsForUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition text-sm shadow-sm">
+                                  Set
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Resources Management -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                          <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-3">
+                            <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"></path>
+                                <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"></path>
+                                <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"></path>
+                              </svg>
+                              Resources Management
+                            </h4>
+                          </div>
+                          <div class="p-5">
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">RAM (MB)</label>
+                                <input type="number" id="resource-ram" placeholder="1024" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
+                              </div>
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Disk (MB)</label>
+                                <input type="number" id="resource-disk" placeholder="2048" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
+                              </div>
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">CPU (%)</label>
+                                <input type="number" id="resource-cpu" placeholder="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
+                              </div>
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Server Slots</label>
+                                <input type="number" id="resource-servers" placeholder="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
+                              </div>
+                            </div>
+                            <button onclick="setResourcesForUser()" class="w-full px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition shadow-sm">
+                              Set Resources
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Empty State -->
+                      <div id="user-management-empty" class="text-center py-16">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Search and select a user to manage their account</p>
+                      </div>
                     </div>
+                  </div>
+
+                  <!-- All Users Section -->
+                  <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">All Users</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Showing all users from Pterodactyl panel</p>
+                      </div>
+                      <button onclick="loadAllUsers()" class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                      </button>
+                    </div>
+                    <div id="all-users-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Add coins -->
-            <div class="card mt-10">
-              <div class="card-body">
-                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-100 sm:truncate tracking-tight mb-4">Add coins</h1>
-                <% /* Discord ID */ %>
-                <label for="location" class="text-sm font-medium text-gray-600">Discord ID</label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="id1" placeholder="000000000000000000">
 
-                <% /* Amount */ %>
-                <label for="location" class="text-sm font-medium text-gray-600">Amount</label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="amount1" placeholder="100">
-
-                <% /* Submit form */ %>
-                <a href="javascript:addCoins()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 px-8 py-2 text-sm font-medium text-gray-600 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                  Add
-                </a>
-              </div>
-              <script>
-                async function addCoins() {
-                  let id1 = encodeURIComponent(document.getElementById("id1").value);
-                  let amount1 = encodeURIComponent(document.getElementById("amount1").value);
-                  document.location.href = `/addcoins?id=${id1}&coins=${amount1}`;
-                };
-              </script>
-
-              <!-- Add resources -->
-              <div class="card mt-10">
-                <div class="card-body">
-                  <h1 class="text-xl font-semibold text-gray-700 sm:truncate tracking-tight mb-4">Add resources</h1>
-                  <% /* Discord ID */ %>
-                  <label for="location" class="text-sm font-medium text-gray-600">Discord ID</label><br>
-                  <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="id2" placeholder="000000000000000000">
-
-                  <% /* CPU */ %>
-                  <label for="location" class="text-sm font-medium text-gray-600">CPU Cores</label><br>
-                  <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="cpu" placeholder="1">
-
-                  <% /* Memory */ %>
-                  <label for="location" class="text-sm font-medium text-gray-600">Memory (GiB)</label><br>
-                  <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="memory" placeholder="2">
-
-                  <% /* Storage */ %>
-                  <label for="location" class="text-sm font-medium text-gray-600">Storage (GiB)</label><br>
-                  <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="storage" placeholder="10">
-
-                  <% /* Servers */ %>
-                  <label for="location" class="text-sm font-medium text-gray-600">Servers</label><br>
-                  <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="servers" placeholder="5">
-
-                  <% /* Submit form */ %>
-                  <a href="javascript:addResources()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 px-8 py-2 text-sm font-medium text-gray-600 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                    Add
-                  </a>
-                </div>
-                <script>
-                  async function addResources() {
-                    let id2 = encodeURIComponent(document.getElementById("id2").value);
-                    let cpu = encodeURIComponent(document.getElementById("cpu").value * 100);
-                    let memory = encodeURIComponent(document.getElementById("memory").value * 1024);
-                    let storage = encodeURIComponent(document.getElementById("storage").value * 1024);
-                    let servers = encodeURIComponent(document.getElementById("servers").value);
-                    document.location.href = `/addresources?id=${id2}&cpu=${cpu}&ram=${memory}&disk=${storage}&servers=${servers}`;
-                  };
-                </script>
-              </div>
-            </div>
       </main>
       <%- include('../components/footer') %>
     </div>
@@ -495,8 +520,6 @@
         loadLocations();
         loadExistingLocations();
         loadNodes();
-      } else if (tabName === 'nests' && nestsData.length === 0) {
-        loadNestsDisplay();
       } else if (tabName === 'users') {
         loadAllUsers();
       }
@@ -1005,35 +1028,7 @@
       }
     }
 
-    // Load nests display
-    async function loadNestsDisplay() {
-      try {
-        const response = await fetch('/admin/pterodactyl/nests');
-        const data = await response.json();
-        const nests = data.data || [];
-        
-        const nestsList = document.getElementById('nests-list');
-        if (nests.length === 0) {
-          nestsList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nests found</p>';
-          return;
-        }
 
-        nestsList.innerHTML = '';
-        nests.forEach(nest => {
-          const div = document.createElement('div');
-          div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
-          div.innerHTML = `
-            <h5 class="font-medium text-gray-900 dark:text-gray-100">${nest.attributes.name}</h5>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Nest ID: ${nest.attributes.id}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${nest.attributes.description || 'No description'}</p>
-          `;
-          nestsList.appendChild(div);
-        });
-      } catch (err) {
-        console.error('Failed to load nests:', err);
-        document.getElementById('nests-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nests</p>';
-      }
-    }
 
     // Global variable for selected user
     let selectedUser = null;
@@ -1088,42 +1083,22 @@
     function selectUser(user) {
       selectedUser = user;
       document.getElementById('user-search-results').classList.add('hidden');
-      document.getElementById('user-search-input').value = user.username;
-      document.getElementById('selected-user-info').classList.remove('hidden');
       
-      const detailsDiv = document.getElementById('user-details-display');
-      detailsDiv.innerHTML = `
-        <div class="flex items-center gap-3 mb-4">
-          <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
-            class="w-16 h-16 rounded-full">
-          <div>
-            <p class="text-lg font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Discord ID: ${user.id}</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
-            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.coins}</p>
-          </div>
-          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
-            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.ram} MB</p>
-          </div>
-          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
-            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.disk} MB</p>
-          </div>
-          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
-            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.cpu}%</p>
-          </div>
-          <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Servers</p>
-            <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${user.resources.servers}</p>
-          </div>
-        </div>
-      `;
+      // Show user card
+      document.getElementById('selected-user-card').classList.remove('hidden');
+      document.getElementById('user-management-panel').classList.remove('hidden');
+      document.getElementById('user-management-empty').classList.add('hidden');
+      
+      // Update user card
+      document.getElementById('selected-user-avatar').src = `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png`;
+      document.getElementById('selected-user-name').textContent = user.username;
+      document.getElementById('selected-user-id').textContent = `ID: ${user.id}`;
+      document.getElementById('selected-user-package').textContent = `📦 ${user.package || 'default'}`;
+      document.getElementById('selected-user-coins').textContent = user.coins;
+      document.getElementById('selected-user-servers').textContent = user.resources.servers;
+      document.getElementById('selected-user-ram').textContent = `${user.resources.ram} MB`;
+      document.getElementById('selected-user-disk').textContent = `${user.resources.disk} MB`;
+      document.getElementById('selected-user-cpu').textContent = `${user.resources.cpu}%`;
     }
 
     // Add coins to user
@@ -1133,7 +1108,7 @@
         return;
       }
       
-      const amount = parseInt(document.getElementById('add-coins-amount').value);
+      const amount = parseInt(document.getElementById('coins-amount').value);
       if (isNaN(amount) || amount <= 0) {
         alert('Please enter a valid amount');
         return;
@@ -1143,13 +1118,14 @@
         const response = await fetch(`/addcoins?id=${selectedUser.id}&coins=${amount}`);
         if (response.redirected || response.ok) {
           alert(`Successfully added ${amount} coins to ${selectedUser.username}`);
-          document.getElementById('add-coins-amount').value = '';
+          document.getElementById('coins-amount').value = '';
           // Refresh user data
           const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
           const data = await searchResponse.json();
           if (data.users && data.users.length > 0) {
             selectUser(data.users[0]);
           }
+          loadAllUsers();
         }
       } catch (err) {
         console.error('Failed to add coins:', err);
@@ -1164,7 +1140,7 @@
         return;
       }
       
-      const amount = parseInt(document.getElementById('set-coins-amount').value);
+      const amount = parseInt(document.getElementById('coins-amount').value);
       if (isNaN(amount) || amount < 0) {
         alert('Please enter a valid amount');
         return;
@@ -1174,13 +1150,14 @@
         const response = await fetch(`/setcoins?id=${selectedUser.id}&coins=${amount}`);
         if (response.redirected || response.ok) {
           alert(`Successfully set coins to ${amount} for ${selectedUser.username}`);
-          document.getElementById('set-coins-amount').value = '';
+          document.getElementById('coins-amount').value = '';
           // Refresh user data
           const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
           const data = await searchResponse.json();
           if (data.users && data.users.length > 0) {
             selectUser(data.users[0]);
           }
+          loadAllUsers();
         }
       } catch (err) {
         console.error('Failed to set coins:', err);
@@ -1188,17 +1165,17 @@
       }
     }
 
-    // Add resources to user
-    async function addResourcesToUser() {
+    // Set resources for user
+    async function setResourcesForUser() {
       if (!selectedUser) {
         alert('Please select a user first');
         return;
       }
       
-      const ram = parseInt(document.getElementById('add-ram-amount').value) || 0;
-      const disk = parseInt(document.getElementById('add-disk-amount').value) || 0;
-      const cpu = parseInt(document.getElementById('add-cpu-amount').value) || 0;
-      const servers = parseInt(document.getElementById('add-servers-amount').value) || 0;
+      const ram = parseInt(document.getElementById('resource-ram').value) || 0;
+      const disk = parseInt(document.getElementById('resource-disk').value) || 0;
+      const cpu = parseInt(document.getElementById('resource-cpu').value) || 0;
+      const servers = parseInt(document.getElementById('resource-servers').value) || 0;
 
       if (ram === 0 && disk === 0 && cpu === 0 && servers === 0) {
         alert('Please enter at least one resource amount');
@@ -1206,23 +1183,24 @@
       }
 
       try {
-        const response = await fetch(`/addresources?id=${selectedUser.id}&ram=${ram}&disk=${disk}&cpu=${cpu}&servers=${servers}`);
+        const response = await fetch(`/setresources?id=${selectedUser.id}&ram=${ram}&disk=${disk}&cpu=${cpu}&servers=${servers}`);
         if (response.redirected || response.ok) {
-          alert(`Successfully added resources to ${selectedUser.username}`);
-          document.getElementById('add-ram-amount').value = '';
-          document.getElementById('add-disk-amount').value = '';
-          document.getElementById('add-cpu-amount').value = '';
-          document.getElementById('add-servers-amount').value = '';
+          alert(`Successfully set resources for ${selectedUser.username}`);
+          document.getElementById('resource-ram').value = '';
+          document.getElementById('resource-disk').value = '';
+          document.getElementById('resource-cpu').value = '';
+          document.getElementById('resource-servers').value = '';
           // Refresh user data
           const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
           const data = await searchResponse.json();
           if (data.users && data.users.length > 0) {
             selectUser(data.users[0]);
           }
+          loadAllUsers();
         }
       } catch (err) {
-        console.error('Failed to add resources:', err);
-        alert('Failed to add resources');
+        console.error('Failed to set resources:', err);
+        alert('Failed to set resources');
       }
     }
 
@@ -1235,46 +1213,49 @@
         
         const usersList = document.getElementById('all-users-list');
         if (!data.users || data.users.length === 0) {
-          usersList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No users found</p>';
+          usersList.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-sm text-gray-500 dark:text-gray-400">No users found</p></div>';
           return;
         }
 
         usersList.innerHTML = '';
         data.users.forEach(user => {
           const div = document.createElement('div');
-          div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
+          div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition cursor-pointer';
+          div.onclick = () => selectUser(user);
           div.innerHTML = `
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
-                  class="w-10 h-10 rounded-full">
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.username}#${user.discriminator}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">ID: ${user.id}</p>
-                </div>
+            <div class="flex items-center gap-3 mb-3">
+              <img src="https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png" 
+                class="w-10 h-10 rounded-full">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">${user.username}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${user.id}</p>
               </div>
-              <div class="flex gap-4 text-sm">
-                <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.coins}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.ram}MB</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.disk}MB</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.cpu}%</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Servers</p>
-                  <p class="font-medium text-gray-900 dark:text-gray-100">${user.resources.servers}</p>
-                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                <p class="text-xs text-gray-500 dark:text-gray-400">Coins</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">${user.coins}</p>
               </div>
+              <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                <p class="text-xs text-gray-500 dark:text-gray-400">RAM</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">${user.resources.ram}MB</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                <p class="text-xs text-gray-500 dark:text-gray-400">Disk</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">${user.resources.disk}MB</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                <p class="text-xs text-gray-500 dark:text-gray-400">CPU</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">${user.resources.cpu}%</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                📦 ${user.package || 'default'}
+              </span>
+              <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                🖥️ ${user.resources.servers} servers
+              </span>
             </div>
           `;
           usersList.appendChild(div);
@@ -1282,7 +1263,7 @@
         console.log('Loaded', data.users.length, 'users');
       } catch (err) {
         console.error('Failed to load users:', err);
-        document.getElementById('all-users-list').innerHTML = '<p class="text-sm text-red-500">Failed to load users</p>';
+        document.getElementById('all-users-list').innerHTML = '<div class="col-span-full"><p class="text-sm text-red-500">Failed to load users</p></div>';
       }
     }
 

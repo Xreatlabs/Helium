@@ -326,65 +326,120 @@ module.exports.load = async function (app, db) {
         return res.json({ users: [] });
       }
 
-      // Query database directly for all user keys
+      // Build a map of Pterodactyl ID -> Discord ID from local database
       const sqlite3 = require('better-sqlite3');
-      const dbFile = new sqlite3(settings.database);
-      const rows = dbFile.prepare("SELECT key FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      const rows = dbFile.prepare("SELECT key, value FROM keyv WHERE key LIKE 'helium:users-%'").all();
       dbFile.close();
       
-      const userIds = rows.map(row => row.key.replace('helium:users-', ''));
-      
-      const users = [];
-      for (const discordId of userIds) {
-        // Get Pterodactyl user ID
-        const pteroId = await db.get(`users-${discordId}`);
-        if (!pteroId) continue;
-
+      const pteroToDiscord = {};
+      rows.forEach(row => {
+        const discordId = row.key.replace('helium:users-', '');
+        let pteroId;
         try {
-          // Fetch user info from Pterodactyl
-          const userResponse = await fetch(
-            `${settings.pterodactyl.domain}/api/application/users/${pteroId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${settings.pterodactyl.key}`,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
+          const parsed = JSON.parse(row.value);
+          pteroId = parsed.value;
+        } catch(e) {
+          pteroId = row.value;
+        }
+        pteroToDiscord[pteroId] = discordId;
+      });
+      
+      // Fetch ALL users from Pterodactyl and filter by search query
+      const userResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/users?per_page=100`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
 
-          if (!userResponse.ok) continue;
+      if (!userResponse.ok) {
+        return res.status(500).json({ error: "Failed to fetch users from Pterodactyl" });
+      }
+      
+      const pterodactylData = await userResponse.json();
+      const users = [];
+      
+      for (const userData of pterodactylData.data) {
+        const user = userData.attributes;
+        
+        // Try to find Discord ID
+        let discordId = pteroToDiscord[user.id];
+        if (!discordId && /^\d{17,19}$/.test(user.username)) {
+          discordId = user.username;
+        }
+        
+        // Search by username, email or Discord ID
+        if (user.username?.toLowerCase().includes(query.toLowerCase()) || 
+            user.email?.toLowerCase().includes(query.toLowerCase()) ||
+            (discordId && discordId.includes(query))) {
           
-          const userData = await userResponse.json();
-          const user = userData.attributes;
-
-          // Search by username, email or Discord ID
-          if (user.username?.toLowerCase().includes(query.toLowerCase()) || 
-              user.email?.toLowerCase().includes(query.toLowerCase()) ||
-              discordId.includes(query)) {
+          // Get coins and resources
+          let coins = 0;
+          let ram = 0;
+          let disk = 0;
+          let cpu = 0;
+          let servers = 0;
+          
+          if (discordId) {
+            coins = await db.get(`coins-${discordId}`) || 0;
             
-            // Get coins and resources
-            const coins = await db.get(`coins-${discordId}`) || 0;
-            const ram = await db.get(`ram-${discordId}`) || 0;
-            const disk = await db.get(`disk-${discordId}`) || 0;
-            const cpu = await db.get(`cpu-${discordId}`) || 0;
-            const servers = await db.get(`servers-${discordId}`) || 0;
+            // Get user's package or use default
+            const packageName = await db.get(`package-${discordId}`) || settings.api.client.packages.default;
+            const packageData = settings.api.client.packages.list[packageName] || {
+              ram: 0,
+              disk: 0,
+              cpu: 0,
+              servers: 0
+            };
             
-            users.push({
-              id: discordId,
-              username: user.username,
-              discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
-              avatar: 'default', // Pterodactyl doesn't store Discord avatars
-              email: user.email,
-              coins,
-              resources: { ram, disk, cpu, servers }
-            });
-
-            if (users.length >= 10) break; // Limit to 10 results
+            // Get extra resources
+            const extraResources = await db.get(`extra-${discordId}`) || {
+              ram: 0,
+              disk: 0,
+              cpu: 0,
+              servers: 0
+            };
+            
+            // Calculate total resources (package + extra)
+            ram = packageData.ram + extraResources.ram;
+            disk = packageData.disk + extraResources.disk;
+            cpu = packageData.cpu + extraResources.cpu;
+            servers = packageData.servers + extraResources.servers;
           }
-        } catch (err) {
-          console.error(`Failed to fetch user ${discordId}:`, err);
-          continue;
+          
+          // For users without Discord ID, still show default package resources
+          if (!discordId) {
+            const defaultPackageData = settings.api.client.packages.list[settings.api.client.packages.default] || {
+              ram: 0,
+              disk: 0,
+              cpu: 0,
+              servers: 0
+            };
+            ram = defaultPackageData.ram;
+            disk = defaultPackageData.disk;
+            cpu = defaultPackageData.cpu;
+            servers = defaultPackageData.servers;
+          }
+          
+          users.push({
+            id: discordId || `ptero-${user.id}`,
+            username: user.username,
+            discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
+            avatar: 'default',
+            email: user.email,
+            coins,
+            resources: { ram, disk, cpu, servers },
+            pterodactylId: user.id,
+            package: discordId ? (await db.get(`package-${discordId}`) || settings.api.client.packages.default) : settings.api.client.packages.default
+          });
+
+          if (users.length >= 10) break;
         }
       }
       
@@ -406,62 +461,120 @@ module.exports.load = async function (app, db) {
     }
 
     try {
-      // Query database directly for all user keys
+      // Build a map of Pterodactyl ID -> Discord ID from local database
       const sqlite3 = require('better-sqlite3');
-      const dbFile = new sqlite3(settings.database);
-      const rows = dbFile.prepare("SELECT key FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      const rows = dbFile.prepare("SELECT key, value FROM keyv WHERE key LIKE 'helium:users-%'").all();
       dbFile.close();
       
-      const userIds = rows.map(row => row.key.replace('helium:users-', ''));
-      console.log(`Found ${userIds.length} users in database`);
+      const pteroToDiscord = {};
+      const discordToPtero = {};
+      rows.forEach(row => {
+        const discordId = row.key.replace('helium:users-', '');
+        let pteroId;
+        try {
+          const parsed = JSON.parse(row.value);
+          pteroId = parsed.value;
+        } catch(e) {
+          pteroId = row.value;
+        }
+        pteroToDiscord[pteroId] = discordId;
+        discordToPtero[discordId] = pteroId;
+      });
+      
+      console.log(`Found ${rows.length} users in local database`);
+      
+      // Fetch ALL users from Pterodactyl
+      const userResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/users?per_page=100`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!userResponse.ok) {
+        console.error('Failed to fetch users from Pterodactyl');
+        return res.status(500).json({ error: "Failed to fetch users from Pterodactyl" });
+      }
+      
+      const pterodactylData = await userResponse.json();
+      console.log(`Found ${pterodactylData.data.length} users in Pterodactyl`);
       
       const users = [];
-      for (const discordId of userIds) {
-        // Get Pterodactyl user ID
-        const pteroId = await db.get(`users-${discordId}`);
-        if (!pteroId) continue;
-
-        try {
-          // Fetch user info from Pterodactyl
-          const userResponse = await fetch(
-            `${settings.pterodactyl.domain}/api/application/users/${pteroId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${settings.pterodactyl.key}`,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
-
-          if (!userResponse.ok) {
-            console.log(`Failed to fetch user ${discordId} from Pterodactyl`);
-            continue;
-          }
-          
-          const userData = await userResponse.json();
-          const user = userData.attributes;
-          
-          // Get coins and resources
-          const coins = await db.get(`coins-${discordId}`) || 0;
-          const ram = await db.get(`ram-${discordId}`) || 0;
-          const disk = await db.get(`disk-${discordId}`) || 0;
-          const cpu = await db.get(`cpu-${discordId}`) || 0;
-          const servers = await db.get(`servers-${discordId}`) || 0;
-          
-          users.push({
-            id: discordId,
-            username: user.username,
-            discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
-            avatar: 'default', // Pterodactyl doesn't store Discord avatars
-            email: user.email,
-            coins,
-            resources: { ram, disk, cpu, servers }
-          });
-        } catch (err) {
-          console.error(`Failed to fetch user ${discordId}:`, err);
-          continue;
+      for (const userData of pterodactylData.data) {
+        const user = userData.attributes;
+        
+        // Try to find Discord ID - either from our map or if username is a Discord ID
+        let discordId = pteroToDiscord[user.id];
+        if (!discordId && /^\d{17,19}$/.test(user.username)) {
+          // Username looks like a Discord ID
+          discordId = user.username;
         }
+        
+        // Get coins and resources from local DB if we have a Discord ID
+        let coins = 0;
+        let ram = 0;
+        let disk = 0;
+        let cpu = 0;
+        let servers = 0;
+        
+        if (discordId) {
+          coins = await db.get(`coins-${discordId}`) || 0;
+          
+          // Get user's package or use default
+          const packageName = await db.get(`package-${discordId}`) || settings.api.client.packages.default;
+          const packageData = settings.api.client.packages.list[packageName] || {
+            ram: 0,
+            disk: 0,
+            cpu: 0,
+            servers: 0
+          };
+          
+          // Get extra resources
+          const extraResources = await db.get(`extra-${discordId}`) || {
+            ram: 0,
+            disk: 0,
+            cpu: 0,
+            servers: 0
+          };
+          
+          // Calculate total resources (package + extra)
+          ram = packageData.ram + extraResources.ram;
+          disk = packageData.disk + extraResources.disk;
+          cpu = packageData.cpu + extraResources.cpu;
+          servers = packageData.servers + extraResources.servers;
+        }
+        
+        // For users without Discord ID, still show default package resources
+        if (!discordId) {
+          const defaultPackageData = settings.api.client.packages.list[settings.api.client.packages.default] || {
+            ram: 0,
+            disk: 0,
+            cpu: 0,
+            servers: 0
+          };
+          ram = defaultPackageData.ram;
+          disk = defaultPackageData.disk;
+          cpu = defaultPackageData.cpu;
+          servers = defaultPackageData.servers;
+        }
+        
+        users.push({
+          id: discordId || `ptero-${user.id}`,
+          username: user.username,
+          discriminator: user.username.includes('#') ? user.username.split('#')[1] : '0000',
+          avatar: 'default',
+          email: user.email,
+          coins,
+          resources: { ram, disk, cpu, servers },
+          pterodactylId: user.id,
+          package: discordId ? (await db.get(`package-${discordId}`) || settings.api.client.packages.default) : settings.api.client.packages.default
+        });
       }
       
       console.log(`Returning ${users.length} users`);
@@ -491,7 +604,10 @@ module.exports.load = async function (app, db) {
 
     try {
       const settingsPath = "./settings.json";
-      const settings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      // Use async file operations to avoid blocking
+      const settingsData = await fs.promises.readFile(settingsPath, 'utf8');
+      const settings = JSON.parse(settingsData);
 
       // Parse value to appropriate type
       if (value === 'true') {
@@ -526,11 +642,14 @@ module.exports.load = async function (app, db) {
       }
       currentObj[keys[keys.length - 1]] = value;
 
-      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+      // Use async write to avoid blocking
+      await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+      
+      console.log(`[Settings] Updated ${setting} = ${JSON.stringify(value)}`);
       res.send("Settings updated successfully");
     } catch (err) {
-      console.error(err);
-      res.status(500).send("Internal Server Error");
+      console.error(`[Settings] Error updating ${setting}:`, err);
+      res.status(500).send(`Failed to update setting: ${err.message}`);
     }
   });
   

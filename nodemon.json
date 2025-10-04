@@ -1,0 +1,23 @@
+{
+  "ignore": [
+    "settings.json",
+    "database.sqlite",
+    "database.sqlite-shm",
+    "database.sqlite-wal",
+    "node_modules/*",
+    ".git/*",
+    "assets/*",
+    "*.log"
+  ],
+  "watch": [
+    "*.js",
+    "api/**/*.js",
+    "lib/**/*.js",
+    "managers/**/*.js",
+    "middleware/**/*.js",
+    "routes/**/*.js",
+    "views/**/*.ejs"
+  ],
+  "ext": "js,json,ejs",
+  "delay": 1000
+}
