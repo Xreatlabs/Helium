@@ -44,6 +44,211 @@ async function checkAdmin(req, res, db) {
 }
 
 module.exports.load = async function (app, db) {
+  // Fetch eggs from Pterodactyl Panel
+  app.get("/admin/pterodactyl/eggs", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/nests/${req.query.nest}/eggs?include=nest`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch eggs" });
+    }
+  });
+
+  // Fetch all nests from Pterodactyl Panel
+  app.get("/admin/pterodactyl/nests", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/nests`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch nests" });
+    }
+  });
+
+  // Fetch locations (nodes) from Pterodactyl Panel
+  app.get("/admin/pterodactyl/locations", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/locations`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch locations" });
+    }
+  });
+
+  // Save egg configuration
+  app.post("/admin/eggs/save", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { eggName, eggData } = req.body;
+      
+      const settingsPath = "./settings.json";
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      if (!currentSettings.api.client.eggs) {
+        currentSettings.api.client.eggs = {};
+      }
+      
+      currentSettings.api.client.eggs[eggName] = eggData;
+      
+      fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+      res.json({ success: true, message: "Egg saved successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to save egg" });
+    }
+  });
+
+  // Delete egg configuration
+  app.delete("/admin/eggs/delete", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { eggName } = req.body;
+      
+      const settingsPath = "./settings.json";
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      if (currentSettings.api.client.eggs && currentSettings.api.client.eggs[eggName]) {
+        delete currentSettings.api.client.eggs[eggName];
+        fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+        res.json({ success: true, message: "Egg deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Egg not found" });
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to delete egg" });
+    }
+  });
+
+  // Save location configuration
+  app.post("/admin/locations/save", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { locationId, locationData } = req.body;
+      
+      const settingsPath = "./settings.json";
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      if (!currentSettings.api.client.locations) {
+        currentSettings.api.client.locations = {};
+      }
+      
+      currentSettings.api.client.locations[locationId] = locationData;
+      
+      fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+      res.json({ success: true, message: "Location saved successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to save location" });
+    }
+  });
+
+  // Delete location configuration
+  app.delete("/admin/locations/delete", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { locationId } = req.body;
+      
+      const settingsPath = "./settings.json";
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath));
+      
+      if (currentSettings.api.client.locations && currentSettings.api.client.locations[locationId]) {
+        delete currentSettings.api.client.locations[locationId];
+        fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+        res.json({ success: true, message: "Location deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Location not found" });
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to delete location" });
+    }
+  });
+
   app.get("/settings/update", async (req, res) => {
     // Check if the user is authorized to make changes
     if (!req.session.userinfo || !req.session.userinfo.id) {
