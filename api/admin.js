@@ -1423,6 +1423,53 @@ module.exports.load = async function (app, db) {
       }
     }
   };
+
+  // Admin endpoint to manage server renewals
+  app.post("/admin/server/expiry", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { serverId, expiryDays } = req.body;
+
+    if (!serverId) {
+      return res.status(400).json({ error: "Server ID is required" });
+    }
+
+    try {
+      if (expiryDays === null || expiryDays === undefined || expiryDays === "") {
+        // Remove expiration
+        await db.delete("server-expiry-" + serverId);
+        log(
+          "Admin - Remove Server Expiry",
+          `${req.session.userinfo.username} removed expiration for server ${serverId}`
+        );
+        return res.json({ success: true, message: "Expiration removed" });
+      }
+
+      const days = parseInt(expiryDays);
+      if (isNaN(days)) {
+        return res.status(400).json({ error: "Invalid days value" });
+      }
+
+      const expiryDate = Date.now() + days * 24 * 60 * 60 * 1000;
+      await db.set("server-expiry-" + serverId, expiryDate);
+
+      log(
+        "Admin - Set Server Expiry",
+        `${req.session.userinfo.username} set server ${serverId} to expire in ${days} days (${new Date(expiryDate).toISOString()})`
+      );
+
+      return res.json({
+        success: true,
+        message: `Expiration set to ${days} days from now`,
+        expiryDate: new Date(expiryDate).toISOString(),
+      });
+    } catch (error) {
+      console.error("Error setting server expiry:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
 };
 
 function hexToDecimal(hex) {

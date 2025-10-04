@@ -95,6 +95,58 @@ module.exports.renderdataeval = `(async () => {
       isDarkMode: isDarkMode,
     db: db
     };
+    
+    // Fetch server expiry data for renewal system
+    renderdata.serverExpiry = {};
+    if (newsettings.api.client.allow.renewsuspendsystem?.enabled && req.session.pterodactyl?.relationships?.servers?.data) {
+      for (const server of req.session.pterodactyl.relationships.servers.data) {
+        const serverId = server.attributes.id;
+        const expiryTime = await db.get("server-expiry-" + serverId);
+        if (expiryTime) {
+          const now = Date.now();
+          const daysUntilExpiry = Math.floor((expiryTime - now) / (24 * 60 * 60 * 1000));
+          const hoursUntilExpiry = Math.floor((expiryTime - now) / (60 * 60 * 1000));
+          const gracePeriod = newsettings.api.client.allow.renewsuspendsystem.graceperiod || 3;
+          
+          let status = null;
+          let text = "";
+          let cssClass = "";
+          
+          if (daysUntilExpiry < 0) {
+            const daysOverdue = Math.abs(daysUntilExpiry);
+            if (daysOverdue > gracePeriod) {
+              status = "suspended";
+              text = "Suspended - Expired " + daysOverdue + " days ago";
+              cssClass = "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300";
+            } else {
+              status = "expired";
+              text = "Expired " + daysOverdue + " days ago (grace period)";
+              cssClass = "bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300";
+            }
+          } else if (daysUntilExpiry === 0) {
+            status = "expiring-today";
+            text = "Expires in " + hoursUntilExpiry + " hours";
+            cssClass = "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300";
+          } else if (daysUntilExpiry <= 3) {
+            status = "expiring-soon";
+            text = "Expires in " + daysUntilExpiry + " days";
+            cssClass = "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300";
+          } else {
+            status = "active";
+            text = "Expires in " + daysUntilExpiry + " days";
+            cssClass = "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300";
+          }
+          
+          renderdata.serverExpiry[serverId] = {
+            timestamp: expiryTime,
+            status: status,
+            text: text,
+            class: cssClass
+          };
+        }
+      }
+    }
+    
      renderdata.arcioafktext = JavaScriptObfuscator.obfuscate(\`
      let everywhat = \${newsettings.api.afk.every};
      let gaincoins = \${newsettings.api.afk.coins};
@@ -201,6 +253,12 @@ if (cluster.isMaster) {
       chalk.white("State updated: ") + chalk.green('online')
     );
   });
+
+  // Start renewal cron job
+  if (settings.api.client.allow.renewsuspendsystem?.enabled) {
+    const renewalCron = require("./scripts/renewal-cron");
+    renewalCron(db, settings);
+  }
 
   var cache = false;
   app.use(function (req, res, next) {

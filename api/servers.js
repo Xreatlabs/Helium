@@ -290,7 +290,7 @@ module.exports.load = async function (app, db) {
               };
             specs.deploy.locations = [location];
             
-            specs.docker_image = eggData.attributes.docker_image;
+            specs.docker_image = "ghcr.io/pterodactyl/yolks:java_21";
             specs.startup = eggData.attributes.startup;
             specs.environment = defaultEnvironment;
 
@@ -316,6 +316,13 @@ module.exports.load = async function (app, db) {
             let newpterodactylinfo = req.session.pterodactyl;
             newpterodactylinfo.relationships.servers.data.push(serverinfotext);
             req.session.pterodactyl = newpterodactylinfo;
+
+            // Set initial server expiration if renewal system is enabled
+            if (newsettings.api.client.allow.renewsuspendsystem?.enabled) {
+              const renewalPeriod = newsettings.api.client.allow.renewsuspendsystem.renewalperiod;
+              const expiryDate = Date.now() + (renewalPeriod * 24 * 60 * 60 * 1000);
+              await db.set("server-expiry-" + serverinfotext.attributes.id, expiryDate);
+            }
 
             cb();
             log(
@@ -628,4 +635,153 @@ module.exports.load = async function (app, db) {
       );
     }
   });
+
+  // Server Renewal Endpoint
+  app.post("/renew", async (req, res) => {
+    if (!req.session.pterodactyl) return res.redirect("/login");
+
+    let theme = indexjs.get(req);
+    let newsettings = JSON.parse(fs.readFileSync("./settings.json").toString());
+
+    // Check if renewal system is enabled
+    if (!newsettings.api.client.allow.renewsuspendsystem?.enabled) {
+      return res.redirect(theme.settings.redirect.renewserver + "?err=RENEWAL_DISABLED");
+    }
+
+    // Check if coins system is enabled
+    if (!newsettings.api.client.coins.enabled) {
+      return res.redirect(theme.settings.redirect.renewserver + "?err=COINS_DISABLED");
+    }
+
+    const serverId = req.body.serverid;
+    if (!serverId) {
+      return res.redirect(theme.settings.redirect.renewserver + "?err=MISSING_SERVER_ID");
+    }
+
+    try {
+      // Verify server belongs to user
+      const serverInfo = req.session.pterodactyl.relationships.servers.data.find(
+        (server) => server.attributes.id.toString() === serverId
+      );
+
+      if (!serverInfo) {
+        return res.redirect(theme.settings.redirect.renewserver + "?err=SERVER_NOT_FOUND");
+      }
+
+      // Get user's current coins
+      const userCoins = (await db.get("coins-" + req.session.userinfo.id)) || 0;
+      const renewalCost = newsettings.api.client.allow.renewsuspendsystem.renewalcost;
+
+      // Check if user has enough coins
+      if (userCoins < renewalCost) {
+        return res.redirect(theme.settings.redirect.renewserver + "?err=INSUFFICIENT_COINS");
+      }
+
+      // Deduct coins
+      await db.set("coins-" + req.session.userinfo.id, userCoins - renewalCost);
+
+      // Get current expiration or set new one
+      const currentExpiry = await db.get("server-expiry-" + serverId);
+      const now = Date.now();
+      const baseTime = currentExpiry && currentExpiry > now ? currentExpiry : now;
+      const renewalPeriod = newsettings.api.client.allow.renewsuspendsystem.renewalperiod;
+      const newExpiry = baseTime + (renewalPeriod * 24 * 60 * 60 * 1000);
+
+      // Set new expiration
+      await db.set("server-expiry-" + serverId, newExpiry);
+
+      // Unsuspend server if it was suspended
+      const isSuspended = await db.get("server-suspended-" + serverId);
+      if (isSuspended) {
+        try {
+          const unsuspendResponse = await fetch(
+            `${settings.pterodactyl.domain}/api/application/servers/${serverId}/unsuspend`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${settings.pterodactyl.key}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+          if (unsuspendResponse.ok || unsuspendResponse.status === 204) {
+            await db.delete("server-suspended-" + serverId);
+          }
+        } catch (err) {
+          console.error("Failed to unsuspend server:", err);
+        }
+      }
+
+      // Log the renewal
+      log(
+        "Server Renewed",
+        `${req.session.userinfo.username} renewed server ${serverInfo.attributes.name} (ID: ${serverId}) for ${renewalCost} coins. New expiry: ${new Date(newExpiry).toISOString()}`
+      );
+
+      // Trigger webhook event
+      try {
+        const { triggerEvent } = require("../lib/integrations");
+        await triggerEvent("server.renewed", {
+          serverId: serverId,
+          serverName: serverInfo.attributes.name,
+          userId: req.session.userinfo.id,
+          username: req.session.userinfo.username,
+          coinsSpent: renewalCost,
+          newExpiry: new Date(newExpiry).toISOString(),
+          renewalDays: renewalPeriod,
+        });
+      } catch (err) {
+        console.error("Webhook error:", err);
+      }
+
+      return res.redirect(theme.settings.redirect.renewserver + "?err=RENEWED");
+    } catch (error) {
+      console.error("Renewal error:", error);
+      return res.redirect(theme.settings.redirect.renewserver + "?err=RENEWAL_FAILED");
+    }
+  });
+
+  // Toggle Auto-Renewal Endpoint
+  app.post("/toggle-autorenewal", async (req, res) => {
+    if (!req.session.pterodactyl) return res.redirect("/login");
+
+    let theme = indexjs.get(req);
+    let newsettings = JSON.parse(fs.readFileSync("./settings.json").toString());
+
+    if (!newsettings.api.client.allow.renewsuspendsystem?.enabled ||
+        !newsettings.api.client.allow.renewsuspendsystem?.autorenewal) {
+      return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_DISABLED");
+    }
+
+    const serverId = req.body.serverid;
+    if (!serverId) {
+      return res.redirect(theme.settings.redirect.renewserver + "?err=MISSING_SERVER_ID");
+    }
+
+    try {
+      const serverInfo = req.session.pterodactyl.relationships.servers.data.find(
+        (server) => server.attributes.id.toString() === serverId
+      );
+
+      if (!serverInfo) {
+        return res.redirect(theme.settings.redirect.renewserver + "?err=SERVER_NOT_FOUND");
+      }
+
+      const currentStatus = await db.get("server-autorenewal-" + serverId);
+      if (currentStatus) {
+        await db.delete("server-autorenewal-" + serverId);
+        log("Auto-Renewal Disabled", `${req.session.userinfo.username} disabled auto-renewal for server ${serverInfo.attributes.name}`);
+        return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_DISABLED_SUCCESS");
+      } else {
+        await db.set("server-autorenewal-" + serverId, true);
+        log("Auto-Renewal Enabled", `${req.session.userinfo.username} enabled auto-renewal for server ${serverInfo.attributes.name}`);
+        return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_ENABLED");
+      }
+    } catch (error) {
+      console.error("Toggle auto-renewal error:", error);
+      return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_FAILED");
+    }
+  });
 };
+

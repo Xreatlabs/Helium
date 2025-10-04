@@ -65,7 +65,23 @@
           "modify": true,
           "delete": true
         },
-        "overresourcessuspend": false
+        "overresourcessuspend": false,
+        "renewsuspendsystem": {
+          "_comment": "Server renewal system - servers expire and can be renewed with coins",
+          "enabled": true,
+          "renewalperiod": 30,
+          "_renewalperiod_note": "Days a server lasts before requiring renewal",
+          "renewalcost": 100,
+          "_renewalcost_note": "Coins required to renew a server for the renewal period",
+          "graceperiod": 3,
+          "_graceperiod_note": "Days after expiration before auto-suspension",
+          "autosuspend": true,
+          "_autosuspend_note": "Automatically suspend servers after grace period expires",
+          "autorenewal": true,
+          "_autorenewal_note": "Allow users to enable automatic renewal with their coins",
+          "deletionperiod": 7,
+          "_deletionperiod_note": "Days after suspension before server is deleted (0 to disable auto-deletion)"
+        }
       },
       "oauth2": {
         "_comment": "Go to https://discord.dev/ and create an application to set up OAuth2. This is required for Helium to work. You must also set the redirect URL to the link below.",
