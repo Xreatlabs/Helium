@@ -80,7 +80,7 @@
           <div class="card mt-5">
             <div class="card-body">
               <% /* Server name */ %>
-              <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">Name</label><br>
+              <label for="name" class="text-sm font-medium text-gray-600 dark:text-gray-300">Name</label><br>
               <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="name" placeholder="My server">
 
               <% /* Location */ %>
@@ -102,12 +102,12 @@
               </select>
 
               <% /* Resources - RAM, CPU, Disk */ %>
-              <label for="ram" class="text-sm font-medium text-gray-600 pt-4">Memory (GiB)</label>
-              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="ram" placeholder="<%= (packages ? packages.ram : 0)/1024 + extraresources.ram/1024 - ram/1024 %>" value="<%= (packages ? packages.ram : 0)/1024 + extraresources.ram/1024 - ram/1024 %>">
-              <label for="disk" class="text-sm font-medium text-gray-600 pt-4">Storage (GiB)</label>
-              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="disk" placeholder="<%= (packages ? packages.disk : 0)/1024 + extraresources.disk/1024 - disk/1024 %>" value="<%= (packages ? packages.disk : 0)/1024 + extraresources.disk/1024 - disk/1024 %>">
-              <label for="cpu" class="text-sm font-medium text-gray-600 pt-4">CPU Cores</label>
-              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" id="cpu" placeholder="<%= (packages ? packages.cpu : 0)/100 + extraresources.cpu/100 - cpu/100 %>" value="<%= (packages ? packages.cpu : 0)/100 + extraresources.cpu/100 - cpu/100 %>">
+              <label for="ram" class="text-sm font-medium text-gray-600 dark:text-gray-300 pt-4">Memory (GiB)</label>
+              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="ram" placeholder="<%= (packages ? packages.ram : 0)/1024 + extraresources.ram/1024 - ram/1024 %>" value="<%= (packages ? packages.ram : 0)/1024 + extraresources.ram/1024 - ram/1024 %>">
+              <label for="disk" class="text-sm font-medium text-gray-600 dark:text-gray-300 pt-4">Storage (GiB)</label>
+              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="disk" placeholder="<%= (packages ? packages.disk : 0)/1024 + extraresources.disk/1024 - disk/1024 %>" value="<%= (packages ? packages.disk : 0)/1024 + extraresources.disk/1024 - disk/1024 %>">
+              <label for="cpu" class="text-sm font-medium text-gray-600 dark:text-gray-300 pt-4">CPU Cores</label>
+              <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="cpu" placeholder="<%= (packages ? packages.cpu : 0)/100 + extraresources.cpu/100 - cpu/100 %>" value="<%= (packages ? packages.cpu : 0)/100 + extraresources.cpu/100 - cpu/100 %>">
 
               <% /* Submit form */ %>
               <a href="javascript:submitForm()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 px-8 py-2 text-sm font-medium text-gray-600 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600" onclick="replaceWithLoader()">
@@ -140,11 +140,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-amber-500">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            <h3 class="mt-4 text-md font-semibold tracking-tight text-gray-900">Insufficient resources</h3>
-            <p class="mt-1 text-xs text-gray-500">You need at least 1 GiB memory in order to deploy a server.</p>
+            <h3 class="mt-4 text-md font-semibold tracking-tight text-gray-900 dark:text-gray-100">Insufficient resources</h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">You need at least 1 GiB memory in order to deploy a server.</p>
             <div class="mt-6">
-              <a href="../servers" type="button" class="transition inline-flex items-center rounded-full bg-white px-6 py-1.5 text-xs font-light text-gray-700 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="-ml-0.5 mr-1.5 h-4 w-4 text-gray-800">
+              <a href="../servers" type="button" class="transition inline-flex items-center rounded-full bg-white dark:bg-gray-800 px-6 py-1.5 text-xs font-light text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="-ml-0.5 mr-1.5 h-4 w-4 text-gray-800 dark:text-gray-200">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
                 Back
