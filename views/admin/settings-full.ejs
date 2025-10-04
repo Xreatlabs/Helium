@@ -111,6 +111,15 @@
                 <button onclick="showTab('oauth')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   OAuth2
                 </button>
+                <button onclick="showTab('api')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  API & Bot
+                </button>
+                <button onclick="showTab('permissions')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Permissions
+                </button>
+                <button onclick="showTab('packages')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Packages
+                </button>
                 <button onclick="showTab('coins')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Coins & Store
                 </button>
@@ -159,6 +168,12 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website Secret</label>
                       <input type="text" name="website.secret" value="<%= settings.website.secret %>" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Database Connection</label>
+                      <input type="text" name="database" value="<%= settings.database %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">SQLite connection string (requires restart)</p>
                     </div>
                     <div class="flex items-center">
                       <input type="checkbox" name="testing" <%= settings.testing ? 'checked' : '' %> 
@@ -249,6 +264,211 @@
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save OAuth2 Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-api" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">API Settings</h3>
+                <form id="form-api" onsubmit="saveSettings(event, 'api')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.api.enabled" <%= settings.api?.client?.api?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable API</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Code</label>
+                      <input type="password" name="api.client.api.code" value="<%= settings.api?.client?.api?.code || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Secret key for API access</p>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save API Settings
+                  </button>
+                </form>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Discord Bot Settings</h3>
+                <form id="form-bot" onsubmit="saveSettings(event, 'bot')">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot Token</label>
+                      <input type="password" name="api.client.bot.token" value="<%= settings.api?.client?.bot?.token || '' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Auto Join Guild</h4>
+                      <div class="flex items-center mb-4">
+                        <input type="checkbox" name="api.client.bot.joinguild.enabled" <%= settings.api?.client?.bot?.joinguild?.enabled ? 'checked' : '' %> 
+                          class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                        <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Auto Join</label>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Guild IDs (one per line)</label>
+                        <textarea name="api.client.bot.joinguild.guildid" rows="3" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                          placeholder="Guild ID"><%= settings.api?.client?.bot?.joinguild?.guildid?.join('\n') || '' %></textarea>
+                      </div>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Give Role on Login</h4>
+                      <div class="flex items-center mb-4">
+                        <input type="checkbox" name="api.client.bot.giverole.enabled" <%= settings.api?.client?.bot?.giverole?.enabled ? 'checked' : '' %> 
+                          class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                        <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Auto Role</label>
+                      </div>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Guild ID</label>
+                          <input type="text" name="api.client.bot.giverole.guildid" value="<%= settings.api?.client?.bot?.giverole?.guildid || '' %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role ID</label>
+                          <input type="text" name="api.client.bot.giverole.roleid" value="<%= settings.api?.client?.bot?.giverole?.roleid || '' %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Bot Settings
+                  </button>
+                </form>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">J4R (Join for Rewards)</h3>
+                <form id="form-j4r" onsubmit="saveSettings(event, 'j4r')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.j4r.enabled" <%= settings.api?.client?.j4r?.enabled ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable J4R System</label>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Note: J4R ads configuration requires manual JSON editing in settings.json</p>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save J4R Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-permissions" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">User Permissions</h3>
+                <form id="form-permissions" onsubmit="saveSettings(event, 'permissions')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.allow.newusers" <%= settings.api?.client?.allow?.newusers ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Allow New Users to Register</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.allow.regen" <%= settings.api?.client?.allow?.regen ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Allow Password Regeneration</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.allow.overresourcessuspend" <%= settings.api?.client?.allow?.overresourcessuspend ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Suspend on Over Resources</label>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Server Permissions</h4>
+                      <div class="space-y-2">
+                        <label class="flex items-center">
+                          <input type="checkbox" name="api.client.allow.server.create" <%= settings.api?.client?.allow?.server?.create ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow Server Creation</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="api.client.allow.server.modify" <%= settings.api?.client?.allow?.server?.modify ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow Server Modification</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="api.client.allow.server.delete" <%= settings.api?.client?.allow?.server?.delete ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow Server Deletion</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Permission Settings
+                  </button>
+                </form>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Password Generator</h3>
+                <form id="form-password" onsubmit="saveSettings(event, 'password')">
+                  <div class="space-y-6">
+                    <div class="flex items-center">
+                      <input type="checkbox" name="api.client.passwordgenerator.signup" <%= settings.api?.client?.passwordgenerator?.signup ? 'checked' : '' %> 
+                        class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                      <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Generate Password on Signup</label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password Length</label>
+                      <input type="number" name="api.client.passwordgenerator.length" value="<%= settings.api?.client?.passwordgenerator?.length || 16 %>" 
+                        min="8" max="64"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Password Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-packages" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Packages & Resources</h3>
+                <form id="form-packages" onsubmit="saveSettings(event, 'packages')">
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Package</label>
+                      <input type="text" name="api.client.packages.default" value="<%= settings.api?.client?.packages?.default || 'default' %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Default Package Resources</h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RAM (MB)</label>
+                          <input type="number" name="api.client.packages.list.default.ram" value="<%= settings.api?.client?.packages?.list?.default?.ram || 1024 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
+                          <input type="number" name="api.client.packages.list.default.disk" value="<%= settings.api?.client?.packages?.list?.default?.disk || 1024 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
+                          <input type="number" name="api.client.packages.list.default.cpu" value="<%= settings.api?.client?.packages?.list?.default?.cpu || 100 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server Slots</label>
+                          <input type="number" name="api.client.packages.list.default.servers" value="<%= settings.api?.client?.packages?.list?.default?.servers || 2 %>" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4">Note: Advanced package configuration (locations, eggs, role packages) requires manual JSON editing in settings.json</p>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Package Settings
                   </button>
                 </form>
               </div>
@@ -612,10 +832,10 @@
           }
         }
         
-        window.location.href = '/settings-full?success=1';
+        window.location.href = '/settings?success=1';
       } catch (error) {
         console.error('Error saving settings:', error);
-        window.location.href = '/settings-full?error=' + encodeURIComponent(error.message);
+        window.location.href = '/settings?error=' + encodeURIComponent(error.message);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;

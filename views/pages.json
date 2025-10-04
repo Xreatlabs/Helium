@@ -53,8 +53,7 @@
     "servers": "servers/servers.ejs",
     "accounts": "accounts.ejs",
     "admin": "admin/admin.ejs",
-    "settings": "admin/settings.ejs",
-    "settings-full": "admin/settings-full.ejs",
+    "settings": "admin/settings-full.ejs",
     "webhooks": "admin/webhooks.ejs"
   },
   "mustbeloggedin": [
@@ -71,7 +70,6 @@
   "mustbeadmin": [
     "/admin",
     "/settings",
-    "/settings-full",
     "/webhooks"
   ]
 }
