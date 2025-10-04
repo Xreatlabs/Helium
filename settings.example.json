@@ -199,17 +199,13 @@
         }
       },
       "linkvertise": {
-        "_comment": "Configure Linkvertise earning. Create Linkvertise links that redirect to your callback URL after completion.",
+        "_comment": "Configure Linkvertise earning with one-time token system",
         "enabled": false,
+        "userId": "1405790",
+        "baseUrl": "https://link-to.net",
+        "domain": "http://localhost:3000",
         "rewardCoins": 10,
-        "requireKnownLink": true,
-        "links": [
-          {
-            "id": "support-1",
-            "name": "Support us via Linkvertise",
-            "url": "https://linkvertise.com/12345/support?target=http://localhost:3000/linkvertise/callback?id=support-1"
-          }
-        ]
+        "cooldownTime": 3600
       }
     },
     "afk": {

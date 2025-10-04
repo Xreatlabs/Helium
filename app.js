@@ -107,7 +107,18 @@ module.exports.renderdataeval = `(async () => {
 
 // Load database
 const Keyv = require("keyv").default;
-const db = new Keyv(settings.database);
+const { KeyvSqlite } = require("@keyv/sqlite");
+
+// Use SQLite adapter directly to prevent caching issues across cluster workers
+const sqliteStore = new KeyvSqlite({
+  uri: settings.database,
+  busyTimeout: 10000
+});
+
+const db = new Keyv({
+  store: sqliteStore,
+  namespace: 'helium'
+});
 
 db.on("error", (err) => {
   console.log(

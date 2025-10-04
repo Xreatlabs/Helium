@@ -87,23 +87,22 @@
                 <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
                   <p class="text-sm text-amber-700">Linkvertise rewards are currently disabled.</p>
                 </div>
-              <% } %>
-              <% if (linkvertise && Array.isArray(linkvertise.links) && linkvertise.links.length > 0) { %>
-                <% linkvertise.links.forEach(function(l) { %>
-                  <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 transition hover:bg-gray-50 dark:hover:bg-gray-800/70 hover:border-gray-300 dark:hover:border-gray-600">
-                    <dt class="text-md tracking-tight font-semibold text-gray-600 dark:text-gray-300"><%= l.name %></dt>
-                    <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
-                      <div class="mt-1 flex rounded-md">
-                        <a href="<%= l.url %>" class="transition inline-flex items-center rounded-2xl bg-gray-200 dark:bg-gray-700 px-8 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                          Continue — +<%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins
-                        </a>
-                      </div>
-                    </dd>
-                  </div>
-                <% }); %>
               <% } else { %>
-                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
-                  <p class="text-sm text-gray-600 dark:text-gray-300">No Linkvertise links configured.</p>
+                <div class="px-4 py-5 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 transition hover:bg-gray-50 dark:hover:bg-gray-800/70 hover:border-gray-300 dark:hover:border-gray-600">
+                  <dt class="text-md tracking-tight font-semibold text-gray-600 dark:text-gray-300">Complete Linkvertise</dt>
+                  <dd class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    <p>Complete a Linkvertise link to earn <%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins.</p>
+                    <% if (linkvertise.cooldownTime) { %>
+                      <p class="mt-1 text-xs">Cooldown: <%= Math.floor(linkvertise.cooldownTime / 60) %> minutes between uses.</p>
+                    <% } %>
+                  </dd>
+                  <dd class="mt-3 flex justify-between items-baseline md:block lg:flex">
+                    <div class="mt-1 flex rounded-md">
+                      <a href="/api/user/earn/l4r/linkvertise/start" class="transition inline-flex items-center rounded-2xl bg-indigo-600 dark:bg-indigo-500 px-8 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Start Earning — +<%= (linkvertise && linkvertise.rewardCoins) || 10 %> coins
+                      </a>
+                    </div>
+                  </dd>
                 </div>
               <% } %>
             </div>
