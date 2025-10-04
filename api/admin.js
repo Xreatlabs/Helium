@@ -696,6 +696,18 @@ module.exports.load = async function (app, db) {
       `set coins`,
       `${req.session.userinfo.username}#${req.session.userinfo.discriminator} set the coins of the user with the ID \`${id}\` to \`${coins}\`.`
     );
+    
+    // Trigger webhook event for admin action
+    const { onAdminAction } = require('../lib/integrations');
+    onAdminAction(
+      req.session.userinfo.username,
+      'Set Coins',
+      id,
+      [
+        { name: 'New Balance', value: coins.toString(), inline: true }
+      ]
+    ).catch(err => console.error('Webhook error:', err));
+    
     res.redirect(successredirect + "?err=none");
   });
 
@@ -738,6 +750,14 @@ module.exports.load = async function (app, db) {
       `add coins`,
       `${req.session.userinfo.username}#${req.session.userinfo.discriminator} added \`${req.query.coins}\` coins to the user with the ID \`${id}\`'s account.`
     );
+    
+    // Trigger webhook event for admin adding coins
+    const { onCoinsAdded } = require('../lib/integrations');
+    onCoinsAdded(
+      id,
+      `User ${id}`,
+      parseFloat(req.query.coins)
+    ).catch(err => console.error('Webhook error:', err));
     res.redirect(successredirect + "?err=none");
   });
 
@@ -825,6 +845,22 @@ module.exports.load = async function (app, db) {
         `set resources`,
         `${req.session.userinfo.username}#${req.session.userinfo.discriminator} set the resources of the user with the ID \`${id}\` to:\`\`\`servers: ${serversstring}\nCPU: ${cpustring}%\nMemory: ${ramstring} MB\nDisk: ${diskstring} MB\`\`\``
       );
+      
+      // Trigger webhook event for admin action
+      const { onAdminAction } = require('../lib/integrations');
+      const fields = [];
+      if (req.query.servers) fields.push({ name: 'Servers', value: serversstring, inline: true });
+      if (req.query.cpu) fields.push({ name: 'CPU', value: cpustring + '%', inline: true });
+      if (req.query.ram) fields.push({ name: 'RAM', value: ramstring + ' MB', inline: true });
+      if (req.query.disk) fields.push({ name: 'Disk', value: diskstring + ' MB', inline: true });
+      
+      onAdminAction(
+        req.session.userinfo.username,
+        'Set Resources',
+        id,
+        fields
+      ).catch(err => console.error('Webhook error:', err));
+      
       return res.redirect(successredirect + "?err=none");
     } else {
       res.redirect(`${failredirect}?err=MISSINGVARIABLES`);

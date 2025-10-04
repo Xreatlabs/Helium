@@ -70,6 +70,22 @@ module.exports.load = async function (app, db) {
       `${req.session.userinfo.username}#${req.session.userinfo.discriminator} bought ${extraResource} ${type} from the store for \`${purchaseCost}\` coins.`
     );
 
+    // Trigger webhook events
+    const { onCoinsSpent, onResourcePurchased } = require('../lib/integrations');
+    onCoinsSpent(
+      req.session.userinfo.id,
+      req.session.userinfo.username,
+      purchaseCost,
+      `${type} resources`
+    ).catch(err => console.error('Webhook error:', err));
+    
+    onResourcePurchased(
+      req.session.userinfo.id,
+      req.session.userinfo.username,
+      type,
+      extraResource
+    ).catch(err => console.error('Webhook error:', err));
+
     res.redirect(
       (theme.settings.redirect[`purchase${type}`]
         ? theme.settings.redirect[`purchase${type}`]

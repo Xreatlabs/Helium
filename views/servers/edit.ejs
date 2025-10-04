@@ -58,7 +58,7 @@
                 </span>
               </div>
             </div>
-            <div class="bg-gray-100 rounded-lg text-darker text-sm">
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg text-darker text-sm">
               <%
                     let ram = 0;
                     let disk = 0;
@@ -92,31 +92,31 @@
                 </div>
                 <div class="grid grid-cols-3 gap-6">
                   <div class="col-span-3 sm:col-span-2">
-                    <label for="company-website" class="text-sm font-medium text-gray-600">Memory (GiB)</label>
+                    <label for="company-website" class="text-sm font-medium text-gray-600 dark:text-gray-300">Memory (GiB)</label>
                     <div class="mt-1 flex">
-                      <input type="text" name="company-website" id="ram" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" value="<%= serverinfo.attributes.limits.memory/1024 %>">
+                      <input type="text" name="company-website" id="ram" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-200" value="<%= serverinfo.attributes.limits.memory/1024 %>">
                     </div>
                   </div>
                 </div><br>
 
                 <div class="grid grid-cols-3 gap-6">
                   <div class="col-span-3 sm:col-span-2">
-                    <label for="company-website" class="text-sm font-medium text-gray-600">CPU Cores</label>
+                    <label for="company-website" class="text-sm font-medium text-gray-600 dark:text-gray-300">CPU Cores</label>
                     <div class="mt-1 flex">
-                      <input type="text" name="company-website" id="cpu" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" value="<%= serverinfo.attributes.limits.cpu/100 %>">
+                      <input type="text" name="company-website" id="cpu" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-200" value="<%= serverinfo.attributes.limits.cpu/100 %>">
                     </div>
                   </div>
                 </div><br>
 
                 <div class="grid grid-cols-3 gap-6">
                   <div class="col-span-3 sm:col-span-2">
-                    <label for="company-website" class="text-sm font-medium text-gray-600">Storage (GiB)</label>
+                    <label for="company-website" class="text-sm font-medium text-gray-600 dark:text-gray-300">Storage (GiB)</label>
                     <div class="mt-1 flex">
-                      <input type="text" name="company-website" id="disk" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 text-gray-600" value="<%= serverinfo.attributes.limits.disk/1024 %>">
+                      <input type="text" name="company-website" id="disk" class="mt-3 px-4 py-2 focus:border-gray-400 focus:ring-gray-600 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-600 dark:text-gray-200" value="<%= serverinfo.attributes.limits.disk/1024 %>">
                     </div>
                   </div>
                 </div><br><br>
-                <button onclick="submitForm()" class="transition inline-flex items-center rounded-2xl bg-gray-200 px-8 py-2 text-sm font-medium text-gray-600 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                <button onclick="submitForm()" class="transition inline-flex items-center rounded-2xl bg-gray-200 dark:bg-gray-700 px-8 py-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
                   Apply Changes
                 </button>
               </div>
@@ -129,10 +129,10 @@
                 };
               </script>
               <% } else { %>
-              <p class="text-gray-600">Could not find server with the provided ID.</p>
+              <p class="text-gray-600 dark:text-gray-400">Could not find server with the provided ID.</p>
               <% } %>
               <% } else { %>
-              <p class="text-gray-600">Missing server ID.</p>
+              <p class="text-gray-600 dark:text-gray-400">Missing server ID.</p>
               <% } %>
             </div>
           </div>

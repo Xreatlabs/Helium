@@ -32,31 +32,37 @@ module.exports.load = async function(app, db) {
 
     currentlyonpage[req.session.userinfo.id] = true;
     
-    // Send initial stats
-    ws.send(JSON.stringify({
-      type: 'stats',
-      activeUsers: Object.keys(currentlyonpage).length,
-      multiplier: getMultiplier(),
-      baseCoins: newsettings.api.afk.coins,
-      interval: newsettings.api.afk.every
-    }));
-
-    // Broadcast stats update to all clients
-    const broadcastStats = () => {
-      const stats = {
-        type: 'stats',
-        activeUsers: Object.keys(currentlyonpage).length,
-        multiplier: getMultiplier(),
-        baseCoins: newsettings.api.afk.coins,
-        interval: newsettings.api.afk.every
-      };
-      // Note: In production, you'd want to track all ws connections to broadcast properly
-      // For now, we'll send on coin award
-      return stats;
+    // Track when next coin will be awarded
+    const connectionTime = Date.now();
+    let nextCoinTime = connectionTime + (newsettings.api.afk.every * 1000);
+    
+    // Send initial stats with exact remaining time
+    const sendStats = () => {
+      if (ws.readyState === 1) {
+        const now = Date.now();
+        const remainingSeconds = Math.ceil((nextCoinTime - now) / 1000);
+        
+        ws.send(JSON.stringify({
+          type: 'stats',
+          activeUsers: Object.keys(currentlyonpage).length,
+          multiplier: getMultiplier(),
+          baseCoins: newsettings.api.afk.coins,
+          interval: newsettings.api.afk.every,
+          remainingSeconds: Math.max(0, remainingSeconds)
+        }));
+      }
     };
+    
+    sendStats();
 
+    // Send stats updates every 5 seconds to keep clients in sync with exact countdown
+    let statsLoop = setInterval(sendStats, 5000);
+
+    // Coin earning loop
     let coinloop = setInterval(
       async function() {
+        if (ws.readyState !== 1) return;
+        
         const multiplier = getMultiplier();
         const coinsToAdd = Math.floor(newsettings.api.afk.coins * multiplier * 100) / 100;
         
@@ -64,6 +70,17 @@ module.exports.load = async function(app, db) {
         usercoins = usercoins ? usercoins : 0;
         usercoins = usercoins + coinsToAdd;
         await db.set("coins-" + req.session.userinfo.id, usercoins);
+        
+        // Trigger webhook event for coins added
+        const { onCoinsAdded } = require('../lib/integrations');
+        onCoinsAdded(
+          req.session.userinfo.id,
+          req.session.userinfo.username,
+          coinsToAdd
+        ).catch(err => console.error('Webhook error:', err));
+        
+        // Update next coin time
+        nextCoinTime = Date.now() + (newsettings.api.afk.every * 1000);
         
         // Send coin update with current stats
         ws.send(JSON.stringify({
@@ -76,10 +93,30 @@ module.exports.load = async function(app, db) {
       }, newsettings.api.afk.every * 1000
     );
 
+    // Heartbeat to keep connection alive
+    let heartbeat = setInterval(() => {
+      if (ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'heartbeat' }));
+      }
+    }, 30000);
+
+    ws.on('message', (msg) => {
+      try {
+        const data = JSON.parse(msg);
+        if (data.type === 'pong') {
+          // Client is alive
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    });
+
     ws.onclose = async() => {
       clearInterval(coinloop);
+      clearInterval(statsLoop);
+      clearInterval(heartbeat);
       delete currentlyonpage[req.session.userinfo.id];
-    }
+    };
   });
 };
 

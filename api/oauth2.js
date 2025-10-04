@@ -414,6 +414,13 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       log('signup', `${discordUser.username}#${discordUser.discriminator} created account`);
       console.log(`[OAuth] Created new Pterodactyl account: ID ${userId}`);
       
+      // Trigger webhook event
+      const { onUserRegistered } = require('../lib/integrations');
+      onUserRegistered({
+        id: discordUser.id,
+        username: discordUser.username
+      }).catch(err => console.error('Webhook error:', err));
+      
       return data.attributes;
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse Pterodactyl create response:`, jsonError);
@@ -458,6 +465,14 @@ async function handleJ4R(userId, accessToken, db) {
         userJ4Rs.push({ id: guildConfig.id, coins: guildConfig.coins });
         coins += guildConfig.coins;
         console.log(`[J4R] User ${userId} joined ${guildConfig.id}, earned ${guildConfig.coins} coins`);
+        
+        // Trigger webhook event for J4R coins
+        const { onCoinsAdded } = require('../lib/integrations');
+        onCoinsAdded(
+          discordUser.id,
+          discordUser.username,
+          guildConfig.coins
+        ).catch(err => console.error('Webhook error:', err));
       }
     }
 

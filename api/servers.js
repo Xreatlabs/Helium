@@ -244,6 +244,31 @@ module.exports.load = async function (app, db) {
                 }
             }
 
+            let eggData;
+            try {
+              const eggResponse = await fetch(
+                `${settings.pterodactyl.domain}/api/application/nests/${egginfo.info.nest || 1}/eggs/${egginfo.info.egg}?include=variables`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${settings.pterodactyl.key}`,
+                    Accept: "application/json",
+                  },
+                }
+              );
+              eggData = await eggResponse.json();
+            } catch (err) {
+              console.error("Failed to fetch egg data:", err);
+              cb();
+              return res.redirect(`${redirectlink}?err=EGGFETCHFAILED`);
+            }
+
+            let defaultEnvironment = {};
+            if (eggData.attributes.relationships && eggData.attributes.relationships.variables) {
+              for (let variable of eggData.attributes.relationships.variables.data) {
+                defaultEnvironment[variable.attributes.env_variable] = variable.attributes.default_value;
+              }
+            }
+
             let specs = egginfo.info;
             specs["user"] = await db.get("users-" + req.session.userinfo.id);
             if (!specs["limits"])
@@ -264,6 +289,10 @@ module.exports.load = async function (app, db) {
                 port_range: [],
               };
             specs.deploy.locations = [location];
+            
+            specs.docker_image = eggData.attributes.docker_image;
+            specs.startup = eggData.attributes.startup;
+            specs.environment = defaultEnvironment;
 
             let serverinfo = await fetch(
               settings.pterodactyl.domain + "/api/application/servers",

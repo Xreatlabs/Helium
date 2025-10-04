@@ -237,6 +237,9 @@
               updateStats(data);
             } else if (data.type === 'coins') {
               handleCoinEarned(data);
+            } else if (data.type === 'heartbeat') {
+              // Respond to heartbeat to keep connection alive
+              ws.send(JSON.stringify({ type: 'pong' }));
             }
           } catch (err) {
             console.error('Error parsing message:', err);
@@ -284,9 +287,11 @@
       const progress = ((data.multiplier - 1.0) / (maxMultiplier - 1.0)) * 100;
       document.getElementById('multiplier-progress').style.width = `${progress}%`;
       
-      // Start countdown if not already running
-      if (!countdownInterval) {
-        startCountdown(intervalSeconds);
+      // Sync countdown with backend's remaining time
+      if (data.remainingSeconds !== undefined) {
+        startCountdown(data.remainingSeconds, intervalSeconds);
+      } else if (!countdownInterval) {
+        startCountdown(intervalSeconds, intervalSeconds);
       }
     }
 
@@ -295,38 +300,53 @@
       totalEarned += data.earned;
       document.getElementById('sessionEarnings').textContent = totalEarned.toFixed(2);
       
-      // Update stats
+      // Update multiplier and stats
+      currentMultiplier = data.multiplier;
       document.getElementById('activeUsers').textContent = data.activeUsers;
       document.getElementById('multiplier').textContent = `x${data.multiplier.toFixed(2)}`;
+      
+      // Update multiplier progress bar
+      const maxMultiplier = 2.5;
+      const progress = ((data.multiplier - 1.0) / (maxMultiplier - 1.0)) * 100;
+      document.getElementById('multiplier-progress').style.width = `${progress}%`;
+      
+      // Update rates
+      const baseRate = (baseCoinsPerInterval / intervalSeconds * 60).toFixed(2);
+      const currentRate = (baseCoinsPerInterval * data.multiplier / intervalSeconds * 60).toFixed(2);
+      document.getElementById('baseRate').textContent = `${baseRate} coins/min`;
+      document.getElementById('currentRate').textContent = `${currentRate} coins/min`;
       
       // Show notification
       showNotification(`+${data.earned.toFixed(2)} coins earned! (x${data.multiplier.toFixed(2)} multiplier)`, 'success');
       
-      // Restart countdown
-      startCountdown(intervalSeconds);
+      // Restart countdown - this ensures perfect sync with backend
+      startCountdown(intervalSeconds, intervalSeconds);
     }
 
     // Start countdown timer
-    function startCountdown(seconds) {
+    function startCountdown(remainingTime, totalTime = null) {
       if (countdownInterval) clearInterval(countdownInterval);
       
-      let remaining = seconds;
-      const totalSeconds = seconds;
+      let remaining = remainingTime;
+      const totalSeconds = totalTime || remainingTime;
       
       const updateTimer = () => {
         const mins = Math.floor(remaining / 60);
         const secs = remaining % 60;
         document.getElementById('countdown').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
         
-        // Update progress bar
+        // Update progress bar (based on total interval)
         const progress = ((totalSeconds - remaining) / totalSeconds) * 100;
-        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-bar').style.width = `${Math.max(0, Math.min(100, progress))}%`;
         
         remaining--;
         
         if (remaining < 0) {
-          remaining = totalSeconds;
-          document.getElementById('progress-bar').style.width = '0%';
+          // Don't auto-reset, wait for actual coin message
+          document.getElementById('countdown').textContent = 'Earning...';
+          document.getElementById('progress-bar').style.width = '100%';
+          clearInterval(countdownInterval);
+          countdownInterval = null;
         }
       };
       
