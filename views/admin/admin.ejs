@@ -334,7 +334,7 @@
     let locationsData = [];
     let selectedEggData = null;
     let selectedLocationData = null;
-    let currentSettings = <%= JSON.stringify(settings.api.client) %>;
+    let currentSettings = <%- JSON.stringify(settings.api.client || {}) %>;
 
     // Tab switching
     function showConfigTab(tabName) {
@@ -372,8 +372,16 @@
     // Load nests
     async function loadNests() {
       try {
+        console.log('Loading nests from Pterodactyl Panel...');
         const response = await fetch('/admin/pterodactyl/nests');
+        console.log('Nests response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Nests data received:', data);
         nestsData = data.data || [];
         
         const nestSelect = document.getElementById('nest-select');
@@ -384,9 +392,10 @@
           option.textContent = nest.attributes.name;
           nestSelect.appendChild(option);
         });
+        console.log('Loaded', nestsData.length, 'nests');
       } catch (err) {
         console.error('Failed to load nests:', err);
-        alert('Failed to load nests from Pterodactyl Panel');
+        alert('Failed to load nests from Pterodactyl Panel. Check console for details.');
       }
     }
 
@@ -450,6 +459,8 @@
         return;
       }
 
+      console.log('Saving egg configuration:', eggName);
+
       const eggData = {
         display: displayName,
         minimum: {
@@ -486,6 +497,8 @@
         const result = await response.json();
         if (result.success) {
           alert('Egg configuration saved successfully!');
+          if (!currentSettings.eggs) currentSettings.eggs = {};
+          currentSettings.eggs[eggName] = eggData;
           loadExistingEggs();
           document.getElementById('egg-config-form').classList.add('hidden');
           document.getElementById('nest-select').value = '';
@@ -718,10 +731,12 @@
     }
 
     // Initialize on page load
-    if (document.getElementById('config-tab-eggs')) {
-      loadNests();
-      loadExistingEggs();
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('config-tab-eggs')) {
+        loadNests();
+        loadExistingEggs();
+      }
+    });
   </script>
 </body>
 </html>
