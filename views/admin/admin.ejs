@@ -231,6 +231,13 @@
                           <input type="text" id="location-package" placeholder="e.g., default" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave empty for no package restriction</p>
                         </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Nodes</label>
+                          <div id="location-nodes-checkboxes" class="space-y-2 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 max-h-48 overflow-y-auto">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Loading nodes...</p>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select which nodes users can deploy servers to at this location</p>
+                        </div>
                         <button onclick="saveLocation()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                           Save Location Configuration
                         </button>
@@ -341,6 +348,7 @@
     let nestsData = [];
     let eggsData = [];
     let locationsData = [];
+    let nodesData = [];
     let selectedEggData = null;
     let selectedLocationData = null;
     let currentSettings = <%- JSON.stringify(settings.api.client || {}) %>;
@@ -619,16 +627,17 @@
         
         const data = await response.json();
         console.log('Nodes data received:', data);
-        const nodes = data.data || [];
+        nodesData = data.data || [];
         
+        // Display nodes list
         const nodesList = document.getElementById('nodes-list');
-        if (nodes.length === 0) {
+        if (nodesData.length === 0) {
           nodesList.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes found</p>';
           return;
         }
 
         nodesList.innerHTML = '';
-        nodes.forEach(node => {
+        nodesData.forEach(node => {
           const div = document.createElement('div');
           div.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
           
@@ -666,7 +675,7 @@
           `;
           nodesList.appendChild(div);
         });
-        console.log('Loaded', nodes.length, 'nodes');
+        console.log('Loaded', nodesData.length, 'nodes');
       } catch (err) {
         console.error('Failed to load nodes:', err);
         document.getElementById('nodes-list').innerHTML = '<p class="text-sm text-red-500">Failed to load nodes. Check console for details.</p>';
@@ -690,6 +699,44 @@
       // Load existing package if configured
       const existingLocation = currentSettings.locations?.[locationId];
       document.getElementById('location-package').value = existingLocation?.package || '';
+      
+      // Populate node checkboxes
+      populateNodeCheckboxes(locationId, existingLocation?.nodes || []);
+    }
+
+    // Populate node checkboxes for location
+    function populateNodeCheckboxes(locationId, selectedNodes) {
+      const checkboxContainer = document.getElementById('location-nodes-checkboxes');
+      
+      if (nodesData.length === 0) {
+        checkboxContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes available</p>';
+        return;
+      }
+
+      // Filter nodes that belong to this location
+      const locationNodes = nodesData.filter(node => node.attributes.location_id == locationId);
+      
+      if (locationNodes.length === 0) {
+        checkboxContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No nodes found for this location</p>';
+        return;
+      }
+
+      checkboxContainer.innerHTML = '';
+      locationNodes.forEach(node => {
+        const isChecked = selectedNodes.includes(node.attributes.id.toString()) || selectedNodes.includes(node.attributes.id);
+        
+        const label = document.createElement('label');
+        label.className = 'flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer';
+        label.innerHTML = `
+          <input type="checkbox" 
+            value="${node.attributes.id}" 
+            ${isChecked ? 'checked' : ''}
+            class="location-node-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+          <span class="text-sm text-gray-900 dark:text-gray-100">${node.attributes.name}</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">(ID: ${node.attributes.id})</span>
+        `;
+        checkboxContainer.appendChild(label);
+      });
     }
 
     // Save location
@@ -703,9 +750,18 @@
         return;
       }
 
+      // Get selected nodes
+      const selectedNodes = [];
+      document.querySelectorAll('.location-node-checkbox:checked').forEach(checkbox => {
+        selectedNodes.push(parseInt(checkbox.value));
+      });
+
+      console.log('Saving location with nodes:', selectedNodes);
+
       const locationData = {
         name: displayName,
-        package: packageName
+        package: packageName,
+        nodes: selectedNodes
       };
 
       try {
@@ -746,12 +802,17 @@
 
       locationsList.innerHTML = '';
       Object.entries(locations).forEach(([key, location]) => {
+        const nodesInfo = location.nodes && location.nodes.length > 0 
+          ? `${location.nodes.length} node(s)` 
+          : 'No nodes';
+        
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
         div.innerHTML = `
           <div>
             <h5 class="font-medium text-gray-900 dark:text-gray-100">${location.name}</h5>
             <p class="text-xs text-gray-500 dark:text-gray-400">Location ID: ${key} | Package: ${location.package || 'None'}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Available Nodes: ${nodesInfo}</p>
           </div>
           <button onclick="deleteLocation('${key}')" class="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg">Delete</button>
         `;
