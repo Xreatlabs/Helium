@@ -111,6 +111,9 @@
                 <button onclick="showTab('oauth')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   OAuth2
                 </button>
+                <button onclick="showTab('ratelimits')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Rate Limits
+                </button>
                 <button onclick="showTab('api')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   API & Bot
                 </button>
@@ -261,9 +264,87 @@
                         class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
                       <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Duplicate IP Check</label>
                     </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blocked IPs (one per line)</label>
+                      <textarea name="api.client.oauth2.ip.block" rows="3" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="192.168.1.1"><%= settings.api?.client?.oauth2?.ip?.block?.join('\n') || '' %></textarea>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Block specific IPs from accessing the dashboard</p>
+                    </div>
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save OAuth2 Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-ratelimits" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Rate Limits</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Configure rate limits for different endpoints (requests per time window)</p>
+                <form id="form-ratelimits" onsubmit="saveSettings(event, 'ratelimits')">
+                  <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/callback</label>
+                        <input type="number" name="api.client.ratelimits./callback" value="<%= settings.api?.client?.ratelimits?.['/callback'] || 2 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/create</label>
+                        <input type="number" name="api.client.ratelimits./create" value="<%= settings.api?.client?.ratelimits?.['/create'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/delete</label>
+                        <input type="number" name="api.client.ratelimits./delete" value="<%= settings.api?.client?.ratelimits?.['/delete'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/modify</label>
+                        <input type="number" name="api.client.ratelimits./modify" value="<%= settings.api?.client?.ratelimits?.['/modify'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/updateinfo</label>
+                        <input type="number" name="api.client.ratelimits./updateinfo" value="<%= settings.api?.client?.ratelimits?.['/updateinfo'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/setplan</label>
+                        <input type="number" name="api.client.ratelimits./setplan" value="<%= settings.api?.client?.ratelimits?.['/setplan'] || 2 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/admin</label>
+                        <input type="number" name="api.client.ratelimits./admin" value="<%= settings.api?.client?.ratelimits?.['/admin'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/regen</label>
+                        <input type="number" name="api.client.ratelimits./regen" value="<%= settings.api?.client?.ratelimits?.['/regen'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/renew</label>
+                        <input type="number" name="api.client.ratelimits./renew" value="<%= settings.api?.client?.ratelimits?.['/renew'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/api/userinfo</label>
+                        <input type="number" name="api.client.ratelimits./api/userinfo" value="<%= settings.api?.client?.ratelimits?.['/api/userinfo'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/linkvertise/callback</label>
+                        <input type="number" name="api.client.ratelimits./linkvertise/callback" value="<%= settings.api?.client?.ratelimits?.['/linkvertise/callback'] || 1 %>" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Rate Limit Settings
                   </button>
                 </form>
               </div>
@@ -592,6 +673,12 @@
                       <input type="number" name="api.client.linkvertise.rewardCoins" value="<%= settings.api?.client?.linkvertise?.rewardCoins || 10 %>" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cooldown Time (seconds)</label>
+                      <input type="number" name="api.client.linkvertise.cooldownTime" value="<%= settings.api?.client?.linkvertise?.cooldownTime || 3600 %>" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Note: Cooldown is currently disabled in code</p>
+                    </div>
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save Linkvertise Settings
@@ -649,6 +736,13 @@
                       <input type="password" name="antivpn.APIKey" value="<%= settings.antivpn?.APIKey || '' %>" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Get your key from proxycheck.io</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted IPs (one per line)</label>
+                      <textarea name="antivpn.whitelistedIPs" rows="3" 
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        placeholder="192.168.1.1"><%= settings.antivpn?.whitelistedIPs?.join('\n') || '' %></textarea>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">IPs that bypass VPN check</p>
                     </div>
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
@@ -709,6 +803,11 @@
                           <input type="checkbox" name="logging.actions.user.create server" <%= settings.logging?.actions?.user?.['create server'] ? 'checked' : '' %> 
                             class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
                           <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Create Server</span>
+                        </label>
+                        <label class="flex items-center">
+                          <input type="checkbox" name="logging.actions.user.gifted coins" <%= settings.logging?.actions?.user?.['gifted coins'] ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Gifted Coins</span>
                         </label>
                         <label class="flex items-center">
                           <input type="checkbox" name="logging.actions.user.modify server" <%= settings.logging?.actions?.user?.['modify server'] ? 'checked' : '' %> 
