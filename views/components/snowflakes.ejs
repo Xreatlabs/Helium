@@ -1,0 +1,102 @@
+<% if (hasSnowflakes) { %>
+<!-- Snowflakes Animation -->
+<div id="snowflakes-container" class="snowflakes" aria-hidden="true"></div>
+
+<style>
+  .snowflakes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  .snowflake {
+    position: absolute;
+    top: -10px;
+    color: #fff;
+    font-size: 1.2em;
+    font-family: Arial, sans-serif;
+    text-shadow: 0 0 10px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.6);
+    animation: fall linear infinite;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 3px rgba(255,255,255,0.8));
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    100% {
+      transform: translateY(100vh) translateX(var(--drift)) rotate(360deg);
+    }
+  }
+
+  /* Dark mode snowflakes */
+  .dark .snowflake {
+    color: #f0f0f0;
+    text-shadow: 0 0 15px rgba(255,255,255,0.5), 0 0 25px rgba(200,220,255,0.4);
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.9));
+  }
+</style>
+
+<script>
+  (function() {
+    const snowflakesContainer = document.getElementById('snowflakes-container');
+    const snowflakeChars = ['❄', '❅', '❆'];
+    const numberOfSnowflakes = 60; // Increased for more prominence
+    let snowflakeId = 0;
+
+    function createSnowflake(initialDelay = 0) {
+      const snowflake = document.createElement('div');
+      snowflake.className = 'snowflake';
+      snowflake.dataset.id = snowflakeId++;
+      snowflake.innerHTML = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+      
+      // Random starting position
+      snowflake.style.left = Math.random() * 100 + '%';
+      
+      // Random size (slightly larger for more prominence)
+      const size = Math.random() * 0.7 + 0.6;
+      snowflake.style.fontSize = size + 'em';
+      
+      // Random animation duration (adjusted for better visibility)
+      const duration = (Math.random() * 4 + 8) / size;
+      snowflake.style.animationDuration = duration + 's';
+      
+      // Random horizontal drift
+      const drift = (Math.random() - 0.5) * 150;
+      snowflake.style.setProperty('--drift', drift + 'px');
+      
+      // Minimal delay for fresh page load, or random for continuous effect
+      snowflake.style.animationDelay = initialDelay + 's';
+      
+      // Random opacity (slightly more visible)
+      snowflake.style.opacity = Math.random() * 0.5 + 0.5;
+      
+      snowflakesContainer.appendChild(snowflake);
+      
+      // Remove snowflake after animation completes and create new one
+      setTimeout(() => {
+        if (snowflake.parentNode) {
+          snowflake.remove();
+        }
+        // Create a new one with random delay to maintain continuous effect
+        createSnowflake(Math.random() * 2);
+      }, (duration + parseFloat(snowflake.style.animationDelay)) * 1000);
+    }
+
+    // Clear any existing snowflakes (for page navigation)
+    snowflakesContainer.innerHTML = '';
+    
+    // Create initial burst of snowflakes with staggered start for prominent effect
+    for (let i = 0; i < numberOfSnowflakes; i++) {
+      // Start all snowflakes quickly with minimal stagger for prominent restart effect
+      setTimeout(() => createSnowflake(i * 0.05), i * 50);
+    }
+  })();
+</script>
+<% } %>

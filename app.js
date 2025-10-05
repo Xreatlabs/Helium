@@ -75,6 +75,16 @@ module.exports.renderdataeval = `(async () => {
      isDarkMode = (darkModeStatus === true) || (darkModeStatus === 1) || (darkModeStatus === "true");
    }
    
+   // Check snowflakes preference from database (default: enabled)
+   let hasSnowflakes = true;
+   if (req.session && req.session.userinfo && req.session.userinfo.id) {
+     const snowflakesStatus = await db.get("snowflakes-" + req.session.userinfo.id);
+     // If explicitly set to false, disable it; otherwise keep default enabled
+     if (snowflakesStatus === false || snowflakesStatus === 0 || snowflakesStatus === "false") {
+       hasSnowflakes = false;
+     }
+   }
+   
     let renderdata = {
       req: req,
       settings: newsettings,
@@ -93,6 +103,7 @@ module.exports.renderdataeval = `(async () => {
       extra: theme.settings.variables,
       isAdmin: isAdmin,
       isDarkMode: isDarkMode,
+      hasSnowflakes: hasSnowflakes,
     db: db
     };
     
@@ -245,6 +256,13 @@ if (cluster.isMaster) {
       strict: true,
       type: "application/json",
       verify: undefined,
+    })
+  );
+
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: "500kb"
     })
   );
 

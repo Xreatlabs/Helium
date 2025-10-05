@@ -238,7 +238,7 @@ module.exports.load = function (app, db) {
       const isRootAdmin = pterodactylUser.root_admin === true;
       await db.set(`admin-${discordUser.id}`, isRootAdmin ? 1 : 0);
       
-      // Store user data for leaderboard
+      // Store user data
       await db.set(`users-${discordUser.id}`, {
         id: discordUser.id,
         username: discordUser.username,
@@ -352,32 +352,24 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
         
         // Check if not already claimed
         let userIds = (await db.get('users')) || [];
-        if (!userIds.includes(userId)) {
-          userIds.push(userId);
+        if (!userIds.includes(discordUser.id)) {
+          userIds.push(discordUser.id);
           await db.set('users', userIds);
-          await db.set(`users-${discordUser.id}`, userId);
-          
-          console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
-          return matches[0].attributes;
-        } else {
-          // Already claimed, fetch fresh data
-          const freshResponse = await fetch(
-            `${settings.pterodactyl.domain}/api/application/users/${userId}?include=servers`,
-            {
-              headers: {
-                'Authorization': `Bearer ${settings.pterodactyl.key}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-            }
-          );
-          
-          if (freshResponse.ok) {
-            const freshData = await freshResponse.json();
-            console.log(`[OAuth] Retrieved fresh data for existing account: ID ${userId}`);
-            return freshData.attributes;
-          }
         }
+        await db.set(`ptero-${discordUser.id}`, userId);
+        
+        // Store user data
+        await db.set(`users-${discordUser.id}`, {
+          id: discordUser.id,
+          username: discordUser.username,
+          discriminator: discordUser.discriminator || '0',
+          global_name: discordUser.global_name || discordUser.username,
+          avatar: discordUser.avatar,
+          email: discordUser.email
+        });
+        
+        console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
+        return matches[0].attributes;
       }
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse search response:`, jsonError);
@@ -425,9 +417,21 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       
       // Store user mapping
       let userIds = (await db.get('users')) || [];
-      userIds.push(userId);
-      await db.set('users', userIds);
-      await db.set(`users-${discordUser.id}`, userId);
+      if (!userIds.includes(discordUser.id)) {
+        userIds.push(discordUser.id);
+        await db.set('users', userIds);
+      }
+      await db.set(`ptero-${discordUser.id}`, userId);
+      
+      // Store user data
+      await db.set(`users-${discordUser.id}`, {
+        id: discordUser.id,
+        username: discordUser.username,
+        discriminator: discordUser.discriminator || '0',
+        global_name: discordUser.global_name || discordUser.username,
+        avatar: discordUser.avatar,
+        email: discordUser.email
+      });
       
       log('signup', `${discordUser.username}#${discordUser.discriminator} created account`);
       console.log(`[OAuth] Created new Pterodactyl account: ID ${userId}`);
