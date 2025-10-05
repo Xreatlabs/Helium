@@ -108,6 +108,9 @@
                 <button onclick="showTab('announcement')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Announcement
                 </button>
+                <button onclick="showTab('socialmedia')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Social Media
+                </button>
                 <button onclick="showTab('health')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Health Monitoring
                 </button>
@@ -254,6 +257,90 @@
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save Announcement Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-socialmedia" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Social Media Links</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Configure social media and external links displayed on your dashboard</p>
+                
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p class="text-sm text-blue-800 dark:text-blue-200">💡 <strong>Tip:</strong> These links will be displayed in the footer and navigation areas. Enable/disable individual links as needed.</p>
+                </div>
+
+                <!-- Enable/Disable Section -->
+                <div class="mb-6">
+                  <div class="flex items-center">
+                    <input type="checkbox" id="social-media-enabled" <%= settings.socialMedia?.enabled ? 'checked' : '' %> 
+                      class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                    <label for="social-media-enabled" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Social Media Links</label>
+                  </div>
+                </div>
+
+                <!-- Social Media Links List -->
+                <div id="social-media-links" class="space-y-4 mb-6">
+                  <% 
+                  const socialLinks = settings.socialMedia?.links || [];
+                  if (socialLinks.length > 0) {
+                    socialLinks.forEach((link, index) => {
+                  %>
+                  <div class="social-link-item border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900" data-index="<%= index %>">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Platform Name</label>
+                        <input type="text" class="link-name w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" 
+                          value="<%= link.name %>" placeholder="Discord">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Icon</label>
+                        <select class="link-icon w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <option value="discord" <%= link.icon === 'discord' ? 'selected' : '' %>>Discord</option>
+                          <option value="twitter" <%= link.icon === 'twitter' ? 'selected' : '' %>>Twitter/X</option>
+                          <option value="instagram" <%= link.icon === 'instagram' ? 'selected' : '' %>>Instagram</option>
+                          <option value="youtube" <%= link.icon === 'youtube' ? 'selected' : '' %>>YouTube</option>
+                          <option value="github" <%= link.icon === 'github' ? 'selected' : '' %>>GitHub</option>
+                          <option value="facebook" <%= link.icon === 'facebook' ? 'selected' : '' %>>Facebook</option>
+                          <option value="tiktok" <%= link.icon === 'tiktok' ? 'selected' : '' %>>TikTok</option>
+                          <option value="reddit" <%= link.icon === 'reddit' ? 'selected' : '' %>>Reddit</option>
+                          <option value="linkedin" <%= link.icon === 'linkedin' ? 'selected' : '' %>>LinkedIn</option>
+                          <option value="twitch" <%= link.icon === 'twitch' ? 'selected' : '' %>>Twitch</option>
+                          <option value="link" <%= link.icon === 'link' ? 'selected' : '' %>>Website/Link</option>
+                          <option value="email" <%= link.icon === 'email' ? 'selected' : '' %>>Email</option>
+                        </select>
+                      </div>
+                      <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL</label>
+                        <div class="flex gap-2">
+                          <input type="url" class="link-url flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" 
+                            value="<%= link.url %>" placeholder="https://...">
+                          <div class="flex items-center gap-2">
+                            <input type="checkbox" class="link-enabled h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600" 
+                              <%= link.enabled ? 'checked' : '' %>>
+                            <label class="text-sm text-gray-600 dark:text-gray-400">Enabled</label>
+                            <button type="button" onclick="removeSocialLink(this)" class="ml-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <% 
+                    });
+                  }
+                  %>
+                </div>
+
+                <button type="button" onclick="addSocialLink()" class="mb-6 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                  + Add Social Link
+                </button>
+
+                <form id="form-socialmedia" onsubmit="saveSocialMedia(event)">
+                  <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Social Media Links
                   </button>
                 </form>
               </div>
@@ -1861,6 +1948,116 @@
         }
       } catch (error) {
         alert('❌ Failed to save user max resources');
+        console.error(error);
+      }
+    }
+
+    // Social Media Links functions
+    function addSocialLink() {
+      const container = document.getElementById('social-media-links');
+      const timestamp = Date.now();
+      
+      const html = `
+        <div class="social-link-item border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900" data-new="true" data-id="${timestamp}">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Platform Name</label>
+              <input type="text" class="link-name w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" 
+                value="" placeholder="Discord">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Icon</label>
+              <select class="link-icon w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                <option value="discord">Discord</option>
+                <option value="twitter">Twitter/X</option>
+                <option value="instagram">Instagram</option>
+                <option value="youtube">YouTube</option>
+                <option value="github">GitHub</option>
+                <option value="facebook">Facebook</option>
+                <option value="tiktok">TikTok</option>
+                <option value="reddit">Reddit</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="twitch">Twitch</option>
+                <option value="link">Website/Link</option>
+                <option value="email">Email</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL</label>
+              <div class="flex gap-2">
+                <input type="url" class="link-url flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" 
+                  value="" placeholder="https://...">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" class="link-enabled h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600" checked>
+                  <label class="text-sm text-gray-600 dark:text-gray-400">Enabled</label>
+                  <button type="button" onclick="removeSocialLink(this)" class="ml-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function removeSocialLink(button) {
+      const item = button.closest('.social-link-item');
+      if (confirm('Are you sure you want to remove this social link?')) {
+        item.remove();
+      }
+    }
+    
+    async function saveSocialMedia(event) {
+      event.preventDefault();
+      
+      const enabled = document.getElementById('social-media-enabled').checked;
+      const items = document.querySelectorAll('.social-link-item');
+      const links = [];
+      
+      items.forEach(item => {
+        const name = item.querySelector('.link-name').value.trim();
+        const icon = item.querySelector('.link-icon').value;
+        const url = item.querySelector('.link-url').value.trim();
+        const linkEnabled = item.querySelector('.link-enabled').checked;
+        
+        if (name && url) {
+          links.push({
+            name,
+            icon,
+            url,
+            enabled: linkEnabled
+          });
+        }
+      });
+      
+      const socialMediaConfig = {
+        enabled,
+        links
+      };
+      
+      try {
+        const response = await fetch('/admin/settings/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: 'socialMedia',
+            value: socialMediaConfig
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('✅ Social media links saved successfully!');
+          window.location.reload();
+        } else {
+          alert('❌ Error: ' + data.error);
+        }
+      } catch (error) {
+        alert('❌ Failed to save social media links');
         console.error(error);
       }
     }
