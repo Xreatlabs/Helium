@@ -71,7 +71,7 @@ module.exports.load = async function (app, db) {
     await db.set('all-codes', allCodes);
 
     log(
-      `Code Created`,
+      `code created`,
       `${req.session.userinfo.username} created code ${code} with ${JSON.stringify(codeData.rewards)}`
     );
 
@@ -121,7 +121,7 @@ module.exports.load = async function (app, db) {
     await db.set('all-codes', updatedCodes);
 
     log(
-      `Code Deleted`,
+      `code deleted`,
       `${req.session.userinfo.username} deleted code ${code}`
     );
 
@@ -196,7 +196,7 @@ module.exports.load = async function (app, db) {
     const usageInfo = remainingUses > 0 ? ` (${remainingUses} use(s) remaining for you)` : '';
 
     log(
-      `Code Redeemed`,
+      `code redeemed`,
       `${req.session.userinfo.username} redeemed code ${codeUpper} and received: ${rewardsList.join(', ')}`
     );
 

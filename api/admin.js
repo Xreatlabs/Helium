@@ -1441,7 +1441,7 @@ module.exports.load = async function (app, db) {
         // Remove expiration
         await db.delete("server-expiry-" + serverId);
         log(
-          "Admin - Remove Server Expiry",
+          "remove server expiry",
           `${req.session.userinfo.username} removed expiration for server ${serverId}`
         );
         return res.json({ success: true, message: "Expiration removed" });
@@ -1456,7 +1456,7 @@ module.exports.load = async function (app, db) {
       await db.set("server-expiry-" + serverId, expiryDate);
 
       log(
-        "Admin - Set Server Expiry",
+        "set server expiry",
         `${req.session.userinfo.username} set server ${serverId} to expire in ${days} days (${new Date(expiryDate).toISOString()})`
       );
 

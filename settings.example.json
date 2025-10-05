@@ -246,12 +246,18 @@
       "user": {
         "signup": true,
         "create server": true,
+        "created server": true,
         "gifted coins": true,
         "modify server": true,
         "buy servers": true,
         "buy ram": true,
         "buy cpu": true,
-        "buy disk": true
+        "buy disk": true,
+        "resources purchased": true,
+        "server renewed": true,
+        "auto-renewal enabled": true,
+        "auto-renewal disabled": true,
+        "code redeemed": true
       },
       "admin": {
         "set coins": true,
@@ -261,7 +267,11 @@
         "create coupon": true,
         "revoke coupon": true,
         "remove account": true,
-        "view ip": true
+        "view ip": true,
+        "code created": true,
+        "code deleted": true,
+        "remove server expiry": true,
+        "set server expiry": true
       }
     }
   }

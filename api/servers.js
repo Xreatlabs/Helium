@@ -359,7 +359,7 @@ module.exports.load = async function (app, db) {
 
             cb();
             log(
-              "created server",
+              "create server",
               `${req.session.userinfo.username}#${req.session.userinfo.discriminator} created a new server named \`${name}\` with the following specs:\n\`\`\`Memory: ${ram} MB\nCPU: ${cpu}%\nDisk: ${disk}\`\`\``
             );
             
@@ -763,7 +763,7 @@ module.exports.load = async function (app, db) {
 
       // Log the renewal
       log(
-        "Server Renewed",
+        "server renewed",
         `${req.session.userinfo.username} renewed server ${serverInfo.attributes.name} (ID: ${serverId}) for ${renewalCost} coins. New expiry: ${new Date(newExpiry).toISOString()}`
       );
 
@@ -819,11 +819,11 @@ module.exports.load = async function (app, db) {
       const currentStatus = await db.get("server-autorenewal-" + serverId);
       if (currentStatus) {
         await db.delete("server-autorenewal-" + serverId);
-        log("Auto-Renewal Disabled", `${req.session.userinfo.username} disabled auto-renewal for server ${serverInfo.attributes.name}`);
+        log("auto-renewal disabled", `${req.session.userinfo.username} disabled auto-renewal for server ${serverInfo.attributes.name}`);
         return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_DISABLED_SUCCESS");
       } else {
         await db.set("server-autorenewal-" + serverId, true);
-        log("Auto-Renewal Enabled", `${req.session.userinfo.username} enabled auto-renewal for server ${serverInfo.attributes.name}`);
+        log("auto-renewal enabled", `${req.session.userinfo.username} enabled auto-renewal for server ${serverInfo.attributes.name}`);
         return res.redirect(theme.settings.redirect.renewserver + "?err=AUTORENEWAL_ENABLED");
       }
     } catch (error) {
