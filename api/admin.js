@@ -658,6 +658,58 @@ module.exports.load = async function (app, db) {
       res.status(500).send(`Failed to update setting: ${err.message}`);
     }
   });
+
+  app.post("/admin/settings/update", async (req, res) => {
+    // Check if the user is authorized to make changes
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    const isAdmin = await checkAdmin(req, res, db);
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    const { path, value } = req.body;
+
+    if (!path || value === undefined) {
+      return res.status(400).json({ success: false, error: "Missing path or value parameter" });
+    }
+
+    try {
+      const settingsPath = "./settings.json";
+      
+      // Use async file operations to avoid blocking
+      const settingsData = await fs.promises.readFile(settingsPath, 'utf8');
+      const settings = JSON.parse(settingsData);
+
+      // Split the path by dots and set the value
+      const keys = path.split(".");
+      let currentObj = settings;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!currentObj[keys[i]]) {
+          currentObj[keys[i]] = {};
+        }
+        currentObj = currentObj[keys[i]];
+      }
+      currentObj[keys[keys.length - 1]] = value;
+
+      // Use async write to avoid blocking
+      await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+      
+      console.log(`[Settings] Updated ${path} = ${JSON.stringify(value)}`);
+      
+      log(
+        'settings updated',
+        `${req.session.userinfo.username}#${req.session.userinfo.discriminator} updated ${path} in settings.`
+      );
+      
+      res.json({ success: true, message: "Settings updated successfully" });
+    } catch (err) {
+      console.error(`[Settings] Error updating ${path}:`, err);
+      res.status(500).json({ success: false, error: `Failed to update setting: ${err.message}` });
+    }
+  });
   
   app.get("/setcoins", async (req, res) => {
     let theme = indexjs.get(req);
