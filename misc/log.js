@@ -76,11 +76,22 @@ function extractUsername(message) {
  * @param {Object} metadata - Optional metadata for enhanced display
  */
 module.exports = (action, message, metadata = {}) => {
-    if (!settings.logging.status) return
-    if (!settings.logging.actions.user[action] && !settings.logging.actions.admin[action]) return
+    console.log(`[Logging] Called with action: ${action}, message: ${message.substring(0, 50)}...`)
+    
+    if (!settings.logging.status) {
+        console.log('[Logging] Logging is disabled in settings')
+        return
+    }
+    
+    if (!settings.logging.actions.user[action] && !settings.logging.actions.admin[action]) {
+        console.log(`[Logging] Action "${action}" is not enabled in settings`)
+        return
+    }
 
     const webhookId = settings.logging.webhookId
     const webhookToken = settings.logging.webhookToken
+    
+    console.log(`[Logging] Webhook ID: ${webhookId ? 'configured' : 'missing'}, Token: ${webhookToken ? 'configured' : 'missing'}`)
     
     if (!webhookId || !webhookToken) {
         console.error('[Logging] Webhook ID or Token not configured')
