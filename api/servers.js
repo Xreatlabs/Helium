@@ -72,6 +72,7 @@ module.exports.load = async function (app, db) {
           req.session.userinfo.id,
           db
         ).catch((err) => {
+          console.error('[Server Create] getPteroUser error:', err);
           cb();
           res.send(
             "An error has occured while attempting to update your account information and server list."
@@ -79,7 +80,12 @@ module.exports.load = async function (app, db) {
           return null;
         });
         
+        console.log('[Server Create] cacheaccount exists:', !!cacheaccount);
+        console.log('[Server Create] cacheaccount.data exists:', !!(cacheaccount && cacheaccount.data));
+        console.log('[Server Create] cacheaccount structure:', cacheaccount ? Object.keys(cacheaccount) : 'null');
+        
         if (!cacheaccount || !cacheaccount.data) {
+          console.error('[Server Create] Missing cacheaccount or cacheaccount.data');
           if (!res.headersSent) {
             cb();
             return res.send(
