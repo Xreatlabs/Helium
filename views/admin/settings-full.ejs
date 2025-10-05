@@ -271,7 +271,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blocked IPs (one per line)</label>
                       <textarea name="api.client.oauth2.ip.block" rows="3" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        placeholder="192.168.1.1"><%= settings.api?.client?.oauth2?.ip?.block?.join('\n') || '' %></textarea>
+                        placeholder="192.168.1.1"><%= settings.api?.client?.oauth2?.ip?.block ? (Array.isArray(settings.api.client.oauth2.ip.block) ? settings.api.client.oauth2.ip.block.join('\n') : settings.api.client.oauth2.ip.block) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Block specific IPs from accessing the dashboard</p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Guild IDs (one per line)</label>
                         <textarea name="api.client.bot.joinguild.guildid" rows="3" 
                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="Guild ID"><%= settings.api?.client?.bot?.joinguild?.guildid?.join('\n') || '' %></textarea>
+                          placeholder="Guild ID"><%= settings.api?.client?.bot?.joinguild?.guildid ? (Array.isArray(settings.api.client.bot.joinguild.guildid) ? settings.api.client.bot.joinguild.guildid.join('\n') : settings.api.client.bot.joinguild.guildid) : '' %></textarea>
                       </div>
                     </div>
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -834,7 +834,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted IPs (one per line)</label>
                       <textarea name="antivpn.whitelistedIPs" rows="3" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        placeholder="192.168.1.1"><%= settings.antivpn?.whitelistedIPs?.join('\n') || '' %></textarea>
+                        placeholder="192.168.1.1"><%= settings.antivpn?.whitelistedIPs ? (Array.isArray(settings.antivpn.whitelistedIPs) ? settings.antivpn.whitelistedIPs.join('\n') : settings.antivpn.whitelistedIPs) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">IPs that bypass VPN check</p>
                     </div>
                   </div>
@@ -857,7 +857,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted User IDs</label>
                       <textarea name="whitelist.users" rows="4" 
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        placeholder="One Discord User ID per line"><%= settings.whitelist?.users?.join('\n') || '' %></textarea>
+                        placeholder="One Discord User ID per line"><%= settings.whitelist?.users ? (Array.isArray(settings.whitelist.users) ? settings.whitelist.users.join('\n') : settings.whitelist.users) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter Discord User IDs, one per line</p>
                     </div>
                   </div>
