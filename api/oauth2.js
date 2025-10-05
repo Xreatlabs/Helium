@@ -238,8 +238,11 @@ module.exports.load = function (app, db) {
       // Sync admin status with panel
       await syncAdminStatus(pterodactylUser, discordUser.id, db);
       
-      // Store user data
-      await db.set(`users-${discordUser.id}`, {
+      // Store Pterodactyl user ID for this Discord user
+      await db.set(`users-${discordUser.id}`, pterodactylUser.id);
+      
+      // Store Discord user data separately
+      await db.set(`userinfo-${discordUser.id}`, {
         id: discordUser.id,
         username: discordUser.username,
         discriminator: discordUser.discriminator || '0',
@@ -358,8 +361,11 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
         }
         await db.set(`ptero-${discordUser.id}`, userId);
         
-        // Store user data
-        await db.set(`users-${discordUser.id}`, {
+        // Store Pterodactyl user ID for this Discord user
+        await db.set(`users-${discordUser.id}`, userId);
+        
+        // Store Discord user data separately
+        await db.set(`userinfo-${discordUser.id}`, {
           id: discordUser.id,
           username: discordUser.username,
           discriminator: discordUser.discriminator || '0',
@@ -423,8 +429,11 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       }
       await db.set(`ptero-${discordUser.id}`, userId);
       
-      // Store user data
-      await db.set(`users-${discordUser.id}`, {
+      // Store Pterodactyl user ID for this Discord user
+      await db.set(`users-${discordUser.id}`, userId);
+      
+      // Store Discord user data separately
+      await db.set(`userinfo-${discordUser.id}`, {
         id: discordUser.id,
         username: discordUser.username,
         discriminator: discordUser.discriminator || '0',
