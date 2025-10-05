@@ -10,7 +10,17 @@ module.exports = (action, message) => {
     if (!settings.logging.status) return
     if (!settings.logging.actions.user[action] && !settings.logging.actions.admin[action]) return
 
-    fetch(settings.logging.webhook, {
+    const webhookId = settings.logging.webhookId
+    const webhookToken = settings.logging.webhookToken
+    
+    if (!webhookId || !webhookToken) {
+        console.error('[Logging] Webhook ID or Token not configured')
+        return
+    }
+
+    const webhookUrl = `https://discord.com/api/webhooks/${webhookId}/${webhookToken}`
+
+    fetch(webhookUrl, {
         method: 'POST',
         headers: {
             'content-type': 'application/json'
@@ -25,13 +35,20 @@ module.exports = (action, message) => {
                         name: 'Helium Logging'
                     },
                     thumbnail: {
-                        url: 'https://atqr.pages.dev/favicon.png' // This is the default Helium logo, you can change it if you want.
+                        url: 'https://atqr.pages.dev/favicon.png'
                     }
                 }
             ]
         })
     })
-    .catch(() => {})
+    .then(response => {
+        if (!response.ok) {
+            console.error(`[Logging] Webhook failed with status ${response.status}: ${response.statusText}`)
+        }
+    })
+    .catch(error => {
+        console.error('[Logging] Failed to send webhook:', error.message)
+    })
 }
 
 function hexToDecimal(hex) {

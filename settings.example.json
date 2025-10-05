@@ -240,7 +240,8 @@
   "logging": {
     "_note": "This is the 2nd-generation version of Helium's logging system. Please report any bugs on the GitHub (github.com/heliactyloss/heliactyl). Thank you.",
     "status": false,
-    "webhook": "Webhook URL",
+    "webhookId": "Your Discord Webhook ID",
+    "webhookToken": "Your Discord Webhook Token",
     "actions": {
       "user": {
         "signup": true,
