@@ -28,9 +28,10 @@ module.exports.load = async function (app, db) {
     if (!req.session.pterodactyl) return res.redirect("/login");
     const cacheaccount = await getPteroUser(req.session.userinfo.id, db).catch(
       () => {
-        return res.send(
+        res.send(
           "An error has occured while attempting to update your account information and server list."
         );
+        return null;
       }
     );
     if (!cacheaccount || !cacheaccount.data) return;
@@ -66,9 +67,10 @@ module.exports.load = async function (app, db) {
           db
         ).catch(() => {
           cb();
-          return res.send(
+          res.send(
             "An error has occured while attempting to update your account information and server list."
           );
+          return null;
         });
         if (!cacheaccount || !cacheaccount.data) {
           cb();
@@ -387,9 +389,10 @@ module.exports.load = async function (app, db) {
         req.session.userinfo.id,
         db
       ).catch(() => {
-        return res.send(
+        res.send(
           "An error has occured while attempting to update your account information and server list."
         );
+        return null;
       });
       if (!cacheaccount || !cacheaccount.data) return;
       req.session.pterodactyl = cacheaccount.data.attributes;
