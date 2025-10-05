@@ -15,6 +15,7 @@ const fs = require("fs");
 const getPteroUser = require("../misc/getPteroUser");
 const Queue = require("../managers/Queue");
 const log = require("../misc/log");
+const syncAdminStatus = require("../lib/syncAdminStatus");
 
 if (settings.pterodactyl)
   if (settings.pterodactyl.domain) {
@@ -34,6 +35,10 @@ module.exports.load = async function (app, db) {
     );
     if (!cacheaccount) return;
     req.session.pterodactyl = cacheaccount.attributes;
+    
+    // Sync admin status with panel - security fix
+    await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
+    
     if (req.query.redirect)
       if (typeof req.query.redirect == "string")
         return res.redirect("/" + req.query.redirect);
@@ -67,6 +72,9 @@ module.exports.load = async function (app, db) {
           );
         }
         req.session.pterodactyl = cacheaccount.attributes;
+        
+        // Sync admin status with panel
+        await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
 
         if (
           req.query.name &&
@@ -375,6 +383,9 @@ module.exports.load = async function (app, db) {
       });
       if (!cacheaccount) return;
       req.session.pterodactyl = cacheaccount.attributes;
+      
+      // Sync admin status with panel
+      await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
 
       let redirectlink = theme.settings.redirect.failedmodifyserver
         ? theme.settings.redirect.failedmodifyserver

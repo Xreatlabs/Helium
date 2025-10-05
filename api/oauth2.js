@@ -9,6 +9,7 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 const log = require("../misc/log");
 const vpnCheck = require("../misc/vpnCheck");
+const syncAdminStatus = require("../lib/syncAdminStatus");
 
 // Normalize settings
 const normalizeUrl = (url) => url.replace(/\/$/, '');
@@ -234,9 +235,8 @@ module.exports.load = function (app, db) {
       };
       req.session.pterodactylId = pterodactylUser.id;
       
-      // Check if user is root admin and store in database
-      const isRootAdmin = pterodactylUser.root_admin === true;
-      await db.set(`admin-${discordUser.id}`, isRootAdmin ? 1 : 0);
+      // Sync admin status with panel
+      await syncAdminStatus(pterodactylUser, discordUser.id, db);
       
       // Store user data
       await db.set(`users-${discordUser.id}`, {
