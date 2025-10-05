@@ -4,6 +4,13 @@
     "domain": "https://panel.example.com",
     "key": "Your Pterodactyl API key with all permissions"
   },
+  "announcement": {
+    "enabled": false,
+    "message": "Welcome to our dashboard! Check out our new features.",
+    "type": "info",
+    "dismissible": true,
+    "_comment": "Announcement banner settings. Types: info (blue), success (green), warning (yellow), error (red)"
+  },
   "timezone": "Europe/London",
   "version": "1.0.0",
   "testing": false,
