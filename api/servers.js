@@ -208,31 +208,49 @@ module.exports.load = async function (app, db) {
           let disk = parseFloat(req.query.disk);
           let cpu = parseFloat(req.query.cpu);
           if (!isNaN(ram) && !isNaN(disk) && !isNaN(cpu)) {
-            // Check against maximum package limits first (if configured)
-            if (package.max) {
-              if (package.max.ram && package.max.ram > 0) {
-                if (ram2 + ram > package.max.ram) {
-                  cb();
-                  return res.redirect(
-                    `${redirectlink}?err=MAXRAM&max=${package.max.ram}&current=${ram2}`
-                  );
-                }
+            // Check against maximum limits (user-specific takes priority over package limits)
+            const userMaxResources = newsettings.api.client.userMaxResources || {};
+            const userSpecificMax = userMaxResources[req.session.userinfo.id];
+            
+            let maxLimits = {};
+            if (userSpecificMax) {
+              // User-specific limits take priority
+              maxLimits = {
+                ram: userSpecificMax.ram,
+                disk: userSpecificMax.disk,
+                cpu: userSpecificMax.cpu
+              };
+            } else if (package.max) {
+              // Fall back to package limits
+              maxLimits = {
+                ram: package.max.ram,
+                disk: package.max.disk,
+                cpu: package.max.cpu
+              };
+            }
+            
+            if (maxLimits.ram && maxLimits.ram > 0) {
+              if (ram2 + ram > maxLimits.ram) {
+                cb();
+                return res.redirect(
+                  `${redirectlink}?err=MAXRAM&max=${maxLimits.ram}&current=${ram2}`
+                );
               }
-              if (package.max.disk && package.max.disk > 0) {
-                if (disk2 + disk > package.max.disk) {
-                  cb();
-                  return res.redirect(
-                    `${redirectlink}?err=MAXDISK&max=${package.max.disk}&current=${disk2}`
-                  );
-                }
+            }
+            if (maxLimits.disk && maxLimits.disk > 0) {
+              if (disk2 + disk > maxLimits.disk) {
+                cb();
+                return res.redirect(
+                  `${redirectlink}?err=MAXDISK&max=${maxLimits.disk}&current=${disk2}`
+                );
               }
-              if (package.max.cpu && package.max.cpu > 0) {
-                if (cpu2 + cpu > package.max.cpu) {
-                  cb();
-                  return res.redirect(
-                    `${redirectlink}?err=MAXCPU&max=${package.max.cpu}&current=${cpu2}`
-                  );
-                }
+            }
+            if (maxLimits.cpu && maxLimits.cpu > 0) {
+              if (cpu2 + cpu > maxLimits.cpu) {
+                cb();
+                return res.redirect(
+                  `${redirectlink}?err=MAXCPU&max=${maxLimits.cpu}&current=${cpu2}`
+                );
               }
             }
 
@@ -534,28 +552,46 @@ module.exports.load = async function (app, db) {
               servers: 0,
             };
 
-        // Check against maximum package limits first (if configured)
-        if (package.max) {
-          if (package.max.ram && package.max.ram > 0) {
-            if (ram2 + ram > package.max.ram) {
-              return res.redirect(
-                `${redirectlink}?id=${req.query.id}&err=MAXRAM&max=${package.max.ram}&current=${ram2}`
-              );
-            }
+        // Check against maximum limits (user-specific takes priority over package limits)
+        const userMaxResources = newsettings.api.client.userMaxResources || {};
+        const userSpecificMax = userMaxResources[req.session.userinfo.id];
+        
+        let maxLimits = {};
+        if (userSpecificMax) {
+          // User-specific limits take priority
+          maxLimits = {
+            ram: userSpecificMax.ram,
+            disk: userSpecificMax.disk,
+            cpu: userSpecificMax.cpu
+          };
+        } else if (package.max) {
+          // Fall back to package limits
+          maxLimits = {
+            ram: package.max.ram,
+            disk: package.max.disk,
+            cpu: package.max.cpu
+          };
+        }
+        
+        if (maxLimits.ram && maxLimits.ram > 0) {
+          if (ram2 + ram > maxLimits.ram) {
+            return res.redirect(
+              `${redirectlink}?id=${req.query.id}&err=MAXRAM&max=${maxLimits.ram}&current=${ram2}`
+            );
           }
-          if (package.max.disk && package.max.disk > 0) {
-            if (disk2 + disk > package.max.disk) {
-              return res.redirect(
-                `${redirectlink}?id=${req.query.id}&err=MAXDISK&max=${package.max.disk}&current=${disk2}`
-              );
-            }
+        }
+        if (maxLimits.disk && maxLimits.disk > 0) {
+          if (disk2 + disk > maxLimits.disk) {
+            return res.redirect(
+              `${redirectlink}?id=${req.query.id}&err=MAXDISK&max=${maxLimits.disk}&current=${disk2}`
+            );
           }
-          if (package.max.cpu && package.max.cpu > 0) {
-            if (cpu2 + cpu > package.max.cpu) {
-              return res.redirect(
-                `${redirectlink}?id=${req.query.id}&err=MAXCPU&max=${package.max.cpu}&current=${cpu2}`
-              );
-            }
+        }
+        if (maxLimits.cpu && maxLimits.cpu > 0) {
+          if (cpu2 + cpu > maxLimits.cpu) {
+            return res.redirect(
+              `${redirectlink}?id=${req.query.id}&err=MAXCPU&max=${maxLimits.cpu}&current=${cpu2}`
+            );
           }
         }
 

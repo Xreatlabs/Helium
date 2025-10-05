@@ -36,12 +36,28 @@ module.exports.load = async function (app, db) {
     if (userCoins < purchaseCost)
       return res.redirect(`${failedCallbackPath}?err=CANNOTAFFORD`);
 
-    // Check maximum resource limits from package configuration
+    // Check maximum resource limits (user-specific takes priority over package limits)
     const userPackage = (await db.get(`package-${req.session.userinfo.id}`)) || newsettings.api.client.packages.default;
     const packageConfig = newsettings.api.client.packages.list[userPackage];
     
-    if (packageConfig && packageConfig.max && packageConfig.max[type]) {
-      const maxResource = packageConfig.max[type];
+    // Check for user-specific max resources first
+    const userMaxResources = newsettings.api.client.userMaxResources || {};
+    const userSpecificMax = userMaxResources[req.session.userinfo.id];
+    
+    let maxResource = null;
+    let limitSource = null;
+    
+    if (userSpecificMax && userSpecificMax[type] !== undefined) {
+      // User-specific limit exists
+      maxResource = userSpecificMax[type];
+      limitSource = 'user-specific';
+    } else if (packageConfig && packageConfig.max && packageConfig.max[type] !== undefined) {
+      // Fall back to package limit
+      maxResource = packageConfig.max[type];
+      limitSource = 'package';
+    }
+    
+    if (maxResource !== null) {
       const extraResources = (await db.get(`extra-${req.session.userinfo.id}`)) || {
         ram: 0,
         disk: 0,
@@ -56,7 +72,7 @@ module.exports.load = async function (app, db) {
       
       // If max is set (not 0) and would be exceeded, block the purchase
       if (maxResource > 0 && newTotal > maxResource) {
-        return res.redirect(`${failedCallbackPath}?err=MAXRESOURCES&max=${maxResource}&current=${currentTotal}`);
+        return res.redirect(`${failedCallbackPath}?err=MAXRESOURCES&max=${maxResource}&current=${currentTotal}&source=${limitSource}`);
       }
     }
 

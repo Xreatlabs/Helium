@@ -126,6 +126,9 @@
                 <button onclick="showTab('packages')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Packages
                 </button>
+                <button onclick="showTab('usermaxres')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  User Max Resources
+                </button>
                 <button onclick="showTab('coins')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Coins & Store
                 </button>
@@ -642,6 +645,79 @@
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save Package Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-usermaxres" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">User-Specific Maximum Resources</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Override package max limits for specific Discord users. These limits take priority over package max settings.</p>
+                
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p class="text-sm text-blue-800 dark:text-blue-200">💡 <strong>How it works:</strong> Enter a Discord ID to set custom max resources for that user. Set to 0 for unlimited, or leave fields empty to use package defaults.</p>
+                </div>
+
+                <div id="userMaxResourcesList" class="space-y-4">
+                  <% 
+                  const userMaxRes = settings.api?.client?.userMaxResources || {};
+                  const userEntries = Object.entries(userMaxRes).filter(([key]) => !key.startsWith('_'));
+                  if (userEntries.length > 0) {
+                    userEntries.forEach(([discordId, limits], index) => {
+                  %>
+                  <div class="user-max-res-item border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900" data-index="<%= index %>">
+                    <div class="flex justify-between items-start mb-4">
+                      <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discord ID</label>
+                        <input type="text" name="api.client.userMaxResources.<%= discordId %>.id" value="<%= discordId %>" 
+                          class="discord-id-input w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                          placeholder="123456789012345678" data-original-id="<%= discordId %>">
+                      </div>
+                      <button type="button" onclick="removeUserMaxRes(this)" class="ml-4 mt-7 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+                        Remove
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max RAM (MB)</label>
+                        <input type="number" name="api.client.userMaxResources.<%= discordId %>.ram" value="<%= limits.ram || 0 %>" 
+                          placeholder="0 = unlimited"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Disk (MB)</label>
+                        <input type="number" name="api.client.userMaxResources.<%= discordId %>.disk" value="<%= limits.disk || 0 %>" 
+                          placeholder="0 = unlimited"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max CPU (%)</label>
+                        <input type="number" name="api.client.userMaxResources.<%= discordId %>.cpu" value="<%= limits.cpu || 0 %>" 
+                          placeholder="0 = unlimited"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Server Slots</label>
+                        <input type="number" name="api.client.userMaxResources.<%= discordId %>.servers" value="<%= limits.servers || 0 %>" 
+                          placeholder="0 = unlimited"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      </div>
+                    </div>
+                  </div>
+                  <% 
+                    });
+                  }
+                  %>
+                </div>
+
+                <button type="button" onclick="addUserMaxRes()" class="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                  + Add User
+                </button>
+
+                <form id="form-usermaxres" onsubmit="saveUserMaxRes(event)" class="mt-6">
+                  <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save User Max Resources
                   </button>
                 </form>
               </div>
@@ -1449,6 +1525,125 @@
       // Initial preview
       updateAnnouncementPreview();
     });
+
+    // User Max Resources functions
+    let userMaxResCounter = 0;
+    
+    function addUserMaxRes() {
+      const container = document.getElementById('userMaxResourcesList');
+      const newId = 'new_' + Date.now();
+      userMaxResCounter++;
+      
+      const html = `
+        <div class="user-max-res-item border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900" data-new="true" data-id="${newId}">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discord ID</label>
+              <input type="text" name="new_discord_id_${newId}" value="" 
+                class="discord-id-input w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                placeholder="123456789012345678" data-new-id="${newId}">
+            </div>
+            <button type="button" onclick="removeUserMaxRes(this)" class="ml-4 mt-7 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+              Remove
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max RAM (MB)</label>
+              <input type="number" name="new_ram_${newId}" value="0" 
+                placeholder="0 = unlimited"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Disk (MB)</label>
+              <input type="number" name="new_disk_${newId}" value="0" 
+                placeholder="0 = unlimited"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max CPU (%)</label>
+              <input type="number" name="new_cpu_${newId}" value="0" 
+                placeholder="0 = unlimited"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Server Slots</label>
+              <input type="number" name="new_servers_${newId}" value="0" 
+                placeholder="0 = unlimited"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function removeUserMaxRes(button) {
+      const item = button.closest('.user-max-res-item');
+      if (confirm('Are you sure you want to remove this user max resource configuration?')) {
+        item.remove();
+      }
+    }
+    
+    async function saveUserMaxRes(event) {
+      event.preventDefault();
+      
+      const userMaxResources = {};
+      const items = document.querySelectorAll('.user-max-res-item');
+      
+      items.forEach(item => {
+        let discordId;
+        let ram, disk, cpu, servers;
+        
+        if (item.dataset.new === 'true') {
+          // New item
+          const newId = item.dataset.id;
+          discordId = document.querySelector(`[name="new_discord_id_${newId}"]`).value.trim();
+          ram = parseInt(document.querySelector(`[name="new_ram_${newId}"]`).value) || 0;
+          disk = parseInt(document.querySelector(`[name="new_disk_${newId}"]`).value) || 0;
+          cpu = parseInt(document.querySelector(`[name="new_cpu_${newId}"]`).value) || 0;
+          servers = parseInt(document.querySelector(`[name="new_servers_${newId}"]`).value) || 0;
+        } else {
+          // Existing item
+          const idInput = item.querySelector('.discord-id-input');
+          discordId = idInput.value.trim();
+          const originalId = idInput.dataset.originalId;
+          
+          ram = parseInt(item.querySelector(`[name="api.client.userMaxResources.${originalId}.ram"]`).value) || 0;
+          disk = parseInt(item.querySelector(`[name="api.client.userMaxResources.${originalId}.disk"]`).value) || 0;
+          cpu = parseInt(item.querySelector(`[name="api.client.userMaxResources.${originalId}.cpu"]`).value) || 0;
+          servers = parseInt(item.querySelector(`[name="api.client.userMaxResources.${originalId}.servers"]`).value) || 0;
+        }
+        
+        if (discordId) {
+          userMaxResources[discordId] = { ram, disk, cpu, servers };
+        }
+      });
+      
+      try {
+        const response = await fetch('/admin/settings/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: 'api.client.userMaxResources',
+            value: userMaxResources
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('✅ User max resources saved successfully!');
+          window.location.reload();
+        } else {
+          alert('❌ Error: ' + data.error);
+        }
+      } catch (error) {
+        alert('❌ Failed to save user max resources');
+        console.error(error);
+      }
+    }
   </script>
 </body>
 </html>
