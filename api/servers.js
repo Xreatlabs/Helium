@@ -33,11 +33,16 @@ module.exports.load = async function (app, db) {
         );
       }
     );
-    if (!cacheaccount) return;
-    req.session.pterodactyl = cacheaccount.attributes;
+    if (!cacheaccount || !cacheaccount.data) return;
+    req.session.pterodactyl = cacheaccount.data.attributes;
+    
+    // Ensure relationships exist
+    if (!req.session.pterodactyl.relationships) {
+      req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+    }
     
     // Sync admin status with panel - security fix
-    await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
+    await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
     
     if (req.query.redirect)
       if (typeof req.query.redirect == "string")
@@ -65,16 +70,21 @@ module.exports.load = async function (app, db) {
             "An error has occured while attempting to update your account information and server list."
           );
         });
-        if (!cacheaccount) {
+        if (!cacheaccount || !cacheaccount.data) {
           cb();
           return res.send(
             "Helium failed to find an account on the configured panel, try relogging"
           );
         }
-        req.session.pterodactyl = cacheaccount.attributes;
+        req.session.pterodactyl = cacheaccount.data.attributes;
+        
+        // Ensure relationships exist
+        if (!req.session.pterodactyl.relationships) {
+          req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+        }
         
         // Sync admin status with panel
-        await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
+        await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
 
         if (
           req.query.name &&
@@ -381,11 +391,16 @@ module.exports.load = async function (app, db) {
           "An error has occured while attempting to update your account information and server list."
         );
       });
-      if (!cacheaccount) return;
-      req.session.pterodactyl = cacheaccount.attributes;
+      if (!cacheaccount || !cacheaccount.data) return;
+      req.session.pterodactyl = cacheaccount.data.attributes;
+      
+      // Ensure relationships exist
+      if (!req.session.pterodactyl.relationships) {
+        req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+      }
       
       // Sync admin status with panel
-      await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
+      await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
 
       let redirectlink = theme.settings.redirect.failedmodifyserver
         ? theme.settings.redirect.failedmodifyserver
