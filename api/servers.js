@@ -27,14 +27,20 @@ module.exports.load = async function (app, db) {
   app.get("/updateinfo", async (req, res) => {
     if (!req.session.pterodactyl) return res.redirect("/login");
     const cacheaccount = await getPteroUser(req.session.userinfo.id, db).catch(
-      () => {
+      (err) => {
         res.send(
           "An error has occured while attempting to update your account information and server list."
         );
         return null;
       }
     );
-    if (!cacheaccount || !cacheaccount.data) return;
+    
+    if (!cacheaccount || !cacheaccount.data) {
+      if (!res.headersSent) {
+        return res.send("Failed to fetch account information");
+      }
+      return;
+    }
     req.session.pterodactyl = cacheaccount.data.attributes;
     
     // Ensure relationships exist
@@ -65,18 +71,22 @@ module.exports.load = async function (app, db) {
         const cacheaccount = await getPteroUser(
           req.session.userinfo.id,
           db
-        ).catch(() => {
+        ).catch((err) => {
           cb();
           res.send(
             "An error has occured while attempting to update your account information and server list."
           );
           return null;
         });
+        
         if (!cacheaccount || !cacheaccount.data) {
-          cb();
-          return res.send(
-            "Helium failed to find an account on the configured panel, try relogging"
-          );
+          if (!res.headersSent) {
+            cb();
+            return res.send(
+              "Helium failed to find an account on the configured panel, try relogging"
+            );
+          }
+          return;
         }
         req.session.pterodactyl = cacheaccount.data.attributes;
         
@@ -388,13 +398,19 @@ module.exports.load = async function (app, db) {
       const cacheaccount = await getPteroUser(
         req.session.userinfo.id,
         db
-      ).catch(() => {
+      ).catch((err) => {
         res.send(
           "An error has occured while attempting to update your account information and server list."
         );
         return null;
       });
-      if (!cacheaccount || !cacheaccount.data) return;
+      
+      if (!cacheaccount || !cacheaccount.data) {
+        if (!res.headersSent) {
+          return res.send("Failed to fetch account information");
+        }
+        return;
+      }
       req.session.pterodactyl = cacheaccount.data.attributes;
       
       // Ensure relationships exist
