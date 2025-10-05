@@ -141,6 +141,9 @@
                 <button onclick="showTab('logging')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
                   Logging
                 </button>
+                <button onclick="showTab('codes')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
+                  Codes
+                </button>
               </nav>
             </div>
 
@@ -957,6 +960,96 @@
               </div>
             </div>
 
+            <!-- Codes Tab -->
+            <div id="tab-codes" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Code Management</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Create and manage redemption codes for users to receive coins and resources.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <!-- Create Code Form -->
+                  <div>
+                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Code</h4>
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Code (Optional)</label>
+                        <input type="text" id="create-code-custom" placeholder="Leave empty for auto-generate" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 uppercase" 
+                          maxlength="20">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave empty to auto-generate (XXXX-XXXX-XXXX)</p>
+                      </div>
+                      
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Coins</label>
+                          <input type="number" id="create-code-coins" placeholder="0" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RAM (MB)</label>
+                          <input type="number" id="create-code-ram" placeholder="0" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
+                          <input type="number" id="create-code-disk" placeholder="0" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
+                          <input type="number" id="create-code-cpu" placeholder="0" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server Slots</label>
+                          <input type="number" id="create-code-servers" placeholder="0" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Uses (Total)</label>
+                          <input type="number" id="create-code-maxuses" placeholder="999999" min="1" value="999999"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">All users combined</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Uses Per User</label>
+                        <input type="number" id="create-code-maxuses-per-user" placeholder="1" min="1" value="1"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How many times each user can redeem this code</p>
+                      </div>
+                      
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expires In (Days)</label>
+                        <input type="number" id="create-code-expires" placeholder="0 = Never" min="0"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave as 0 for never expiring</p>
+                      </div>
+                      
+                      <button onclick="createCode()" 
+                        class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition shadow-lg">
+                        Create Code
+                      </button>
+                      
+                      <div id="create-code-message" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
+                    </div>
+                  </div>
+                  
+                  <!-- Codes List -->
+                  <div>
+                    <div class="flex items-center justify-between mb-4">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Active Codes</h4>
+                      <button onclick="loadCodes()" class="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition">
+                        Refresh
+                      </button>
+                    </div>
+                    <div id="codes-list" class="space-y-3 max-h-[600px] overflow-y-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
@@ -1033,6 +1126,164 @@
         submitBtn.textContent = originalText;
       }
     }
+
+    // ========= CODE MANAGEMENT FUNCTIONS =========
+    
+    // Create a new code
+    async function createCode() {
+      const customCode = document.getElementById('create-code-custom').value.trim();
+      const coins = parseInt(document.getElementById('create-code-coins').value) || 0;
+      const ram = parseInt(document.getElementById('create-code-ram').value) || 0;
+      const disk = parseInt(document.getElementById('create-code-disk').value) || 0;
+      const cpu = parseInt(document.getElementById('create-code-cpu').value) || 0;
+      const servers = parseInt(document.getElementById('create-code-servers').value) || 0;
+      const maxUses = parseInt(document.getElementById('create-code-maxuses').value) || 999999;
+      const maxUsesPerUser = parseInt(document.getElementById('create-code-maxuses-per-user').value) || 1;
+      const expiresIn = parseInt(document.getElementById('create-code-expires').value) || 0;
+      const messageDiv = document.getElementById('create-code-message');
+      
+      if (coins === 0 && ram === 0 && disk === 0 && cpu === 0 && servers === 0) {
+        messageDiv.textContent = '❌ Please specify at least one resource';
+        messageDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+        messageDiv.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/admin/codes/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customCode,
+            coins,
+            ram,
+            disk,
+            cpu,
+            servers,
+            maxUses,
+            maxUsesPerUser,
+            expiresIn
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          messageDiv.innerHTML = `✅ Code created: <strong class="font-mono bg-green-200 dark:bg-green-800 px-2 py-1 rounded">${data.code.code}</strong>`;
+          messageDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700';
+          messageDiv.classList.remove('hidden');
+          
+          document.getElementById('create-code-custom').value = '';
+          document.getElementById('create-code-coins').value = '';
+          document.getElementById('create-code-ram').value = '';
+          document.getElementById('create-code-disk').value = '';
+          document.getElementById('create-code-cpu').value = '';
+          document.getElementById('create-code-servers').value = '';
+          document.getElementById('create-code-maxuses').value = '999999';
+          document.getElementById('create-code-maxuses-per-user').value = '1';
+          document.getElementById('create-code-expires').value = '';
+          
+          loadCodes();
+        } else {
+          messageDiv.textContent = '❌ ' + data.error;
+          messageDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+          messageDiv.classList.remove('hidden');
+        }
+      } catch (error) {
+        messageDiv.textContent = '❌ Failed to create code';
+        messageDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+        messageDiv.classList.remove('hidden');
+      }
+    }
+    
+    // Load all codes
+    async function loadCodes() {
+      try {
+        const response = await fetch('/admin/codes/list');
+        const data = await response.json();
+        const codesList = document.getElementById('codes-list');
+        
+        if (!data.codes || data.codes.length === 0) {
+          codesList.innerHTML = '<div class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">No codes created yet</div>';
+          return;
+        }
+        
+        codesList.innerHTML = '';
+        data.codes.forEach(code => {
+          const isExpired = code.expiresAt && Date.now() > code.expiresAt;
+          const isFullyUsed = code.uses >= code.maxUses;
+          const isInactive = isExpired || isFullyUsed;
+          
+          const rewards = [];
+          if (code.rewards.coins > 0) rewards.push(`💰 ${code.rewards.coins} coins`);
+          if (code.rewards.ram > 0) rewards.push(`🎮 ${code.rewards.ram}MB RAM`);
+          if (code.rewards.disk > 0) rewards.push(`💾 ${code.rewards.disk}MB Disk`);
+          if (code.rewards.cpu > 0) rewards.push(`⚡ ${code.rewards.cpu}% CPU`);
+          if (code.rewards.servers > 0) rewards.push(`🖥️ ${code.rewards.servers} servers`);
+          
+          const div = document.createElement('div');
+          div.className = `bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border ${isInactive ? 'border-red-300 dark:border-red-700 opacity-60' : 'border-gray-200 dark:border-gray-700'}`;
+          div.innerHTML = `
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <code class="text-lg font-bold text-blue-600 dark:text-blue-400">${code.code}</code>
+                  ${isExpired ? '<span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded">Expired</span>' : ''}
+                  ${isFullyUsed ? '<span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded">Used Up</span>' : ''}
+                </div>
+                <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  <div class="flex flex-wrap gap-1">
+                    ${rewards.join(' ')}
+                  </div>
+                  <div>Total Uses: ${code.uses}/${code.maxUses}</div>
+                  <div>Per User Limit: ${code.maxUsesPerUser}</div>
+                  ${code.expiresAt ? `<div>Expires: ${new Date(code.expiresAt).toLocaleDateString()}</div>` : '<div>Never expires</div>'}
+                </div>
+              </div>
+              <button onclick="deleteCode('${code.code}')" 
+                class="px-3 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                Delete
+              </button>
+            </div>
+          `;
+          codesList.appendChild(div);
+        });
+      } catch (error) {
+        console.error('Failed to load codes:', error);
+        document.getElementById('codes-list').innerHTML = '<div class="text-center py-8 text-red-500 text-sm">Failed to load codes</div>';
+      }
+    }
+    
+    // Delete a code
+    async function deleteCode(code) {
+      if (!confirm(`Are you sure you want to delete code ${code}?`)) return;
+      
+      try {
+        const response = await fetch(`/admin/codes/delete/${code}`, {
+          method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          loadCodes();
+        } else {
+          alert('Failed to delete code: ' + data.error);
+        }
+      } catch (error) {
+        alert('Failed to delete code');
+      }
+    }
+
+    // Load codes when codes tab is opened
+    document.addEventListener('DOMContentLoaded', function() {
+      const codesTab = document.querySelector('[onclick*="codes"]');
+      if (codesTab) {
+        codesTab.addEventListener('click', function() {
+          setTimeout(loadCodes, 100);
+        });
+      }
+    });
   </script>
 </body>
 </html>
