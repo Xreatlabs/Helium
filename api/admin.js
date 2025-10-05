@@ -21,6 +21,7 @@ const indexjs = require("../app.js");
 const adminjs = require("./admin.js");
 const ejs = require("ejs");
 const log = require("../misc/log");
+const healthCheck = require("../lib/healthCheck");
 
 // Helper function to check admin status
 async function checkAdmin(req, res, db) {
@@ -656,6 +657,26 @@ module.exports.load = async function (app, db) {
     } catch (err) {
       console.error(`[Settings] Error updating ${setting}:`, err);
       res.status(500).send(`Failed to update setting: ${err.message}`);
+    }
+  });
+
+  app.get("/admin/health/status", async (req, res) => {
+    // Check authorization
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    const isAdmin = await checkAdmin(req, res, db);
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    try {
+      const healthStatus = await healthCheck.runHealthChecks(db);
+      res.json({ success: true, health: healthStatus });
+    } catch (error) {
+      console.error('[Health] Error getting health status:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 

@@ -154,6 +154,29 @@
           }
         }
       },
+      "healthMonitoring": {
+        "enabled": true,
+        "checkInterval": 60,
+        "_comment_checkInterval": "Health check interval in seconds (default: 60)",
+        "checks": {
+          "pterodactyl": true,
+          "database": true,
+          "diskSpace": true,
+          "memory": true
+        },
+        "thresholds": {
+          "diskSpaceWarning": 80,
+          "diskSpaceCritical": 90,
+          "memoryWarning": 80,
+          "memoryCritical": 90,
+          "_comment": "Threshold percentages for warnings and critical alerts"
+        },
+        "alerts": {
+          "webhook": false,
+          "webhookUrl": "",
+          "_comment": "Send health alerts to a webhook (separate from main webhook)"
+        }
+      },
       "locations": {
         "1": {
           "package": null,
