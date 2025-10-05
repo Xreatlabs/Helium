@@ -297,18 +297,37 @@
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Icon</label>
                         <select class="link-icon w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                          <option value="discord" <%= link.icon === 'discord' ? 'selected' : '' %>>Discord</option>
-                          <option value="twitter" <%= link.icon === 'twitter' ? 'selected' : '' %>>Twitter/X</option>
-                          <option value="instagram" <%= link.icon === 'instagram' ? 'selected' : '' %>>Instagram</option>
-                          <option value="youtube" <%= link.icon === 'youtube' ? 'selected' : '' %>>YouTube</option>
-                          <option value="github" <%= link.icon === 'github' ? 'selected' : '' %>>GitHub</option>
-                          <option value="facebook" <%= link.icon === 'facebook' ? 'selected' : '' %>>Facebook</option>
-                          <option value="tiktok" <%= link.icon === 'tiktok' ? 'selected' : '' %>>TikTok</option>
-                          <option value="reddit" <%= link.icon === 'reddit' ? 'selected' : '' %>>Reddit</option>
-                          <option value="linkedin" <%= link.icon === 'linkedin' ? 'selected' : '' %>>LinkedIn</option>
-                          <option value="twitch" <%= link.icon === 'twitch' ? 'selected' : '' %>>Twitch</option>
-                          <option value="link" <%= link.icon === 'link' ? 'selected' : '' %>>Website/Link</option>
-                          <option value="email" <%= link.icon === 'email' ? 'selected' : '' %>>Email</option>
+                          <optgroup label="Social Media">
+                            <option value="discord" <%= link.icon === 'discord' ? 'selected' : '' %>>Discord</option>
+                            <option value="twitter" <%= link.icon === 'twitter' ? 'selected' : '' %>>Twitter/X</option>
+                            <option value="instagram" <%= link.icon === 'instagram' ? 'selected' : '' %>>Instagram</option>
+                            <option value="youtube" <%= link.icon === 'youtube' ? 'selected' : '' %>>YouTube</option>
+                            <option value="github" <%= link.icon === 'github' ? 'selected' : '' %>>GitHub</option>
+                            <option value="facebook" <%= link.icon === 'facebook' ? 'selected' : '' %>>Facebook</option>
+                            <option value="tiktok" <%= link.icon === 'tiktok' ? 'selected' : '' %>>TikTok</option>
+                            <option value="reddit" <%= link.icon === 'reddit' ? 'selected' : '' %>>Reddit</option>
+                            <option value="linkedin" <%= link.icon === 'linkedin' ? 'selected' : '' %>>LinkedIn</option>
+                            <option value="twitch" <%= link.icon === 'twitch' ? 'selected' : '' %>>Twitch</option>
+                          </optgroup>
+                          <optgroup label="Services & Pages">
+                            <option value="website" <%= link.icon === 'website' ? 'selected' : '' %>>🌐 Website/Home</option>
+                            <option value="panel" <%= link.icon === 'panel' ? 'selected' : '' %>>⚙️ Control Panel</option>
+                            <option value="status" <%= link.icon === 'status' ? 'selected' : '' %>>📊 Status Page</option>
+                            <option value="docs" <%= link.icon === 'docs' ? 'selected' : '' %>>📚 Documentation</option>
+                            <option value="support" <%= link.icon === 'support' ? 'selected' : '' %>>💬 Support/Help</option>
+                            <option value="blog" <%= link.icon === 'blog' ? 'selected' : '' %>>📝 Blog</option>
+                            <option value="store" <%= link.icon === 'store' ? 'selected' : '' %>>🛒 Store/Shop</option>
+                            <option value="community" <%= link.icon === 'community' ? 'selected' : '' %>>👥 Community/Forum</option>
+                            <option value="wiki" <%= link.icon === 'wiki' ? 'selected' : '' %>>📖 Wiki</option>
+                            <option value="api" <%= link.icon === 'api' ? 'selected' : '' %>>🔌 API Docs</option>
+                            <option value="billing" <%= link.icon === 'billing' ? 'selected' : '' %>>💳 Billing</option>
+                            <option value="downloads" <%= link.icon === 'downloads' ? 'selected' : '' %>>⬇️ Downloads</option>
+                            <option value="news" <%= link.icon === 'news' ? 'selected' : '' %>>📰 News</option>
+                          </optgroup>
+                          <optgroup label="General">
+                            <option value="link" <%= link.icon === 'link' ? 'selected' : '' %>>🔗 Generic Link</option>
+                            <option value="email" <%= link.icon === 'email' ? 'selected' : '' %>>📧 Email</option>
+                          </optgroup>
                         </select>
                       </div>
                       <div class="md:col-span-2">
@@ -1968,18 +1987,37 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Icon</label>
               <select class="link-icon w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                <option value="discord">Discord</option>
-                <option value="twitter">Twitter/X</option>
-                <option value="instagram">Instagram</option>
-                <option value="youtube">YouTube</option>
-                <option value="github">GitHub</option>
-                <option value="facebook">Facebook</option>
-                <option value="tiktok">TikTok</option>
-                <option value="reddit">Reddit</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="twitch">Twitch</option>
-                <option value="link">Website/Link</option>
-                <option value="email">Email</option>
+                <optgroup label="Social Media">
+                  <option value="discord">Discord</option>
+                  <option value="twitter">Twitter/X</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="github">GitHub</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="reddit">Reddit</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="twitch">Twitch</option>
+                </optgroup>
+                <optgroup label="Services & Pages">
+                  <option value="website">🌐 Website/Home</option>
+                  <option value="panel">⚙️ Control Panel</option>
+                  <option value="status">📊 Status Page</option>
+                  <option value="docs">📚 Documentation</option>
+                  <option value="support">💬 Support/Help</option>
+                  <option value="blog">📝 Blog</option>
+                  <option value="store">🛒 Store/Shop</option>
+                  <option value="community">👥 Community/Forum</option>
+                  <option value="wiki">📖 Wiki</option>
+                  <option value="api">🔌 API Docs</option>
+                  <option value="billing">💳 Billing</option>
+                  <option value="downloads">⬇️ Downloads</option>
+                  <option value="news">📰 News</option>
+                </optgroup>
+                <optgroup label="General">
+                  <option value="link">🔗 Generic Link</option>
+                  <option value="email">📧 Email</option>
+                </optgroup>
               </select>
             </div>
             <div class="md:col-span-2">

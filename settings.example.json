@@ -13,44 +13,60 @@
   },
   "socialMedia": {
     "enabled": true,
-    "_comment": "Social media links displayed in footer and navigation. Add/remove links as needed.",
+    "_comment": "Social media and service links displayed in footer. Supports 25+ icons including social platforms and service pages.",
     "links": [
       {
         "name": "Discord",
         "icon": "discord",
         "url": "https://discord.gg/your-server",
         "enabled": true,
-        "_comment": "Discord invite link"
+        "_comment": "Discord server invite"
+      },
+      {
+        "name": "Website",
+        "icon": "website",
+        "url": "https://yourwebsite.com",
+        "enabled": true,
+        "_comment": "Main website or homepage"
+      },
+      {
+        "name": "Control Panel",
+        "icon": "panel",
+        "url": "https://panel.yoursite.com",
+        "enabled": false,
+        "_comment": "Pterodactyl or admin panel link"
+      },
+      {
+        "name": "Status",
+        "icon": "status",
+        "url": "https://status.yoursite.com",
+        "enabled": false,
+        "_comment": "Status page for service monitoring"
+      },
+      {
+        "name": "Documentation",
+        "icon": "docs",
+        "url": "https://docs.yoursite.com",
+        "enabled": false,
+        "_comment": "Documentation or knowledge base"
+      },
+      {
+        "name": "Support",
+        "icon": "support",
+        "url": "https://support.yoursite.com",
+        "enabled": false,
+        "_comment": "Support portal or help desk"
       },
       {
         "name": "Twitter",
         "icon": "twitter",
         "url": "https://twitter.com/yourhandle",
-        "enabled": true,
-        "_comment": "Twitter/X profile"
-      },
-      {
-        "name": "Instagram",
-        "icon": "instagram",
-        "url": "https://instagram.com/yourhandle",
-        "enabled": false
-      },
-      {
-        "name": "YouTube",
-        "icon": "youtube",
-        "url": "https://youtube.com/@yourchannel",
         "enabled": false
       },
       {
         "name": "GitHub",
         "icon": "github",
         "url": "https://github.com/yourorg",
-        "enabled": false
-      },
-      {
-        "name": "Website",
-        "icon": "link",
-        "url": "https://yourwebsite.com",
         "enabled": false
       }
     ]
