@@ -58,6 +58,47 @@
                 </span>
               </div>
             </div>
+            
+            <% if (req.query.err) { %>
+            <% if (req.query.err === 'MAXRAM' || req.query.err === 'MAXDISK' || req.query.err === 'MAXCPU') { %>
+            <div class="rounded-3xl bg-red-50 dark:bg-red-900/20 p-8 mb-5 border-2 border-red-200 dark:border-red-800">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-red-600 dark:text-red-400">
+                    <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-md font-medium tracking-tight text-red-800 dark:text-red-200">Maximum resource limit reached</h3>
+                  <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                    <p>You've reached the maximum <%= req.query.err === 'MAXRAM' ? 'RAM' : req.query.err === 'MAXDISK' ? 'Disk' : 'CPU' %> limit for your package.</p>
+                    <% if (req.query.max && req.query.current) { %>
+                    <p class="mt-2"><strong>Currently used:</strong> <%= req.query.current %><%= req.query.err === 'MAXCPU' ? '%' : ' MB' %> | <strong>Maximum allowed:</strong> <%= req.query.max %><%= req.query.err === 'MAXCPU' ? '%' : ' MB' %></p>
+                    <% } %>
+                    <p class="mt-2">Contact an administrator if you need a package upgrade.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } else { %>
+            <div class="rounded-3xl bg-gray-200 dark:bg-gray-800 p-8 mb-5">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-md font-medium tracking-tight text-gray-700 dark:text-gray-200">An error was encountered</h3>
+                  <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <p>Error code: <code><%= req.query.err %></code></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+            <% } %>
+            
             <div class="bg-gray-100 dark:bg-gray-800 rounded-lg text-darker text-sm">
               <%
                     let ram = 0;
