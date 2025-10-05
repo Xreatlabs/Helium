@@ -395,7 +395,8 @@ if (cluster.isMaster) {
             delete req.session.password;
             if (err) {
               console.log(err);
-              return res.render("500.ejs", { err });
+              const newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
+              return res.render("500.ejs", { err, settings: newsettings, isDarkMode: false });
             }
             res.status(200);
             return res.send(str);
@@ -418,7 +419,8 @@ if (cluster.isMaster) {
           delete req.session.password;
           if (err) {
             console.log(err);
-            return res.render("500.ejs", { err });
+            const newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
+            return res.render("500.ejs", { err, settings: newsettings, isDarkMode: false });
           }
           res.status(200);
           res.send(str);
@@ -440,7 +442,8 @@ if (cluster.isMaster) {
         delete req.session.password;
         if (err) {
           console.log(err);
-          return res.render("500.ejs", { err });
+          const newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
+          return res.render("500.ejs", { err, settings: newsettings, isDarkMode: false });
         }
         res.status(200);
         res.send(str);

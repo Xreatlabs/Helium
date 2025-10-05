@@ -1,7 +1,7 @@
-<html class="h-full<% if (isDarkMode) { %> dark<% } %>">
+<html class="h-full<% if (typeof isDarkMode !== 'undefined' && isDarkMode) { %> dark<% } %>">
 
 <head>
-  <title><%= settings.name %></title>
+  <title><%= typeof settings !== 'undefined' && settings.name ? settings.name : 'Helium' %></title>
   <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
   <script>
     (function() {
