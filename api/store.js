@@ -36,6 +36,30 @@ module.exports.load = async function (app, db) {
     if (userCoins < purchaseCost)
       return res.redirect(`${failedCallbackPath}?err=CANNOTAFFORD`);
 
+    // Check maximum resource limits from package configuration
+    const userPackage = (await db.get(`package-${req.session.userinfo.id}`)) || newsettings.api.client.packages.default;
+    const packageConfig = newsettings.api.client.packages.list[userPackage];
+    
+    if (packageConfig && packageConfig.max && packageConfig.max[type]) {
+      const maxResource = packageConfig.max[type];
+      const extraResources = (await db.get(`extra-${req.session.userinfo.id}`)) || {
+        ram: 0,
+        disk: 0,
+        cpu: 0,
+        servers: 0,
+      };
+      
+      // Calculate total resources (package base + extra purchased)
+      const currentTotal = (packageConfig[type] || 0) + (extraResources[type] || 0);
+      const extraResourceAmount = per * parsedAmount;
+      const newTotal = currentTotal + extraResourceAmount;
+      
+      // If max is set (not 0) and would be exceeded, block the purchase
+      if (maxResource > 0 && newTotal > maxResource) {
+        return res.redirect(`${failedCallbackPath}?err=MAXRESOURCES&max=${maxResource}&current=${currentTotal}`);
+      }
+    }
+
     const newUserCoins = userCoins - purchaseCost;
     const newResourceCap = resourceCap + parsedAmount;
     const extraResource = per * parsedAmount;
