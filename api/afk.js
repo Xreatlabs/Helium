@@ -27,8 +27,20 @@ function getMultiplier() {
 module.exports.load = async function(app, db) {
   app.ws("/" + settings.api.afk.path, async (ws, req) => {
     let newsettings = JSON.parse(require("fs").readFileSync("./settings.json"));
-    if (!req.session.pterodactyl) return ws.close();
-    if (currentlyonpage[req.session.userinfo.id]) return ws.close();
+    
+    // Check authentication
+    if (!req.session || !req.session.pterodactyl || !req.session.userinfo) {
+      console.log('[AFK] Unauthorized connection attempt');
+      return ws.close();
+    }
+    
+    // Close existing connection if user already connected (prevent duplicates)
+    if (currentlyonpage[req.session.userinfo.id]) {
+      console.log('[AFK] Duplicate connection detected, closing old connection');
+      currentlyonpage[req.session.userinfo.id] = null;
+      // Give a small delay for cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     currentlyonpage[req.session.userinfo.id] = true;
     
@@ -110,13 +122,24 @@ module.exports.load = async function(app, db) {
         const data = JSON.parse(msg);
         if (data.type === 'pong') {
           // Client is alive
+        } else if (data.type === 'ping') {
+          // Respond to client ping
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'pong' }));
+          }
         }
       } catch (e) {
         // Ignore parse errors
+        console.error('[AFK] Error parsing client message:', e);
       }
     });
 
+    ws.on('error', (error) => {
+      console.error('[AFK] WebSocket error for user', req.session.userinfo.id, ':', error);
+    });
+
     ws.onclose = async() => {
+      console.log('[AFK] Connection closed for user:', req.session.userinfo.id);
       clearInterval(coinloop);
       clearInterval(statsLoop);
       clearInterval(heartbeat);

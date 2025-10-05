@@ -204,26 +204,43 @@
 
   <script>
     // AFK System Variables
-    let ws;
+    let ws = null;
     let sessionStartTime = Date.now();
     let totalEarned = 0;
-    let countdownInterval;
-    let durationInterval;
+    let countdownInterval = null;
+    let durationInterval = null;
     let currentMultiplier = 1.0;
     let baseCoinsPerInterval = <%= settings.api.afk.coins %>;
     let intervalSeconds = <%= settings.api.afk.every %>;
+    let isReconnecting = false;
 
     // Initialize WebSocket
     function initWebSocket() {
+      // Prevent multiple simultaneous reconnection attempts
+      if (isReconnecting) {
+        console.log('Already reconnecting, skipping...');
+        return;
+      }
+      
       try {
+        isReconnecting = true;
+        
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/<%= settings.api.afk.path %>`;
-        console.log('Connecting to WebSocket:', wsUrl);
+        console.log('Connecting to AFK WebSocket:', wsUrl);
+        
+        // Close existing connection if any
+        if (ws && ws.readyState !== WebSocket.CLOSED) {
+          console.log('Closing existing WebSocket connection');
+          ws.close();
+          ws = null;
+        }
         
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-          console.log('AFK WebSocket connected');
+          console.log('AFK WebSocket connected successfully');
+          isReconnecting = false;
           showNotification('Connected! You are now earning coins', 'success');
           startDurationTimer();
         };
@@ -247,23 +264,37 @@
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          showNotification('Connection error - trying to reconnect...', 'error');
-          // Try to reconnect after 5 seconds
-          setTimeout(() => {
-            if (ws.readyState === WebSocket.CLOSED) {
-              initWebSocket();
-            }
-          }, 5000);
+          console.error('AFK WebSocket error:', error);
         };
 
-        ws.onclose = () => {
-          console.log('WebSocket closed');
-          showNotification('Connection closed', 'error');
+        ws.onclose = (event) => {
+          console.log('AFK WebSocket closed:', event.code, event.reason);
+          
+          // Clear intervals
+          if (countdownInterval) clearInterval(countdownInterval);
+          
+          // Only show error and attempt reconnect if not a normal closure
+          if (event.code !== 1000 && event.code !== 1001) {
+            showNotification('Connection lost - reconnecting...', 'error');
+            
+            // Try to reconnect after 3 seconds
+            setTimeout(() => {
+              console.log('Attempting to reconnect...');
+              initWebSocket();
+            }, 3000);
+          } else {
+            showNotification('AFK session ended', 'error');
+          }
         };
       } catch (err) {
         console.error('Error initializing WebSocket:', err);
-        showNotification('Failed to connect', 'error');
+        isReconnecting = false;
+        showNotification('Failed to connect - retrying...', 'error');
+        
+        // Retry after 5 seconds
+        setTimeout(() => {
+          initWebSocket();
+        }, 5000);
       }
     }
 
