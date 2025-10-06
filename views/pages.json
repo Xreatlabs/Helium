@@ -54,7 +54,8 @@
     "accounts": "accounts.ejs",
     "admin": "admin/admin.ejs",
     "settings": "admin/settings-full.ejs",
-    "webhooks": "admin/webhooks.ejs"
+    "webhooks": "admin/webhooks.ejs",
+    "api-keys": "admin/api-keys.ejs"
   },
   "mustbeloggedin": [
     "/dashboard",
@@ -72,6 +73,7 @@
   "mustbeadmin": [
     "/admin",
     "/settings",
-    "/webhooks"
+    "/webhooks",
+    "/api-keys"
   ]
 }

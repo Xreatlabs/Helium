@@ -17,11 +17,14 @@ if (settings.pterodactyl)
 
 const fetch = require("node-fetch");
 const fs = require("fs");
+const path = require("path");
 const indexjs = require("../app.js");
 const adminjs = require("./admin.js");
 const ejs = require("ejs");
 const log = require("../misc/log");
 const healthCheck = require("../lib/healthCheck");
+const ApiKeyManager = require("../managers/ApiKeyManager");
+const apiKeyManager = new ApiKeyManager(path.join(__dirname, "../database.sqlite"));
 
 // Helper function to check admin status
 async function checkAdmin(req, res, db) {
@@ -1541,6 +1544,123 @@ module.exports.load = async function (app, db) {
     } catch (error) {
       console.error("Error setting server expiry:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ==================== API KEY MANAGEMENT ====================
+
+  /**
+   * GET /admin/api-keys
+   * Get all API keys
+   */
+  app.get("/admin/api-keys", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const apiKeys = await apiKeyManager.getAllApiKeys();
+      res.json({ success: true, data: apiKeys });
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+      res.status(500).json({ error: "Failed to fetch API keys" });
+    }
+  });
+
+  /**
+   * POST /admin/api-keys/create
+   * Create a new API key
+   */
+  app.post("/admin/api-keys/create", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { keyName, permissions } = req.body;
+
+      if (!keyName || !permissions) {
+        return res.status(400).json({ error: "Key name and permissions are required" });
+      }
+
+      const createdBy = req.session.userinfo.id;
+      const apiKey = await apiKeyManager.createApiKey(
+        keyName,
+        JSON.stringify(permissions),
+        createdBy
+      );
+
+      log(
+        "create api key",
+        `${req.session.userinfo.username} created API key: ${keyName}`
+      );
+
+      res.json({
+        success: true,
+        message: "API key created successfully",
+        data: apiKey
+      });
+    } catch (error) {
+      console.error("Error creating API key:", error);
+      res.status(500).json({ error: "Failed to create API key" });
+    }
+  });
+
+  /**
+   * DELETE /admin/api-keys/:id
+   * Delete an API key
+   */
+  app.delete("/admin/api-keys/:id", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const keyId = parseInt(req.params.id);
+      const success = await apiKeyManager.deleteApiKey(keyId);
+
+      if (success) {
+        log(
+          "delete api key",
+          `${req.session.userinfo.username} deleted API key ID: ${keyId}`
+        );
+        res.json({ success: true, message: "API key deleted successfully" });
+      } else {
+        res.status(404).json({ error: "API key not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      res.status(500).json({ error: "Failed to delete API key" });
+    }
+  });
+
+  /**
+   * POST /admin/api-keys/:id/toggle
+   * Toggle API key enabled status
+   */
+  app.post("/admin/api-keys/:id/toggle", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const keyId = parseInt(req.params.id);
+      const { enabled } = req.body;
+
+      const success = await apiKeyManager.toggleApiKey(keyId, enabled);
+
+      if (success) {
+        log(
+          "toggle api key",
+          `${req.session.userinfo.username} ${enabled ? "enabled" : "disabled"} API key ID: ${keyId}`
+        );
+        res.json({ success: true, message: `API key ${enabled ? "enabled" : "disabled"} successfully` });
+      } else {
+        res.status(404).json({ error: "API key not found" });
+      }
+    } catch (error) {
+      console.error("Error toggling API key:", error);
+      res.status(500).json({ error: "Failed to toggle API key" });
     }
   });
 };
