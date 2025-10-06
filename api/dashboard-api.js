@@ -220,8 +220,7 @@ module.exports.load = async function (app, db) {
     try {
       const { discordId, page = 1, perPage = 50 } = req.query;
 
-      let url = `${settings.pterodactyl.domain}/api/application/servers?page=${page}&per_page=${perPage}`;
-      
+      // If discordId is provided, get servers via user endpoint
       if (discordId) {
         const pterodactylId = await db.get(`users-${discordId}`);
         if (!pterodactylId) {
@@ -230,22 +229,78 @@ module.exports.load = async function (app, db) {
             message: 'User not found'
           });
         }
-        url += `&filter[owner_id]=${pterodactylId}`;
-      }
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${settings.pterodactyl.key}`,
-          'Content-Type': 'application/json'
+        // Use the user endpoint to get their servers
+        const response = await fetch(
+          `${settings.pterodactyl.domain}/api/application/users/${pterodactylId}?include=servers`,
+          {
+            headers: {
+              'Authorization': `Bearer ${settings.pterodactyl.key}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return res.status(response.status).json({
+            error: 'Pterodactyl API Error',
+            message: 'Failed to fetch user servers',
+            details: errorText
+          });
         }
-      });
 
-      const data = await response.json();
+        const userData = await response.json();
+        
+        // Extract servers from user data
+        const servers = userData.attributes?.relationships?.servers?.data || [];
+        
+        // Format response to match expected structure
+        res.json({
+          success: true,
+          data: {
+            object: 'list',
+            data: servers,
+            meta: {
+              pagination: {
+                total: servers.length,
+                count: servers.length,
+                per_page: servers.length,
+                current_page: 1,
+                total_pages: 1
+              }
+            }
+          }
+        });
+      } else {
+        // Get all servers (no filter)
+        const url = `${settings.pterodactyl.domain}/api/application/servers?page=${page}&per_page=${perPage}`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
 
-      res.json({
-        success: true,
-        data: data
-      });
+        if (!response.ok) {
+          const errorText = await response.text();
+          return res.status(response.status).json({
+            error: 'Pterodactyl API Error',
+            message: 'Failed to fetch servers',
+            details: errorText
+          });
+        }
+
+        const data = await response.json();
+
+        res.json({
+          success: true,
+          data: data
+        });
+      }
     } catch (error) {
       console.error('Error fetching servers:', error);
       res.status(500).json({
@@ -298,6 +353,8 @@ module.exports.load = async function (app, db) {
   /**
    * POST /api/dashboard/servers/:serverId/power
    * Send power action to server (start, stop, restart, kill)
+   * Note: This endpoint is currently not supported due to Pterodactyl API limitations.
+   * Power control requires client API access which is not available through application API keys.
    */
   app.post('/api/dashboard/servers/:serverId/power', requireApiKey(['servers.control', '*']), async (req, res) => {
     try {
@@ -312,32 +369,15 @@ module.exports.load = async function (app, db) {
         });
       }
 
-      const response = await fetch(
-        `${settings.pterodactyl.domain}/api/client/servers/${serverId}/power`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${settings.pterodactyl.key}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ signal: action })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        return res.status(response.status).json({
-          error: 'Pterodactyl API Error',
-          message: errorData.errors?.[0]?.detail || 'Failed to send power action'
-        });
-      }
-
-      res.json({
-        success: true,
-        message: `Power action '${action}' sent successfully`
+      // Power control through application API is not supported by Pterodactyl
+      // This would require client API keys which are user-specific
+      return res.status(501).json({
+        error: 'Not Implemented',
+        message: 'Power control is not currently supported through the Dashboard API. Pterodactyl requires client API access for power actions, which is not available through application API keys.',
+        alternatives: 'Users can control their servers through the Pterodactyl panel directly at ' + settings.pterodactyl.domain
       });
     } catch (error) {
-      console.error('Error sending power action:', error);
+      console.error('Error in power endpoint:', error);
       res.status(500).json({
         error: 'Internal Server Error',
         message: error.message

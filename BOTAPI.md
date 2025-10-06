@@ -7,11 +7,12 @@ Complete guide to connect your Discord bot with the Helium dashboard API system.
 ## Table of Contents
 1. [Quick Setup](#quick-setup)
 2. [Creating Your First API Key](#creating-your-first-api-key)
-3. [Discord.js Bot Setup](#discordjs-bot-setup)
-4. [Command Examples](#command-examples)
-5. [API Endpoints Reference](#api-endpoints-reference)
-6. [Error Handling](#error-handling)
-7. [Security Best Practices](#security-best-practices)
+3. [Complete Bot Example](#complete-bot-example)
+4. [Running Your Bot](#running-your-bot)
+5. [Command Examples](#command-examples)
+6. [API Endpoints Reference](#api-endpoints-reference)
+7. [Error Handling](#error-handling)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -29,7 +30,15 @@ Complete guide to connect your Discord bot with the Helium dashboard API system.
 6. Click **Create**
 7. **IMPORTANT**: Copy the generated API key immediately! You won't see it again!
 
+**Note:** If the API Keys section is not visible in the admin panel, run the database migration:
+```bash
+cd /path/to/helium
+node -e "const Database = require('better-sqlite3'); const db = new Database('database.sqlite'); const sql = require('fs').readFileSync('./migrations/002_api_keys.sql', 'utf8'); db.exec(sql); console.log('Migration complete!');"
+```
+
 ### Step 2: Install Required Packages
+
+In your bot directory, run:
 
 ```bash
 npm install discord.js axios dotenv
@@ -42,16 +51,19 @@ Create `.env` file in your bot directory:
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
 API_KEY=hlm_your_api_key_here
-API_URL=http://localhost:3000
+API_URL=http://localhost:19133
 ```
+
+Replace with your actual values:
+- `DISCORD_TOKEN`: Your Discord bot token from Discord Developer Portal
+- `API_KEY`: The API key you generated in Step 1
+- `API_URL`: Your Helium dashboard URL (use your domain or IP if accessing externally)
 
 ---
 
-## Discord.js Bot Setup
+## Complete Bot Example
 
-### Basic Bot Structure
-
-Create `bot.js`:
+Create `bot.js` file with this complete working code:
 
 ```javascript
 require('dotenv').config();
@@ -83,7 +95,7 @@ client.once('ready', () => {
   testAPIConnection();
 });
 
-// Test API connection
+// Test API connection on startup
 async function testAPIConnection() {
   try {
     const response = await api.get('/api/dashboard/health');
@@ -93,107 +105,139 @@ async function testAPIConnection() {
   } catch (error) {
     console.error('✗ API connection failed!');
     console.error(`  Error: ${error.message}`);
+    console.error('  Make sure your API_KEY and API_URL are correct in .env file');
   }
 }
 
-// Message handler
+// Message command handler
 client.on('messageCreate', async (message) => {
   // Ignore bot messages
   if (message.author.bot) return;
-
-  // Your commands will go here
-  handleCommands(message);
-});
-
-// Command handler function
-async function handleCommands(message) {
+  
+  // Check if message starts with prefix
   const prefix = '!';
   if (!message.content.startsWith(prefix)) return;
 
+  // Parse command and arguments
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // Commands will be added here
-  switch (command) {
-    case 'ping':
-      message.reply('Pong! 🏓');
-      break;
-    
-    case 'help':
-      showHelpMenu(message);
-      break;
-
-    // Add more commands here
+  // Command router
+  try {
+    switch (command) {
+      case 'help':
+        await handleHelp(message);
+        break;
+        
+      case 'ping':
+        message.reply('🏓 Pong!');
+        break;
+        
+      case 'userinfo':
+      case 'profile':
+      case 'me':
+        await handleUserInfo(message);
+        break;
+        
+      case 'servers':
+      case 'myservers':
+        await handleServers(message);
+        break;
+        
+      case 'coins':
+      case 'balance':
+        await handleCoins(message);
+        break;
+        
+      case 'stats':
+        await handleStats(message);
+        break;
+        
+      // Admin commands
+      case 'givecoins':
+        await handleGiveCoins(message, args);
+        break;
+        
+      case 'setresources':
+        await handleSetResources(message, args);
+        break;
+        
+      case 'setpackage':
+        await handleSetPackage(message, args);
+        break;
+        
+      default:
+        message.reply(`Unknown command. Use \`${prefix}help\` to see available commands.`);
+    }
+  } catch (error) {
+    console.error(`Error executing command ${command}:`, error);
+    message.reply('❌ An error occurred while executing that command.');
   }
-}
+});
 
-// Help menu
-function showHelpMenu(message) {
+// ==================== COMMAND HANDLERS ====================
+
+async function handleHelp(message) {
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
-    .setTitle('🤖 Bot Commands')
-    .setDescription('Available dashboard commands:')
+    .setTitle('🤖 Dashboard Bot Commands')
+    .setDescription('Available commands for interacting with the dashboard:')
     .addFields(
-      { name: '!ping', value: 'Test bot response' },
-      { name: '!userinfo', value: 'Get your dashboard info' },
-      { name: '!servers', value: 'List your servers' },
-      { name: '!coins', value: 'Check your coin balance' },
-      { name: '!stats', value: 'View dashboard statistics' }
+      { name: '**User Commands**', value: '\u200b', inline: false },
+      { name: '!userinfo', value: 'View your dashboard profile', inline: true },
+      { name: '!servers', value: 'List your servers', inline: true },
+      { name: '!coins', value: 'Check your coin balance', inline: true },
+      { name: '!stats', value: 'View dashboard statistics', inline: true },
+      { name: '!help', value: 'Show this help menu', inline: true },
+      { name: '!ping', value: 'Check bot responsiveness', inline: true },
+      { name: '\u200b', value: '\u200b', inline: false },
+      { name: '**Admin Commands**', value: '\u200b', inline: false },
+      { name: '!givecoins @user <amount>', value: 'Give coins to a user', inline: false },
+      { name: '!setresources @user <type>:<value>', value: 'Update user resources\nExample: `!setresources @user ram:1024 disk:5120`', inline: false },
+      { name: '!setpackage @user <package>', value: 'Change user package', inline: false }
     )
-    .setFooter({ text: 'Admin commands available for administrators' });
+    .setFooter({ text: 'Admin commands require administrator permissions' })
+    .setTimestamp();
 
   message.reply({ embeds: [embed] });
 }
 
-// Login to Discord
-client.login(process.env.DISCORD_TOKEN);
-
-// Export for use in other files
-module.exports = { client, api };
-```
-
----
-
-## Command Examples
-
-### 1. User Information Command
-
-```javascript
-case 'userinfo':
+async function handleUserInfo(message) {
   try {
     const response = await api.get(`/api/dashboard/users/${message.author.id}`);
     const data = response.data.data;
 
     const embed = new EmbedBuilder()
       .setColor('#00ff00')
-      .setTitle('📊 Your Dashboard Info')
+      .setTitle('📊 Your Dashboard Profile')
+      .setThumbnail(message.author.displayAvatarURL())
       .addFields(
-        { name: 'Package', value: data.packageName || 'Default', inline: true },
-        { name: 'Coins', value: `${data.coins}`, inline: true },
-        { name: 'Admin', value: data.isAdmin ? 'Yes' : 'No', inline: true },
-        { name: 'Extra RAM', value: `${data.extraResources.ram} MB`, inline: true },
-        { name: 'Extra Disk', value: `${data.extraResources.disk} MB`, inline: true },
-        { name: 'Extra CPU', value: `${data.extraResources.cpu}%`, inline: true },
-        { name: 'Extra Servers', value: `${data.extraResources.servers}`, inline: true }
-      );
+        { name: 'Package', value: data.packageName || 'default', inline: true },
+        { name: 'Coins', value: `🪙 ${data.coins.toLocaleString()}`, inline: true },
+        { name: 'Admin', value: data.isAdmin ? '✅ Yes' : '❌ No', inline: true },
+        { name: '\u200b', value: '\u200b', inline: false },
+        { name: '**Extra Resources**', value: '\u200b', inline: false },
+        { name: 'RAM', value: `${data.extraResources.ram} MB`, inline: true },
+        { name: 'Disk', value: `${data.extraResources.disk} MB`, inline: true },
+        { name: 'CPU', value: `${data.extraResources.cpu}%`, inline: true },
+        { name: 'Servers', value: `${data.extraResources.servers}`, inline: true }
+      )
+      .setFooter({ text: `User ID: ${message.author.id}` })
+      .setTimestamp();
 
     message.reply({ embeds: [embed] });
   } catch (error) {
-    handleAPIError(message, error, 'fetch your information');
+    await handleAPIError(message, error, 'fetch your profile');
   }
-  break;
-```
+}
 
-### 2. List User Servers Command
-
-```javascript
-case 'servers':
+async function handleServers(message) {
   try {
     const response = await api.get(`/api/dashboard/servers?discordId=${message.author.id}`);
     const servers = response.data.data.data;
 
     if (servers.length === 0) {
-      return message.reply('You don\'t have any servers yet!');
+      return message.reply('📭 You don\'t have any servers yet!');
     }
 
     const embed = new EmbedBuilder()
@@ -203,24 +247,28 @@ case 'servers':
 
     servers.forEach((server, index) => {
       const limits = server.attributes.limits;
+      const status = server.attributes.suspended ? '🔴 Suspended' : '🟢 Active';
+      
       embed.addFields({
         name: `${index + 1}. ${server.attributes.name}`,
-        value: `**RAM:** ${limits.memory} MB | **Disk:** ${limits.disk} MB | **CPU:** ${limits.cpu}%\n**ID:** ${server.attributes.id}`,
+        value: 
+          `**Status:** ${status}\n` +
+          `**RAM:** ${limits.memory} MB | **Disk:** ${limits.disk} MB | **CPU:** ${limits.cpu}%\n` +
+          `**ID:** \`${server.attributes.identifier}\``,
         inline: false
       });
     });
 
+    embed.setFooter({ text: `Total: ${servers.length} server(s)` });
+    embed.setTimestamp();
+
     message.reply({ embeds: [embed] });
   } catch (error) {
-    handleAPIError(message, error, 'fetch your servers');
+    await handleAPIError(message, error, 'fetch your servers');
   }
-  break;
-```
+}
 
-### 3. Check Coins Command
-
-```javascript
-case 'coins':
+async function handleCoins(message) {
   try {
     const response = await api.get(`/api/dashboard/users/${message.author.id}`);
     const coins = response.data.data.coins;
@@ -228,125 +276,17 @@ case 'coins':
     const embed = new EmbedBuilder()
       .setColor('#FFD700')
       .setTitle('🪙 Your Coins')
-      .setDescription(`You have **${coins}** coins!`);
+      .setDescription(`You have **${coins.toLocaleString()}** coins!`)
+      .setThumbnail(message.author.displayAvatarURL())
+      .setTimestamp();
 
     message.reply({ embeds: [embed] });
   } catch (error) {
-    handleAPIError(message, error, 'fetch your coins');
+    await handleAPIError(message, error, 'fetch your coins');
   }
-  break;
-```
+}
 
-### 4. Admin: Give Coins Command
-
-```javascript
-case 'givecoins':
-  // Check if user has admin permissions in your Discord server
-  if (!message.member.permissions.has('Administrator')) {
-    return message.reply('❌ You need administrator permissions!');
-  }
-
-  // Parse arguments: !givecoins @user 100
-  const targetUser = message.mentions.users.first();
-  const amount = parseInt(args[1]);
-
-  if (!targetUser || !amount) {
-    return message.reply('Usage: `!givecoins @user <amount>`');
-  }
-
-  if (amount < 1 || amount > 999999) {
-    return message.reply('Amount must be between 1 and 999999');
-  }
-
-  try {
-    await api.post(`/api/dashboard/users/${targetUser.id}/coins`, {
-      coins: amount,
-      action: 'add'
-    });
-
-    message.reply(`✅ Successfully gave ${amount} coins to ${targetUser.tag}!`);
-  } catch (error) {
-    handleAPIError(message, error, 'give coins');
-  }
-  break;
-```
-
-### 5. Admin: Update User Resources Command
-
-```javascript
-case 'setresources':
-  // Check if user has admin permissions
-  if (!message.member.permissions.has('Administrator')) {
-    return message.reply('❌ You need administrator permissions!');
-  }
-
-  // Parse arguments: !setresources @user ram:1024 disk:5120 cpu:100 servers:2
-  const user = message.mentions.users.first();
-  if (!user) {
-    return message.reply('Usage: `!setresources @user ram:1024 disk:5120 cpu:100 servers:2`');
-  }
-
-  // Parse resource values
-  const resources = {};
-  args.forEach(arg => {
-    const [key, value] = arg.split(':');
-    if (['ram', 'disk', 'cpu', 'servers'].includes(key)) {
-      resources[key] = parseInt(value);
-    }
-  });
-
-  if (Object.keys(resources).length === 0) {
-    return message.reply('Please specify at least one resource! Example: `ram:1024`');
-  }
-
-  try {
-    await api.post(`/api/dashboard/users/${user.id}/resources`, resources);
-
-    const resourceStr = Object.entries(resources)
-      .map(([key, val]) => `${key}: ${val}`)
-      .join(', ');
-
-    message.reply(`✅ Updated resources for ${user.tag}: ${resourceStr}`);
-  } catch (error) {
-    handleAPIError(message, error, 'update resources');
-  }
-  break;
-```
-
-### 6. Admin: Server Control Command
-
-```javascript
-case 'server':
-  // Check if user has admin permissions
-  if (!message.member.permissions.has('Administrator')) {
-    return message.reply('❌ You need administrator permissions!');
-  }
-
-  // Parse arguments: !server <id> <action>
-  const serverId = args[0];
-  const action = args[1]; // start, stop, restart, kill
-
-  if (!serverId || !action) {
-    return message.reply('Usage: `!server <server_id> <start|stop|restart|kill>`');
-  }
-
-  if (!['start', 'stop', 'restart', 'kill'].includes(action)) {
-    return message.reply('Invalid action! Use: start, stop, restart, or kill');
-  }
-
-  try {
-    await api.post(`/api/dashboard/servers/${serverId}/power`, { action });
-    message.reply(`✅ Server ${serverId}: ${action} command sent!`);
-  } catch (error) {
-    handleAPIError(message, error, `${action} the server`);
-  }
-  break;
-```
-
-### 7. Dashboard Statistics Command
-
-```javascript
-case 'stats':
+async function handleStats(message) {
   try {
     const response = await api.get('/api/dashboard/stats');
     const stats = response.data.data;
@@ -355,100 +295,350 @@ case 'stats':
       .setColor('#5865F2')
       .setTitle('📊 Dashboard Statistics')
       .addFields(
-        { name: 'Total Users', value: `${stats.totalUsers}`, inline: true },
-        { name: 'Total Servers', value: `${stats.totalServers}`, inline: true }
+        { name: 'Total Users', value: stats.totalUsers.toString(), inline: true },
+        { name: 'Total Servers', value: stats.totalServers.toString(), inline: true }
       )
-      .setFooter({ text: `Updated: ${new Date(stats.timestamp).toLocaleString()}` });
+      .setFooter({ text: `Updated: ${new Date(stats.timestamp).toLocaleString()}` })
+      .setTimestamp();
 
     message.reply({ embeds: [embed] });
   } catch (error) {
-    handleAPIError(message, error, 'fetch statistics');
+    await handleAPIError(message, error, 'fetch statistics');
   }
-  break;
-```
+}
 
-### 8. Admin: Change User Package Command
+// ==================== ADMIN COMMANDS ====================
 
-```javascript
-case 'setpackage':
-  // Check if user has admin permissions
+async function handleGiveCoins(message, args) {
+  // Check admin permissions
   if (!message.member.permissions.has('Administrator')) {
-    return message.reply('❌ You need administrator permissions!');
+    return message.reply('❌ You need administrator permissions to use this command!');
   }
 
-  // Parse arguments: !setpackage @user premium
-  const packageUser = message.mentions.users.first();
-  const packageName = args[1];
+  // Parse arguments
+  const targetUser = message.mentions.users.first();
+  const amount = parseInt(args[1]);
 
-  if (!packageUser) {
-    return message.reply('Usage: `!setpackage @user <package_name>`');
+  if (!targetUser || !amount || isNaN(amount)) {
+    return message.reply('❌ Usage: `!givecoins @user <amount>`\nExample: `!givecoins @user 100`');
+  }
+
+  if (amount < 1 || amount > 999999) {
+    return message.reply('❌ Amount must be between 1 and 999999');
   }
 
   try {
-    // First, get available packages
+    await api.post(`/api/dashboard/users/${targetUser.id}/coins`, {
+      coins: amount,
+      action: 'add'
+    });
+
+    const embed = new EmbedBuilder()
+      .setColor('#00ff00')
+      .setTitle('✅ Coins Given')
+      .setDescription(`Successfully gave **${amount}** coins to ${targetUser.tag}!`)
+      .setTimestamp();
+
+    message.reply({ embeds: [embed] });
+  } catch (error) {
+    await handleAPIError(message, error, 'give coins');
+  }
+}
+
+async function handleSetResources(message, args) {
+  // Check admin permissions
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ You need administrator permissions to use this command!');
+  }
+
+  // Parse arguments
+  const targetUser = message.mentions.users.first();
+  if (!targetUser) {
+    return message.reply(
+      '❌ Usage: `!setresources @user <type>:<value> ...`\n' +
+      'Example: `!setresources @user ram:1024 disk:5120 cpu:100 servers:2`\n' +
+      'Types: ram, disk, cpu, servers'
+    );
+  }
+
+  // Parse resource values
+  const resources = {};
+  args.forEach(arg => {
+    const [key, value] = arg.split(':');
+    if (['ram', 'disk', 'cpu', 'servers'].includes(key)) {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        resources[key] = numValue;
+      }
+    }
+  });
+
+  if (Object.keys(resources).length === 0) {
+    return message.reply('❌ Please specify at least one valid resource!\nExample: `ram:1024`');
+  }
+
+  try {
+    await api.post(`/api/dashboard/users/${targetUser.id}/resources`, resources);
+
+    const resourceStr = Object.entries(resources)
+      .map(([key, val]) => `**${key}:** ${val}`)
+      .join('\n');
+
+    const embed = new EmbedBuilder()
+      .setColor('#00ff00')
+      .setTitle('✅ Resources Updated')
+      .setDescription(`Updated resources for ${targetUser.tag}:\n${resourceStr}`)
+      .setTimestamp();
+
+    message.reply({ embeds: [embed] });
+  } catch (error) {
+    await handleAPIError(message, error, 'update resources');
+  }
+}
+
+async function handleSetPackage(message, args) {
+  // Check admin permissions
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ You need administrator permissions to use this command!');
+  }
+
+  // Parse arguments
+  const targetUser = message.mentions.users.first();
+  const packageName = args[1];
+
+  if (!targetUser) {
+    return message.reply('❌ Usage: `!setpackage @user <package_name>`\nExample: `!setpackage @user premium`');
+  }
+
+  try {
+    // Get available packages
     const packagesResponse = await api.get('/api/dashboard/packages');
     const availablePackages = Object.keys(packagesResponse.data.data.packages);
 
     if (packageName && !availablePackages.includes(packageName)) {
-      return message.reply(`Invalid package! Available: ${availablePackages.join(', ')}`);
+      return message.reply(
+        `❌ Invalid package! Available packages:\n${availablePackages.map(p => `\`${p}\``).join(', ')}`
+      );
     }
 
-    await api.post(`/api/dashboard/users/${packageUser.id}/package`, {
+    await api.post(`/api/dashboard/users/${targetUser.id}/package`, {
       packageName: packageName || null
     });
 
-    const msg = packageName 
-      ? `✅ Set ${packageUser.tag}'s package to: ${packageName}`
-      : `✅ Reset ${packageUser.tag}'s package to default`;
+    const embed = new EmbedBuilder()
+      .setColor('#00ff00')
+      .setTitle('✅ Package Updated')
+      .setDescription(
+        packageName 
+          ? `Set ${targetUser.tag}'s package to: **${packageName}**`
+          : `Reset ${targetUser.tag}'s package to default`
+      )
+      .setTimestamp();
 
-    message.reply(msg);
+    message.reply({ embeds: [embed] });
   } catch (error) {
-    handleAPIError(message, error, 'update package');
+    await handleAPIError(message, error, 'update package');
   }
-  break;
-```
+}
 
----
+// ==================== ERROR HANDLER ====================
 
-## Error Handling
-
-Add this error handler function to your bot:
-
-```javascript
-function handleAPIError(message, error, action) {
+async function handleAPIError(message, error, action) {
   console.error(`API Error while trying to ${action}:`, error.response?.data || error.message);
 
   let errorMsg = `❌ Failed to ${action}.`;
+  let errorDetails = '';
 
   if (error.response) {
     // API returned an error
     switch (error.response.status) {
       case 401:
-        errorMsg += '\n**Error:** Invalid API key. Contact bot administrator.';
+        errorDetails = '**Error:** Invalid API key. Contact bot administrator.';
         break;
       case 403:
-        errorMsg += '\n**Error:** Insufficient permissions.';
+        errorDetails = '**Error:** Insufficient permissions.';
         break;
       case 404:
-        errorMsg += '\n**Error:** User or resource not found.';
+        errorDetails = '**Error:** User or resource not found. Have you logged into the dashboard at least once?';
         break;
       case 500:
-        errorMsg += '\n**Error:** Server error. Try again later.';
+        errorDetails = '**Error:** Server error. Try again later.';
         break;
       default:
-        errorMsg += `\n**Error:** ${error.response.data.message || 'Unknown error'}`;
+        errorDetails = `**Error:** ${error.response.data.message || 'Unknown error'}`;
     }
   } else if (error.request) {
     // Request made but no response
-    errorMsg += '\n**Error:** Cannot connect to dashboard API. Check if dashboard is running.';
+    errorDetails = '**Error:** Cannot connect to dashboard API. Is the dashboard running?';
   } else {
     // Something else happened
-    errorMsg += `\n**Error:** ${error.message}`;
+    errorDetails = `**Error:** ${error.message}`;
   }
 
-  message.reply(errorMsg);
+  const embed = new EmbedBuilder()
+    .setColor('#ff0000')
+    .setTitle(errorMsg)
+    .setDescription(errorDetails)
+    .setTimestamp();
+
+  message.reply({ embeds: [embed] });
 }
+
+// Login to Discord
+client.login(process.env.DISCORD_TOKEN);
+
+console.log('Starting Discord bot...');
 ```
+
+---
+
+## Running Your Bot
+
+### Step 1: Create Required Files
+
+Create a new folder for your bot and add these files:
+
+**Directory structure:**
+```
+my-dashboard-bot/
+├── .env
+├── bot.js
+├── package.json
+└── node_modules/
+```
+
+**Create `package.json`:**
+```bash
+npm init -y
+```
+
+**Install dependencies:**
+```bash
+npm install discord.js axios dotenv
+```
+
+### Step 2: Configure Environment
+
+Edit `.env` file:
+```env
+DISCORD_TOKEN=YOUR_BOT_TOKEN_HERE
+API_KEY=hlm_YOUR_API_KEY_HERE
+API_URL=http://localhost:19133
+```
+
+**Getting your Discord bot token:**
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application or select existing one
+3. Go to "Bot" section
+4. Click "Reset Token" to get your token
+5. Copy the token to your `.env` file
+
+**Bot invite link:**
+Create an invite link with these permissions:
+- Send Messages
+- Embed Links
+- Read Message History
+- Use External Emojis
+
+Invite URL format:
+```
+https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_CLIENT_ID&permissions=51200&scope=bot
+```
+
+### Step 3: Enable Message Content Intent
+
+**IMPORTANT:** In Discord Developer Portal:
+1. Go to your application
+2. Click "Bot" section
+3. Scroll down to "Privileged Gateway Intents"
+4. Enable "MESSAGE CONTENT INTENT"
+5. Save changes
+
+Without this, your bot won't be able to read message content!
+
+### Step 4: Run Your Bot
+
+```bash
+node bot.js
+```
+
+You should see:
+```
+Starting Discord bot...
+✓ Bot logged in as YourBot#1234
+✓ API URL: http://localhost:19133
+✓ API connection successful!
+  Dashboard: online
+  Pterodactyl: online
+```
+
+### Step 5: Test Commands
+
+In your Discord server, try:
+```
+!help
+!userinfo
+!coins
+!servers
+!stats
+```
+
+---
+
+## Command Examples
+
+### User Commands
+
+#### Check Your Profile
+```
+!userinfo
+!profile
+!me
+```
+Shows your coins, package, resources, and admin status.
+
+#### List Your Servers
+```
+!servers
+!myservers
+```
+Displays all your servers with their status and resources.
+
+#### Check Coin Balance
+```
+!coins
+!balance
+```
+Shows your current coin balance.
+
+#### Dashboard Statistics
+```
+!stats
+```
+Displays total users and servers on the dashboard.
+
+### Admin Commands
+
+#### Give Coins to User
+```
+!givecoins @username 100
+```
+Adds 100 coins to the mentioned user.
+
+#### Update User Resources
+```
+!setresources @username ram:1024 disk:5120
+!setresources @username cpu:100 servers:2
+!setresources @username ram:2048 disk:10240 cpu:200 servers:3
+```
+Updates extra resources for a user.
+
+#### Change User Package
+```
+!setpackage @username premium
+!setpackage @username default
+```
+Changes the user's package/plan.
 
 ---
 
@@ -456,44 +646,37 @@ function handleAPIError(message, error, action) {
 
 ### User Management
 
-| Endpoint | Method | Permission | Description |
-|----------|--------|-----------|-------------|
-| `/api/dashboard/users/:discordId` | GET | `users.read`, `*` | Get user information |
-| `/api/dashboard/users/:discordId/resources` | POST | `users.write`, `*` | Update extra resources |
-| `/api/dashboard/users/:discordId/coins` | POST | `users.write`, `*` | Update coins |
-| `/api/dashboard/users/:discordId/package` | POST | `users.write`, `*` | Update package/plan |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/dashboard/users/:discordId` | GET | Get user information |
+| `/api/dashboard/users/:discordId/resources` | POST | Update extra resources |
+| `/api/dashboard/users/:discordId/coins` | POST | Update coins |
+| `/api/dashboard/users/:discordId/package` | POST | Update package |
 
 ### Server Management
 
-| Endpoint | Method | Permission | Description |
-|----------|--------|-----------|-------------|
-| `/api/dashboard/servers` | GET | `servers.read`, `*` | List all servers (filter by discordId) |
-| `/api/dashboard/servers/:serverId` | GET | `servers.read`, `*` | Get server details |
-| `/api/dashboard/servers/:serverId/power` | POST | `servers.control`, `*` | Send power action (start/stop/restart/kill) |
-| `/api/dashboard/servers/:serverId` | DELETE | `servers.delete`, `*` | Delete server |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/dashboard/servers?discordId=:id` | GET | Get user's servers |
+| `/api/dashboard/servers` | GET | Get all servers |
+| `/api/dashboard/servers/:id` | GET | Get server details |
+| `/api/dashboard/servers/:id` | DELETE | Delete server |
 
 ### Dashboard Information
 
-| Endpoint | Method | Permission | Description |
-|----------|--------|-----------|-------------|
-| `/api/dashboard/settings` | GET | `settings.read`, `*` | Get dashboard settings |
-| `/api/dashboard/packages` | GET | `settings.read`, `*` | Get available packages |
-| `/api/dashboard/stats` | GET | `stats.read`, `*` | Get statistics |
-| `/api/dashboard/health` | GET | Any | Health check |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/dashboard/settings` | GET | Get dashboard settings |
+| `/api/dashboard/packages` | GET | Get available packages |
+| `/api/dashboard/stats` | GET | Get statistics |
+| `/api/dashboard/health` | GET | Health check |
 
----
+### Request/Response Examples
 
-## Request/Response Examples
-
-### Get User Info
-
-**Request:**
+**Get User Info:**
 ```javascript
 const response = await api.get('/api/dashboard/users/123456789012345678');
-```
-
-**Response:**
-```json
+// Response:
 {
   "success": true,
   "data": {
@@ -513,18 +696,13 @@ const response = await api.get('/api/dashboard/users/123456789012345678');
 }
 ```
 
-### Update Coins
-
-**Request:**
+**Update Coins:**
 ```javascript
 await api.post('/api/dashboard/users/123456789012345678/coins', {
   coins: 50,
   action: 'add'  // 'add', 'subtract', or 'set'
 });
-```
-
-**Response:**
-```json
+// Response:
 {
   "success": true,
   "message": "Coins updated successfully",
@@ -534,53 +712,193 @@ await api.post('/api/dashboard/users/123456789012345678/coins', {
 }
 ```
 
-### Control Server
-
-**Request:**
+**Get User Servers:**
 ```javascript
-await api.post('/api/dashboard/servers/1/power', {
-  action: 'restart'  // 'start', 'stop', 'restart', or 'kill'
-});
-```
-
-**Response:**
-```json
+const response = await api.get('/api/dashboard/servers?discordId=123456789012345678');
+// Response:
 {
   "success": true,
-  "message": "Power action 'restart' sent successfully"
+  "data": {
+    "object": "list",
+    "data": [
+      {
+        "object": "server",
+        "attributes": {
+          "id": 1,
+          "name": "My Server",
+          "limits": {
+            "memory": 1024,
+            "disk": 5120,
+            "cpu": 100
+          }
+          // ... more server data
+        }
+      }
+    ]
+  }
 }
 ```
 
 ---
 
+## Error Handling
+
+### Common Error Responses
+
+**401 Unauthorized:**
+```json
+{
+  "error": "Unauthorized",
+  "message": "Invalid or disabled API key"
+}
+```
+**Solution:** Check your API key is correct and enabled in dashboard.
+
+**403 Forbidden:**
+```json
+{
+  "error": "Forbidden",
+  "message": "API key does not have required permissions"
+}
+```
+**Solution:** Update API key permissions in dashboard admin panel.
+
+**404 Not Found:**
+```json
+{
+  "error": "Not Found",
+  "message": "User not found in database"
+}
+```
+**Solution:** User needs to login to dashboard at least once.
+
+### Error Handling in Code
+
+```javascript
+try {
+  const response = await api.get('/api/dashboard/users/' + userId);
+  // Handle success
+  console.log(response.data);
+} catch (error) {
+  if (error.response) {
+    // API returned an error
+    console.error('Status:', error.response.status);
+    console.error('Message:', error.response.data.message);
+  } else if (error.request) {
+    // No response received
+    console.error('Dashboard API not responding');
+  } else {
+    // Other error
+    console.error('Error:', error.message);
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### Bot Not Responding
+
+**Check 1: Message Content Intent**
+- Go to Discord Developer Portal → Bot → Privileged Gateway Intents
+- Enable "MESSAGE CONTENT INTENT"
+
+**Check 2: Bot Permissions**
+- Ensure bot has "Send Messages" and "Embed Links" permissions in your server
+
+**Check 3: Bot is Online**
+- Check console for "Bot logged in" message
+- Make sure bot appears online in Discord
+
+### API Connection Failed
+
+**Error: `ECONNREFUSED`**
+- Dashboard is not running
+- Start dashboard: `npm start` or `node app.js`
+
+**Error: `401 Unauthorized`**
+- API key is incorrect or disabled
+- Check `.env` file has correct API key
+- Verify key is enabled in dashboard admin panel
+
+**Error: `404 Not Found`**
+- User hasn't logged into dashboard yet
+- Each user must login at least once to be in database
+
+### Commands Not Working
+
+**Commands don't respond:**
+1. Check Message Content Intent is enabled
+2. Verify command prefix (`!` by default)
+3. Check bot has permissions in channel
+
+**Admin commands not working:**
+1. User needs Discord Administrator permission
+2. Check error messages in console
+
+### Dashboard Not Accessible Externally
+
+If using external domain/IP:
+1. Update `API_URL` in `.env` to your external URL
+2. Ensure port 19133 (or your custom port) is open
+3. Check firewall settings
+
+---
+
+## Advanced Features
+
+### Custom Prefix
+
+Change the prefix in `bot.js`:
+```javascript
+const prefix = '!';  // Change to your preferred prefix
+```
+
+### Rate Limiting
+
+Add rate limiting to prevent spam:
+```javascript
+const cooldowns = new Map();
+
+function checkCooldown(userId, commandName, cooldownTime = 3000) {
+  if (cooldowns.has(userId)) {
+    const cooldownEnd = cooldowns.get(userId);
+    if (Date.now() < cooldownEnd) {
+      const timeLeft = ((cooldownEnd - Date.now()) / 1000).toFixed(1);
+      return { limited: true, timeLeft };
+    }
+  }
+  
+  cooldowns.set(userId, Date.now() + cooldownTime);
+  setTimeout(() => cooldowns.delete(userId), cooldownTime);
+  
+  return { limited: false };
+}
+
+// Use in commands:
+const cooldown = checkCooldown(message.author.id, 'userinfo');
+if (cooldown.limited) {
+  return message.reply(`⏱️ Please wait ${cooldown.timeLeft} seconds before using this command again.`);
+}
+```
+
+### Slash Commands
+
+To use slash commands instead of prefix commands, see [Discord.js Slash Commands Guide](https://discordjs.guide/interactions/slash-commands.html).
+
+---
+
 ## Security Best Practices
 
-### 1. Protect Your API Key
+### 1. Never Share Your API Key
+- Keep API key in `.env` file
+- Add `.env` to `.gitignore`
+- Never commit API keys to Git
 
-**❌ Never do this:**
+### 2. Validate User Input
 ```javascript
-const API_KEY = 'hlm_your_actual_key_here';  // Don't hardcode!
-```
-
-**✅ Do this instead:**
-```javascript
-require('dotenv').config();
-const API_KEY = process.env.API_KEY;
-```
-
-### 2. Add .env to .gitignore
-
-Create/update `.gitignore`:
-```
-node_modules/
-.env
-config.json
-```
-
-### 3. Validate User Input
-
-```javascript
-// Always validate before making API calls
+// Always validate before API calls
 if (!targetUser || !amount || isNaN(amount)) {
   return message.reply('Invalid input!');
 }
@@ -590,367 +908,57 @@ if (amount < 1 || amount > 999999) {
 }
 ```
 
-### 4. Implement Permission Checks
-
+### 3. Check Permissions
 ```javascript
-// Check Discord permissions
+// Always verify admin permissions for admin commands
 if (!message.member.permissions.has('Administrator')) {
-  return message.reply('You need administrator permissions!');
-}
-
-// Or check against a whitelist
-const ADMIN_IDS = ['123456789012345678', '987654321098765432'];
-if (!ADMIN_IDS.includes(message.author.id)) {
-  return message.reply('You are not authorized!');
+  return message.reply('Insufficient permissions!');
 }
 ```
 
-### 5. Use Try-Catch Blocks
+### 4. Use Environment Variables
+```javascript
+// ✅ Good
+const apiKey = process.env.API_KEY;
 
+// ❌ Bad
+const apiKey = 'hlm_actual_key_here';
+```
+
+### 5. Handle Errors Gracefully
 ```javascript
 try {
-  const response = await api.get('/api/dashboard/users/' + userId);
-  // Handle success
+  // API call
 } catch (error) {
-  // Handle error properly
-  handleAPIError(message, error, 'fetch user data');
-}
-```
-
-### 6. Rate Limiting (Optional)
-
-```javascript
-const rateLimit = new Map();
-
-function checkRateLimit(userId) {
-  const now = Date.now();
-  const userLimit = rateLimit.get(userId) || { count: 0, resetTime: now };
-
-  if (now > userLimit.resetTime) {
-    // Reset after 1 minute
-    rateLimit.set(userId, { count: 1, resetTime: now + 60000 });
-    return true;
-  }
-
-  if (userLimit.count >= 10) {
-    return false; // Too many requests
-  }
-
-  userLimit.count++;
-  rateLimit.set(userId, userLimit);
-  return true;
-}
-
-// Use in commands
-if (!checkRateLimit(message.author.id)) {
-  return message.reply('Slow down! Try again in a minute.');
+  // Don't expose sensitive error details to users
+  console.error('Error:', error);  // Log for debugging
+  message.reply('An error occurred.');  // Generic user message
 }
 ```
 
 ---
 
-## Troubleshooting
+## Additional Resources
 
-### Bot can't connect to API
-
-**Check:**
-1. Is the dashboard running? (`npm start` in dashboard directory)
-2. Is the API URL correct in `.env`? (e.g., `http://localhost:3000`)
-3. Is the API key valid? Check in dashboard admin panel
-
-**Test connection:**
-```javascript
-async function testConnection() {
-  try {
-    const response = await api.get('/api/dashboard/health');
-    console.log('✓ Connected:', response.data);
-  } catch (error) {
-    console.error('✗ Connection failed:', error.message);
-  }
-}
-```
-
-### 401 Unauthorized Error
-
-**Cause:** Invalid or missing API key
-
-**Fix:**
-1. Check if API key is correct in `.env`
-2. Verify API key exists in dashboard (Admin → API Keys)
-3. Make sure key is enabled (not disabled)
-
-### 403 Forbidden Error
-
-**Cause:** API key doesn't have required permissions
-
-**Fix:**
-1. Go to dashboard Admin → API Keys
-2. Check the permissions for your API key
-3. Add missing permissions or create new key with `*` (full access)
-
-### 404 Not Found Error
-
-**Cause:** User or server doesn't exist
-
-**Fix:**
-1. Verify the Discord ID is correct
-2. Check if user has logged into dashboard at least once
-3. Verify server ID exists in Pterodactyl
-
----
-
-## Full Example Bot
-
-Here's a complete working bot with all commands:
-
-```javascript
-// bot.js
-require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
-});
-
-const api = axios.create({
-  baseURL: process.env.API_URL,
-  headers: {
-    'Authorization': `Bearer ${process.env.API_KEY}`,
-    'Content-Type': 'application/json'
-  }
-});
-
-client.once('ready', () => {
-  console.log(`✓ Bot: ${client.user.tag}`);
-  testAPIConnection();
-});
-
-async function testAPIConnection() {
-  try {
-    const { data } = await api.get('/api/dashboard/health');
-    console.log(`✓ API: ${data.data.dashboard}`);
-  } catch (error) {
-    console.error('✗ API connection failed:', error.message);
-  }
-}
-
-client.on('messageCreate', async (message) => {
-  if (message.author.bot || !message.content.startsWith('!')) return;
-
-  const args = message.content.slice(1).trim().split(/ +/);
-  const command = args.shift().toLowerCase();
-
-  switch (command) {
-    case 'userinfo':
-      await getUserInfo(message);
-      break;
-    case 'servers':
-      await getServers(message);
-      break;
-    case 'coins':
-      await getCoins(message);
-      break;
-    case 'stats':
-      await getStats(message);
-      break;
-    case 'givecoins':
-      await giveCoins(message, args);
-      break;
-    case 'help':
-      showHelp(message);
-      break;
-  }
-});
-
-async function getUserInfo(message) {
-  try {
-    const { data } = await api.get(`/api/dashboard/users/${message.author.id}`);
-    const user = data.data;
-
-    const embed = new EmbedBuilder()
-      .setColor('#00ff00')
-      .setTitle('📊 Your Dashboard Info')
-      .addFields(
-        { name: 'Package', value: user.packageName || 'Default', inline: true },
-        { name: 'Coins', value: `${user.coins}`, inline: true },
-        { name: 'Extra RAM', value: `${user.extraResources.ram} MB`, inline: true },
-        { name: 'Extra Disk', value: `${user.extraResources.disk} MB`, inline: true }
-      );
-
-    message.reply({ embeds: [embed] });
-  } catch (error) {
-    handleError(message, error, 'fetch your info');
-  }
-}
-
-async function getServers(message) {
-  try {
-    const { data } = await api.get(`/api/dashboard/servers?discordId=${message.author.id}`);
-    const servers = data.data.data;
-
-    if (servers.length === 0) {
-      return message.reply('You don\'t have any servers!');
-    }
-
-    const embed = new EmbedBuilder()
-      .setColor('#5865F2')
-      .setTitle(`🖥️ Your Servers (${servers.length})`)
-      .setDescription(servers.map((s, i) => 
-        `${i + 1}. **${s.attributes.name}** (ID: ${s.attributes.id})`
-      ).join('\n'));
-
-    message.reply({ embeds: [embed] });
-  } catch (error) {
-    handleError(message, error, 'fetch servers');
-  }
-}
-
-async function getCoins(message) {
-  try {
-    const { data } = await api.get(`/api/dashboard/users/${message.author.id}`);
-    message.reply(`🪙 You have **${data.data.coins}** coins!`);
-  } catch (error) {
-    handleError(message, error, 'fetch coins');
-  }
-}
-
-async function getStats(message) {
-  try {
-    const { data } = await api.get('/api/dashboard/stats');
-    const embed = new EmbedBuilder()
-      .setColor('#5865F2')
-      .setTitle('📊 Dashboard Statistics')
-      .addFields(
-        { name: 'Total Users', value: `${data.data.totalUsers}`, inline: true },
-        { name: 'Total Servers', value: `${data.data.totalServers}`, inline: true }
-      );
-
-    message.reply({ embeds: [embed] });
-  } catch (error) {
-    handleError(message, error, 'fetch stats');
-  }
-}
-
-async function giveCoins(message, args) {
-  if (!message.member.permissions.has('Administrator')) {
-    return message.reply('❌ Admin only!');
-  }
-
-  const user = message.mentions.users.first();
-  const amount = parseInt(args[1]);
-
-  if (!user || !amount || amount < 1) {
-    return message.reply('Usage: `!givecoins @user <amount>`');
-  }
-
-  try {
-    await api.post(`/api/dashboard/users/${user.id}/coins`, {
-      coins: amount,
-      action: 'add'
-    });
-
-    message.reply(`✅ Gave ${amount} coins to ${user.tag}!`);
-  } catch (error) {
-    handleError(message, error, 'give coins');
-  }
-}
-
-function showHelp(message) {
-  const embed = new EmbedBuilder()
-    .setColor('#5865F2')
-    .setTitle('🤖 Bot Commands')
-    .addFields(
-      { name: '!userinfo', value: 'Your dashboard info' },
-      { name: '!servers', value: 'List your servers' },
-      { name: '!coins', value: 'Check coin balance' },
-      { name: '!stats', value: 'Dashboard statistics' },
-      { name: '!givecoins @user <amount>', value: 'Give coins (Admin)' }
-    );
-
-  message.reply({ embeds: [embed] });
-}
-
-function handleError(message, error, action) {
-  console.error(`Error while ${action}:`, error.response?.data || error.message);
-  
-  let msg = `❌ Failed to ${action}. `;
-  if (error.response?.status === 404) {
-    msg += 'User not found. Have you logged into the dashboard?';
-  } else if (error.response?.status === 401) {
-    msg += 'Invalid API key. Contact bot admin.';
-  } else {
-    msg += 'Try again later.';
-  }
-  
-  message.reply(msg);
-}
-
-client.login(process.env.DISCORD_TOKEN);
-```
-
----
-
-## Running Your Bot
-
-1. Create the files:
-   - `bot.js` (main bot file)
-   - `.env` (environment variables)
-   - `package.json` (if not exists: `npm init -y`)
-
-2. Install dependencies:
-   ```bash
-   npm install discord.js axios dotenv
-   ```
-
-3. Start the bot:
-   ```bash
-   node bot.js
-   ```
-
-4. Test in Discord:
-   ```
-   !help
-   !userinfo
-   !coins
-   ```
-
----
-
-## Permission Reference
-
-When creating an API key, you can select these permissions:
-
-- `*` - **Full Access** (all endpoints)
-- `users.read` - Read user information
-- `users.write` - Modify users (coins, resources, packages)
-- `servers.read` - Read server information  
-- `servers.control` - Start/stop/restart servers
-- `servers.delete` - Delete servers
-- `settings.read` - Read dashboard settings
-- `stats.read` - Read statistics
-
-**Recommendation:** Use `*` for your bot to have full access, or combine specific permissions like `users.read`, `users.write`, `servers.read`, `servers.control`, `stats.read` for most bot functionality.
+- [Discord.js Documentation](https://discord.js.org/)
+- [Discord Developer Portal](https://discord.com/developers/applications)
+- [Axios Documentation](https://axios-http.com/)
+- Helium Dashboard: Your dashboard URL
 
 ---
 
 ## Need Help?
 
-1. Check dashboard is running on the correct port
-2. Verify API key in dashboard admin panel
-3. Check `.env` file has correct values
-4. Look at console logs for error details
-5. Test API health: `curl -H "Authorization: Bearer YOUR_KEY" http://localhost:3000/api/dashboard/health`
-
 **Common Issues:**
-- **ECONNREFUSED**: Dashboard not running
-- **401 Unauthorized**: Wrong API key
-- **403 Forbidden**: Missing permissions
-- **404 Not Found**: User hasn't logged in to dashboard yet
+- Bot offline: Check bot token and Message Content Intent
+- API errors: Verify API key and dashboard is running
+- Commands not working: Check permissions and prefix
+
+**Testing:**
+Run the test script included with Helium:
+```bash
+node test-bot-api.js
+```
 
 ---
 
