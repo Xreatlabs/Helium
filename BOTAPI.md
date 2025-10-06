@@ -87,10 +87,22 @@ npm install discord.js axios dotenv
 ### Step 3: Create .env File
 
 ```env
-DISCORD_TOKEN=your_discord_bot_token
-API_KEY=hlm_your_dashboard_api_key
-API_URL=http://localhost:19133
+# Discord Bot Configuration
+DISCORD_TOKEN=your_discord_bot_token_here
+
+# Dashboard API Configuration
+API_URL=https://dash.example.com
+API_KEY=hlm_your_dashboard_api_key_here
+
+# Pterodactyl Power Control (Optional - for server start/stop/restart)
+PTERO_KEY=ptlc_your_pterodactyl_client_key_here
 ```
+
+**Configuration Explained:**
+- `DISCORD_TOKEN` - Your Discord bot token from Discord Developer Portal
+- `API_URL` - Your Helium dashboard URL (e.g., https://dash.example.com or http://localhost:19133)
+- `API_KEY` - Dashboard API key created in Admin Panel (starts with `hlm_`)
+- `PTERO_KEY` - Pterodactyl client key for power control (starts with `ptlc_`) - Optional
 
 ### Step 4: Basic Bot Structure
 
@@ -103,9 +115,13 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
+// API client for dashboard
 const api = axios.create({
   baseURL: process.env.API_URL,
-  headers: { 'Authorization': `Bearer ${process.env.API_KEY}` }
+  headers: { 
+    'Authorization': `Bearer ${process.env.API_KEY}`,
+    'Content-Type': 'application/json'
+  }
 });
 
 client.on('messageCreate', async (message) => {
@@ -115,6 +131,8 @@ client.on('messageCreate', async (message) => {
 
 client.login(process.env.DISCORD_TOKEN);
 ```
+
+**Note:** All credentials are stored in `.env` file for security. Never commit `.env` to Git!
 
 ### Step 5: Enable Message Content Intent
 
@@ -127,50 +145,57 @@ client.login(process.env.DISCORD_TOKEN);
 
 ## Power Control Setup
 
-Power control allows starting/stopping/restarting servers. Two configuration methods:
+Power control allows starting/stopping/restarting servers from Discord bot.
 
-### Method 1: Global Configuration (Recommended)
+### Create Pterodactyl Client Key
 
-**Add to settings.json:**
+1. Login to Pterodactyl Panel
+2. Click your profile → **Account Settings**
+3. Go to **API Credentials** tab
+4. Click **Create API Key**
+5. Description: `Discord Bot Power Control`
+6. Click Create and copy the key (starts with `ptlc_`)
+7. Add to your bot's `.env` file as `PTERO_KEY`
+
+### Bot Configuration
+
+Your `.env` file should now have:
+```env
+DISCORD_TOKEN=your_bot_token
+API_URL=https://dash.example.com
+API_KEY=hlm_your_dashboard_key
+PTERO_KEY=ptlc_your_pterodactyl_key
+```
+
+### Using Power Control in Bot
+
+**Method 1: Using Environment Variable (Recommended for Bots)**
+
+```javascript
+// Pass the ptero key from environment
+await api.post(`/api/dashboard/servers/${serverId}/power`, {
+  action: 'start',
+  pteroKey: process.env.PTERO_KEY
+});
+```
+
+**Method 2: Dashboard Global Key (Alternative)**
+
+Alternatively, you can configure the key globally in dashboard `settings.json`:
 ```json
 {
   "pterodactyl": {
-    "domain": "https://panel.example.com",
-    "key": "ptla_application_key",
-    "clientKey": "ptlc_client_key_here"
+    "clientKey": "ptlc_..."
   }
 }
 ```
 
-**Create Client Key in Pterodactyl:**
-1. Login to Pterodactyl Panel
-2. Account Settings → API Credentials
-3. Create new key (starts with `ptlc_`)
-4. Add to settings.json as shown above
-
-**Use in bot:**
+Then in bot (no pteroKey needed):
 ```javascript
-// Simple - uses global key from settings
 await api.post(`/api/dashboard/servers/${serverId}/power`, { action: 'start' });
 ```
 
-### Method 2: Per-Request Key (Advanced)
-
-**No settings.json changes needed**
-
-**Use in bot:**
-```javascript
-// Pass key in each request
-await api.post(`/api/dashboard/servers/${serverId}/power`, {
-  action: 'start',
-  pteroKey: 'ptlc_custom_key_here'
-});
-```
-
-**When to use:**
-- Multiple Pterodactyl instances
-- Per-user power control
-- Dynamic key selection
+**Recommended Approach:** Use Method 1 (environment variable) for bots to keep all credentials in `.env` file.
 
 ---
 
@@ -280,7 +305,10 @@ Start your server.
 
 ```javascript
 POST /api/dashboard/servers/{serverId}/power
-Body: { "action": "start" }
+Body: { 
+  "action": "start",
+  "pteroKey": process.env.PTERO_KEY  // Pass from .env
+}
 ```
 
 **Example:** `!start` or `!start Minecraft`
@@ -290,7 +318,10 @@ Stop server gracefully.
 
 ```javascript
 POST /api/dashboard/servers/{serverId}/power
-Body: { "action": "stop" }
+Body: { 
+  "action": "stop",
+  "pteroKey": process.env.PTERO_KEY
+}
 ```
 
 #### 11. !restart [server_name]
@@ -298,7 +329,10 @@ Restart server.
 
 ```javascript
 POST /api/dashboard/servers/{serverId}/power
-Body: { "action": "restart" }
+Body: { 
+  "action": "restart",
+  "pteroKey": process.env.PTERO_KEY
+}
 ```
 
 #### 12. !kill [server_name]
@@ -306,7 +340,10 @@ Force kill server (emergency).
 
 ```javascript
 POST /api/dashboard/servers/{serverId}/power
-Body: { "action": "kill" }
+Body: { 
+  "action": "kill",
+  "pteroKey": process.env.PTERO_KEY
+}
 ```
 
 #### 13. !myserver <action> [name]
@@ -510,12 +547,13 @@ Admin power control for any server.
 
 ```javascript
 POST /api/dashboard/servers/{serverId}/power
-Body: { "action": "start/stop/restart/kill" }
+Body: { 
+  "action": "start/stop/restart/kill",
+  "pteroKey": process.env.PTERO_KEY  // From .env
+}
 ```
 
 **Example:** `!power 1 start`
-
-**With custom key:** `!power 1 start ptlc_custom_key`
 
 #### 32. !deleteserver <server_id>
 Delete a server (admin only).
@@ -656,14 +694,32 @@ try {
 ## Security Best Practices
 
 ### 1. Environment Variables
-```env
-# ✅ Good - Use .env file
-DISCORD_TOKEN=...
-API_KEY=hlm_...
 
-# ❌ Bad - Never hardcode
-const apiKey = "hlm_actual_key";
+**✅ Good - All credentials in .env:**
+```env
+DISCORD_TOKEN=your_bot_token
+API_URL=https://dash.example.com
+API_KEY=hlm_your_dashboard_key
+PTERO_KEY=ptlc_your_pterodactyl_key
 ```
+
+**Usage in code:**
+```javascript
+require('dotenv').config();
+
+const api = axios.create({
+  baseURL: process.env.API_URL,
+  headers: { 'Authorization': `Bearer ${process.env.API_KEY}` }
+});
+```
+
+**❌ Bad - Never hardcode:**
+```javascript
+const apiKey = "hlm_actual_key_here";  // Don't do this!
+const pteroKey = "ptlc_key_here";      // Don't do this!
+```
+
+**Important:** Add `.env` to `.gitignore` to prevent committing secrets!
 
 ### 2. Permission Checks
 ```javascript
