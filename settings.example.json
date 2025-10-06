@@ -2,7 +2,9 @@
   "name": "Helium",
   "pterodactyl": {
     "domain": "https://panel.example.com",
-    "key": "Your Pterodactyl API key with all permissions"
+    "key": "Your Pterodactyl Application API key (ptla_...) with all permissions",
+    "clientKey": "Your Pterodactyl Client API key (ptlc_...) - OPTIONAL for power control. See POWER_CONTROL.md",
+    "_comment": "Application key (ptla_) for admin operations. Client key (ptlc_) enables server power control. Two options: 1) Set clientKey here for global use (easier), OR 2) Pass pteroKey in each API request (flexible). See POWER_CONTROL.md for details."
   },
   "announcement": {
     "enabled": false,

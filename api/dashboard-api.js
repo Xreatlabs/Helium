@@ -353,13 +353,14 @@ module.exports.load = async function (app, db) {
   /**
    * POST /api/dashboard/servers/:serverId/power
    * Send power action to server (start, stop, restart, kill)
-   * Note: This endpoint is currently not supported due to Pterodactyl API limitations.
-   * Power control requires client API access which is not available through application API keys.
+   * Supports two methods:
+   * 1. Global: Configure clientKey in settings.json (easier setup)
+   * 2. Per-request: Pass pteroKey in request body (more flexible)
    */
   app.post('/api/dashboard/servers/:serverId/power', requireApiKey(['servers.control', '*']), async (req, res) => {
     try {
       const serverId = req.params.serverId;
-      const { action } = req.body;
+      const { action, identifier, pteroKey } = req.body;
 
       const validActions = ['start', 'stop', 'restart', 'kill'];
       if (!validActions.includes(action)) {
@@ -369,12 +370,79 @@ module.exports.load = async function (app, db) {
         });
       }
 
-      // Power control through application API is not supported by Pterodactyl
-      // This would require client API keys which are user-specific
-      return res.status(501).json({
-        error: 'Not Implemented',
-        message: 'Power control is not currently supported through the Dashboard API. Pterodactyl requires client API access for power actions, which is not available through application API keys.',
-        alternatives: 'Users can control their servers through the Pterodactyl panel directly at ' + settings.pterodactyl.domain
+      // Determine which Pterodactyl client key to use
+      // Priority: 1. Request body pteroKey, 2. Settings clientKey
+      const clientKey = pteroKey || settings.pterodactyl.clientKey;
+
+      if (!clientKey) {
+        return res.status(501).json({
+          error: 'Not Configured',
+          message: 'Power control requires a Pterodactyl client API key. Either:\n1. Add "clientKey" to pterodactyl settings in settings.json, OR\n2. Pass "pteroKey" in request body',
+          documentation: 'See POWER_CONTROL.md for setup instructions'
+        });
+      }
+
+      // If identifier is provided, use it directly. Otherwise, fetch server details first
+      let serverIdentifier = identifier;
+      
+      if (!serverIdentifier) {
+        // Fetch server details to get identifier
+        const serverResponse = await fetch(
+          `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${settings.pterodactyl.key}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          }
+        );
+
+        if (!serverResponse.ok) {
+          return res.status(404).json({
+            error: 'Not Found',
+            message: 'Server not found'
+          });
+        }
+
+        const serverData = await serverResponse.json();
+        serverIdentifier = serverData.attributes.identifier;
+      }
+
+      // Send power action using client API
+      const powerResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/client/servers/${serverIdentifier}/power`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${clientKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ signal: action })
+        }
+      );
+
+      if (!powerResponse.ok) {
+        const errorText = await powerResponse.text();
+        console.error('Pterodactyl power control error:', errorText);
+        
+        return res.status(powerResponse.status).json({
+          error: 'Pterodactyl Error',
+          message: 'Failed to send power action',
+          details: errorText
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `Power action '${action}' sent successfully to server ${serverId}`,
+        data: {
+          serverId: serverId,
+          identifier: serverIdentifier,
+          action: action,
+          keySource: pteroKey ? 'request' : 'settings'
+        }
       });
     } catch (error) {
       console.error('Error in power endpoint:', error);
