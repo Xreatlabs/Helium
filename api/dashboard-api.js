@@ -210,6 +210,113 @@ module.exports.load = async function (app, db) {
     }
   });
 
+  /**
+   * POST /api/dashboard/users/:discordId/purchase
+   * Purchase resources from the store (deducts coins and adds resources)
+   */
+  app.post('/api/dashboard/users/:discordId/purchase', requireApiKey(['users.write', '*']), async (req, res) => {
+    try {
+      const discordId = req.params.discordId;
+      const { type, amount } = req.body;
+
+      // Validate inputs
+      const validTypes = ['ram', 'disk', 'cpu', 'servers'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Invalid resource type. Must be: ram, disk, cpu, or servers'
+        });
+      }
+
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount < 1) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Amount must be a number greater than 0'
+        });
+      }
+
+      // Check if store is enabled
+      if (!settings.api.client.coins.store.enabled) {
+        return res.status(503).json({
+          error: 'Service Unavailable',
+          message: 'Store is currently disabled'
+        });
+      }
+
+      const pterodactylId = await db.get(`users-${discordId}`);
+      if (!pterodactylId) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'User not found'
+        });
+      }
+
+      // Get user coins
+      const userCoins = (await db.get(`coins-${discordId}`)) || 0;
+
+      // Get store configuration
+      const { per, cost } = settings.api.client.coins.store[type];
+      const purchaseCost = cost * parsedAmount;
+      const resourceAmount = per * parsedAmount;
+
+      // Check if user has enough coins
+      if (userCoins < purchaseCost) {
+        return res.status(400).json({
+          error: 'Insufficient Funds',
+          message: `Not enough coins. Need ${purchaseCost} coins, have ${userCoins} coins`,
+          data: {
+            required: purchaseCost,
+            available: userCoins,
+            shortage: purchaseCost - userCoins
+          }
+        });
+      }
+
+      // Deduct coins
+      const newUserCoins = userCoins - purchaseCost;
+      if (newUserCoins === 0) {
+        await db.delete(`coins-${discordId}`);
+      } else {
+        await db.set(`coins-${discordId}`, newUserCoins);
+      }
+
+      // Add resources
+      const extra = (await db.get(`extra-${discordId}`)) || {
+        ram: 0,
+        disk: 0,
+        cpu: 0,
+        servers: 0
+      };
+
+      extra[type] = (extra[type] || 0) + resourceAmount;
+
+      await db.set(`extra-${discordId}`, extra);
+
+      // Suspend user to refresh resources
+      const adminjs = require('./admin.js');
+      adminjs.suspend(discordId);
+
+      res.json({
+        success: true,
+        message: 'Purchase successful',
+        data: {
+          resourceType: type,
+          resourceAmount: resourceAmount,
+          cost: purchaseCost,
+          remainingCoins: newUserCoins,
+          newTotal: extra[type]
+        }
+      });
+    } catch (error) {
+      console.error('Error processing purchase:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
   // ==================== SERVER MANAGEMENT ====================
   
   /**
@@ -504,7 +611,8 @@ module.exports.load = async function (app, db) {
         name: settings.name,
         packages: settings.api.client.packages.list,
         coins: {
-          enabled: settings.api.client.coins.enabled
+          enabled: settings.api.client.coins.enabled,
+          store: settings.api.client.coins.store
         },
         pterodactyl: {
           domain: settings.pterodactyl.domain

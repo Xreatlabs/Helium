@@ -278,6 +278,12 @@ if (cluster.isMaster) {
     renewalCron(db, settings);
   }
 
+  // Start backup cron job
+  if (settings.backup?.enabled && settings.backup?.automatic) {
+    const backupCron = require("./scripts/backup-cron");
+    backupCron(db, settings);
+  }
+
   var cache = false;
   app.use(function (req, res, next) {
     // Ensure _parsedUrl is available for downstream logic

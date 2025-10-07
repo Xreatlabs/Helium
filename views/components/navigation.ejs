@@ -39,6 +39,7 @@
 <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css" />
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nanobar/0.4.2/nanobar.js"></script>
+<link rel="stylesheet" href="../assets/button-animations.css" />
 <style>
   .alertify-notifier .ajs-message.ajs-success {
     color: #71747a;
@@ -89,28 +90,164 @@
   }
   
   /* Dark mode toggle styles */
+  @keyframes toggleSlide {
+    0% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(50%) scale(1.1);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  @keyframes toggleSlideBack {
+    0% {
+      transform: translateX(100%);
+    }
+    50% {
+      transform: translateX(50%) scale(1.1);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes iconRotate {
+    0% {
+      transform: rotate(0deg) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: rotate(180deg) scale(0.8);
+      opacity: 0.5;
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes iconPulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5);
+    }
+  }
+  
+  @keyframes glowDark {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.8), 0 0 30px rgba(147, 51, 234, 0.5);
+    }
+  }
+  
   .toggle-checkbox {
     left: 0;
-    transition: transform 0.2s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .toggle-checkbox.animating-forward {
+    animation: toggleSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  .toggle-checkbox.animating-backward {
+    animation: toggleSlideBack 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
   
   .toggle-checkbox:checked {
     transform: translateX(100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-color: #3b82f6;
   }
   
   .toggle-checkbox:checked + .toggle-label {
-    background-color: #3b82f6;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    animation: glow 2s ease-in-out infinite;
+  }
+  
+  .dark .toggle-checkbox:checked {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    border-color: #a855f7;
   }
   
   .dark .toggle-checkbox:checked + .toggle-label {
-    background-color: #2563eb;
+    background: linear-gradient(90deg, #a855f7 0%, #7c3aed 100%);
+    animation: glowDark 2s ease-in-out infinite;
   }
   
   .toggle-label {
-    transition: background-color 0.2s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
+  }
+  
+  .icon-animate {
+    animation: iconRotate 0.5s ease-in-out;
+  }
+  
+  .icon-pulse {
+    animation: iconPulse 0.3s ease-in-out;
+  }
+  
+  #darkModeToggle:hover .toggle-checkbox:not(:checked),
+  #topDarkModeToggle:hover {
+    transform: scale(1.05);
+  }
+  
+  #darkModeToggle:active .toggle-checkbox,
+  #topDarkModeToggle:active {
+    transform: scale(0.95);
+  }
+  
+  /* Smooth page-wide transitions for dark mode */
+  html {
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  body {
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.2s;
+  }
+  
+  @keyframes fadeInOut {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  .dark-mode-transition {
+    animation: fadeInOut 0.4s ease-in-out;
   }
 </style>
 <div id="spinner" class="spinner mt-2 mr-2"></div>
@@ -443,6 +580,26 @@
     function toggleDarkMode() {
       const isDarkMode = document.documentElement.classList.contains('dark');
       
+      // Animate the checkbox toggle
+      if (darkModeCheckbox) {
+        darkModeCheckbox.classList.remove('animating-forward', 'animating-backward');
+        if (isDarkMode) {
+          darkModeCheckbox.classList.add('animating-backward');
+        } else {
+          darkModeCheckbox.classList.add('animating-forward');
+        }
+      }
+      
+      // Animate icons
+      if (darkModeIcon) {
+        darkModeIcon.classList.add('icon-animate');
+        setTimeout(() => darkModeIcon.classList.remove('icon-animate'), 500);
+      }
+      if (topDarkModeIcon) {
+        topDarkModeIcon.classList.add('icon-pulse');
+        setTimeout(() => topDarkModeIcon.classList.remove('icon-pulse'), 300);
+      }
+      
       if (isDarkMode) {
         disableDarkMode();
         saveDarkModePreference(false);
@@ -453,6 +610,10 @@
     }
     
     function enableDarkMode() {
+      // Add fade transition to main content
+      const mainContent = document.querySelector('main') || document.body;
+      mainContent.classList.add('dark-mode-transition');
+      
       document.documentElement.classList.add('dark');
       if (darkModeCheckbox) {
         darkModeCheckbox.checked = true;
@@ -467,9 +628,18 @@
         darkModeText.textContent = 'Dark mode';
       }
       localStorage.setItem('darkMode', 'true');
+      
+      // Remove transition class after animation
+      setTimeout(() => {
+        mainContent.classList.remove('dark-mode-transition');
+      }, 400);
     }
     
     function disableDarkMode() {
+      // Add fade transition to main content
+      const mainContent = document.querySelector('main') || document.body;
+      mainContent.classList.add('dark-mode-transition');
+      
       document.documentElement.classList.remove('dark');
       if (darkModeCheckbox) {
         darkModeCheckbox.checked = false;
@@ -484,6 +654,11 @@
         darkModeText.textContent = 'Light mode';
       }
       localStorage.setItem('darkMode', 'false');
+      
+      // Remove transition class after animation
+      setTimeout(() => {
+        mainContent.classList.remove('dark-mode-transition');
+      }, 400);
     }
     
     function saveDarkModePreference(enabled) {
@@ -666,6 +841,98 @@
 </style>
 
 <!-- Code Redemption Modal -->
+<style>
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes modalSlideDown {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  #codeRedemptionModal:not(.hidden) {
+    animation: modalFadeIn 0.2s ease-out;
+  }
+
+  #codeRedemptionModal:not(.hidden) > div {
+    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #codeRedemptionModal.closing {
+    animation: modalFadeIn 0.15s ease-in reverse;
+  }
+
+  #codeRedemptionModal.closing > div {
+    animation: modalSlideDown 0.15s ease-in;
+  }
+
+  .input-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .message-slide {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .button-pulse {
+    animation: pulse 0.3s ease-in-out;
+  }
+
+  #modal-redemption-code:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+
+  #modal-redemption-code {
+    transition: all 0.2s ease;
+  }
+</style>
+
 <div id="codeRedemptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
     <div class="p-6">
@@ -676,7 +943,7 @@
           </svg>
           Redeem Code
         </h3>
-        <button onclick="closeCodeRedemptionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+        <button onclick="closeCodeRedemptionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all duration-200 hover:rotate-90 hover:scale-110">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
             <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
           </svg>
@@ -692,8 +959,8 @@
             maxlength="20">
         </div>
         
-        <button onclick="redeemCodeFromModal()" 
-          class="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-medium transition shadow-lg flex items-center justify-center gap-2">
+        <button onclick="redeemCodeFromModal()" id="redeem-button"
+          class="btn-ripple btn-primary w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
           </svg>
@@ -708,27 +975,42 @@
 
 <script>
   function openCodeRedemptionModal() {
-    document.getElementById('codeRedemptionModal').classList.remove('hidden');
-    document.getElementById('modal-redemption-code').focus();
+    const modal = document.getElementById('codeRedemptionModal');
+    modal.classList.remove('hidden', 'closing');
+    setTimeout(() => {
+      document.getElementById('modal-redemption-code').focus();
+    }, 100);
     document.getElementById('modal-redeem-message').classList.add('hidden');
     document.getElementById('modal-redemption-code').value = '';
   }
   
   function closeCodeRedemptionModal() {
-    document.getElementById('codeRedemptionModal').classList.add('hidden');
+    const modal = document.getElementById('codeRedemptionModal');
+    modal.classList.add('closing');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('closing');
+    }, 150);
   }
   
   async function redeemCodeFromModal() {
     const codeInput = document.getElementById('modal-redemption-code');
     const messageDiv = document.getElementById('modal-redeem-message');
+    const redeemButton = document.getElementById('redeem-button');
     const code = codeInput.value.trim();
     
     if (!code) {
+      codeInput.classList.add('input-shake');
+      setTimeout(() => codeInput.classList.remove('input-shake'), 500);
+      
       messageDiv.textContent = 'Please enter a code';
-      messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+      messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700 message-slide';
       messageDiv.classList.remove('hidden');
       return;
     }
+    
+    redeemButton.disabled = true;
+    redeemButton.classList.add('opacity-75', 'cursor-not-allowed');
     
     try {
       const response = await fetch('/redeem-code', {
@@ -742,24 +1024,39 @@
       const data = await response.json();
       
       if (data.success) {
+        redeemButton.classList.add('button-pulse');
         messageDiv.textContent = '✅ ' + data.message;
-        messageDiv.className = 'p-3 rounded-xl text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700';
+        messageDiv.className = 'p-3 rounded-xl text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 message-slide';
         messageDiv.classList.remove('hidden');
         codeInput.value = '';
         
         setTimeout(() => {
           closeCodeRedemptionModal();
-          window.location.reload();
+          setTimeout(() => {
+            window.location.reload();
+          }, 150);
         }, 2000);
       } else {
+        codeInput.classList.add('input-shake');
+        setTimeout(() => codeInput.classList.remove('input-shake'), 500);
+        
         messageDiv.textContent = '❌ ' + data.error;
-        messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+        messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700 message-slide';
         messageDiv.classList.remove('hidden');
+        
+        redeemButton.disabled = false;
+        redeemButton.classList.remove('opacity-75', 'cursor-not-allowed');
       }
     } catch (error) {
+      codeInput.classList.add('input-shake');
+      setTimeout(() => codeInput.classList.remove('input-shake'), 500);
+      
       messageDiv.textContent = '❌ Failed to redeem code';
-      messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700';
+      messageDiv.className = 'p-3 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700 message-slide';
       messageDiv.classList.remove('hidden');
+      
+      redeemButton.disabled = false;
+      redeemButton.classList.remove('opacity-75', 'cursor-not-allowed');
     }
   }
   

@@ -12,6 +12,7 @@ const fs = require("fs");
 const indexjs = require("../app.js");
 const fetch = require("node-fetch");
 const Queue = require("../managers/Queue");
+const log = require("../misc/log");
 
 module.exports.load = async function (app, db) {
   app.get("/panel", async (req, res) => {
@@ -61,18 +62,18 @@ module.exports.load = async function (app, db) {
   app.get("/transfercoins", async (req, res) => {
     if (!req.session.pterodactyl) return res.redirect(`/`);
 
-    const coins = parseInt(req.query.coins);
+    const coins = parseFloat(req.query.coins);
     if (!coins || !req.query.id)
       return res.redirect(`/transfer?err=MISSINGFIELDS`);
     if (req.query.id.includes(`${req.session.userinfo.id}`))
       return res.redirect(`/transfer?err=CANNOTGIFTYOURSELF`);
 
-    if (coins < 1) return res.redirect(`/transfer?err=TOOLOWCOINS`);
+    if (coins < 0.01) return res.redirect(`/transfer?err=TOOLOWCOINS`);
 
     queue.addJob(async (cb) => {
       const usercoins = await db.get(`coins-${req.session.userinfo.id}`);
       const othercoins = await db.get(`coins-${req.query.id}`);
-      if (!othercoins) {
+      if (!othercoins && othercoins !== 0) {
         cb();
         return res.redirect(`/transfer?err=USERDOESNTEXIST`);
       }
@@ -81,15 +82,27 @@ module.exports.load = async function (app, db) {
         return res.redirect(`/transfer?err=CANTAFFORD`);
       }
 
-      await db.set(`coins-${req.query.id}`, othercoins + coins);
+      // Calculate tax
+      let taxAmount = 0;
+      let amountToReceive = coins;
+      
+      if (settings.api.client.coins.transfer && 
+          settings.api.client.coins.transfer.tax && 
+          settings.api.client.coins.transfer.tax.enabled) {
+        const taxPercentage = settings.api.client.coins.transfer.tax.percentage || 0;
+        taxAmount = (coins * taxPercentage) / 100;
+        amountToReceive = coins - taxAmount;
+      }
+
+      await db.set(`coins-${req.query.id}`, othercoins + amountToReceive);
       await db.set(`coins-${req.session.userinfo.id}`, usercoins - coins);
 
       log(
         "gifted coins",
-        `${req.session.userinfo.username}#${req.session.userinfo.discriminator} sent ${coins}\ coins to the user with the ID \`${req.query.id}\`.`
+        `${req.session.userinfo.username}${req.session.userinfo.discriminator ? '#' + req.session.userinfo.discriminator : ''} sent ${coins} coins (${amountToReceive.toFixed(2)} after ${taxPercentage}% tax) to the user with the ID \`${req.query.id}\`.`
       );
       cb();
-      return res.redirect(`/transfer?err=none`);
+      return res.redirect(`/transfer?err=SUCCESS`);
     });
   });
 };

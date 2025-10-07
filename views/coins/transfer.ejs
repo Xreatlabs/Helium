@@ -138,6 +138,7 @@
                     step="0.01"
                     min="0.01"
                     max="<%= coins %>"
+                    oninput="updateTransferSummary()"
                     class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   >
@@ -145,18 +146,43 @@
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Maximum: <%= coins.toFixed(2) %> coins</p>
               </div>
 
+              <!-- Tax Summary (shown when amount is entered) -->
+              <% const taxEnabled = settings.api.client.coins.transfer && settings.api.client.coins.transfer.tax && settings.api.client.coins.transfer.tax.enabled; %>
+              <% const taxPercentage = taxEnabled ? (settings.api.client.coins.transfer.tax.percentage || 0) : 0; %>
+              
+              <% if (taxEnabled && taxPercentage > 0) { %>
+              <div id="tax-summary" class="hidden bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600 dark:text-gray-400">Transfer Amount:</span>
+                    <span class="font-semibold text-gray-900 dark:text-white" id="transfer-amount">0.00 coins</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600 dark:text-gray-400">Tax (<%= taxPercentage %>%):</span>
+                    <span class="font-semibold text-red-600 dark:text-red-400" id="tax-amount">-0.00 coins</span>
+                  </div>
+                  <div class="border-t border-purple-200 dark:border-purple-700 pt-2 mt-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-700 dark:text-gray-300 font-semibold">Recipient Receives:</span>
+                      <span class="font-bold text-purple-700 dark:text-purple-300 text-lg" id="recipient-amount">0.00 coins</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+
               <!-- Quick Amount Buttons -->
               <div class="flex gap-2">
-                <button type="button" onclick="setAmount(25)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                <button type="button" onclick="setAmount(25)" class="btn-ripple btn-secondary flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
                   25%
                 </button>
-                <button type="button" onclick="setAmount(50)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                <button type="button" onclick="setAmount(50)" class="btn-ripple btn-secondary flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
                   50%
                 </button>
-                <button type="button" onclick="setAmount(75)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                <button type="button" onclick="setAmount(75)" class="btn-ripple btn-secondary flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
                   75%
                 </button>
-                <button type="button" onclick="setAmount(100)" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+                <button type="button" onclick="setAmount(100)" class="btn-ripple btn-secondary flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
                   Max
                 </button>
               </div>
@@ -164,7 +190,7 @@
               <!-- Submit Button -->
               <button 
                 type="submit"
-                class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
+                class="btn-ripple btn-primary w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                   <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
@@ -175,10 +201,34 @@
 
             <script>
               const maxCoins = <%= coins %>;
+              const taxEnabled = <%= taxEnabled ? 'true' : 'false' %>;
+              const taxPercentage = <%= taxPercentage %>;
+              
+              function updateTransferSummary() {
+                if (!taxEnabled || taxPercentage <= 0) return;
+                
+                const amount = parseFloat(document.getElementById('amount').value) || 0;
+                const taxSummary = document.getElementById('tax-summary');
+                
+                if (amount > 0) {
+                  const taxAmount = (amount * taxPercentage) / 100;
+                  const recipientAmount = amount - taxAmount;
+                  
+                  document.getElementById('transfer-amount').textContent = amount.toFixed(2) + ' coins';
+                  document.getElementById('tax-amount').textContent = '-' + taxAmount.toFixed(2) + ' coins';
+                  document.getElementById('recipient-amount').textContent = recipientAmount.toFixed(2) + ' coins';
+                  
+                  taxSummary.classList.remove('hidden');
+                  taxSummary.classList.add('animate-slideIn');
+                } else {
+                  taxSummary.classList.add('hidden');
+                }
+              }
               
               function setAmount(percentage) {
                 const amount = (maxCoins * percentage / 100).toFixed(2);
                 document.getElementById('amount').value = amount;
+                updateTransferSummary();
               }
 
               function submitForm(event) {
@@ -201,9 +251,26 @@
                   return;
                 }
                 
-                document.location.href = `/giftcoins?id=${id}&coins=${coins}`;
+                document.location.href = `/transfercoins?id=${id}&coins=${coins}`;
               }
             </script>
+            
+            <style>
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(-10px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+              
+              .animate-slideIn {
+                animation: slideIn 0.3s ease-out;
+              }
+            </style>
           </div>
         </div>
       </div>
