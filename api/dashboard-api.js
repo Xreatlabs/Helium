@@ -1005,3 +1005,115 @@ module.exports.load = async function (app, db) {
     }
   });
 };
+
+  /**
+   * POST /api/dashboard/ban
+   * Ban a user from the dashboard
+   * 
+   * Body: {
+   *   discordId: "user_discord_id",
+   *   reason: "Ban reason",
+   *   duration: 86400 (optional, in seconds, null for permanent),
+   *   cleanup: true (optional, default true)
+   * }
+   */
+  app.post('/api/dashboard/ban', requireApiKey(['users.write', 'admin', '*']), async (req, res) => {
+    try {
+      const { discordId, reason, duration, cleanup } = req.body;
+
+      if (!discordId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required field: discordId'
+        });
+      }
+
+      const BanManager = require('../lib/BanManager');
+      const banManager = new BanManager(db, settings);
+
+      const result = await banManager.banUser(discordId, 'BOT', {
+        reason: reason || 'Banned by bot',
+        duration: duration ? parseInt(duration) : null,
+        cleanup: cleanup !== false,
+        bannedByUsername: 'Discord Bot'
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error('[Dashboard API] Error banning user:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /api/dashboard/unban
+   * Unban a user from the dashboard
+   * 
+   * Body: {
+   *   discordId: "user_discord_id",
+   *   reason: "Unban reason"
+   * }
+   */
+  app.post('/api/dashboard/unban', requireApiKey(['users.write', 'admin', '*']), async (req, res) => {
+    try {
+      const { discordId, reason } = req.body;
+
+      if (!discordId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required field: discordId'
+        });
+      }
+
+      const BanManager = require('../lib/BanManager');
+      const banManager = new BanManager(db, settings);
+
+      const result = await banManager.unban(
+        discordId,
+        'BOT',
+        reason || 'Unbanned by bot'
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error('[Dashboard API] Error unbanning user:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /api/dashboard/ban/check/:discordId
+   * Check if a user is banned
+   */
+  app.get('/api/dashboard/ban/check/:discordId', requireApiKey(['users.read', '*']), async (req, res) => {
+    try {
+      const { discordId } = req.params;
+
+      const BanManager = require('../lib/BanManager');
+      const banManager = new BanManager(db, settings);
+
+      const ban = await banManager.isBanned(discordId);
+
+      res.json({
+        success: true,
+        banned: !!ban,
+        ban: ban
+      });
+    } catch (error) {
+      console.error('[Dashboard API] Error checking ban:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  });
+

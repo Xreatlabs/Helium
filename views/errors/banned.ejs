@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html class="dark">
+<head>
+  <title>Account Banned - <%= settings.name %></title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-red-950 via-gray-900 to-black min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-2xl w-full fade-in">
+    <!-- Ban Icon -->
+    <div class="flex justify-center mb-8">
+      <div class="relative">
+        <div class="absolute inset-0 bg-red-600 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+        <div class="relative bg-gradient-to-br from-red-600 to-red-800 rounded-full p-8 border-4 border-white/10">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20 text-white">
+            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-gray-900/50 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/10 shadow-2xl">
+      <h1 class="text-4xl md:text-5xl font-bold text-center text-white mb-4">
+        Account Banned
+      </h1>
+      
+      <p class="text-xl text-center text-gray-300 mb-8">
+        Your account has been banned from accessing this service.
+      </p>
+
+      <!-- Ban Details -->
+      <div class="bg-red-950/30 border border-red-800/50 rounded-2xl p-6 mb-8 space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-red-300 mb-1">Reason</p>
+            <p class="text-white"><%= ban.reason || 'No reason provided' %></p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-red-300 mb-1">Ban Type</p>
+            <p class="text-white">
+              <% if (ban.permanent) { %>
+                <span class="inline-flex items-center gap-2 px-3 py-1 bg-red-600/30 rounded-lg border border-red-500/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                  </svg>
+                  Permanent Ban
+                </span>
+              <% } else { %>
+                <span class="inline-flex items-center gap-2 px-3 py-1 bg-orange-600/30 rounded-lg border border-orange-500/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
+                  </svg>
+                  Temporary Ban
+                </span>
+              <% } %>
+            </p>
+          </div>
+        </div>
+
+        <% if (!ban.permanent && ban.expires_at) { %>
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-red-300 mb-1">Expires</p>
+            <p class="text-white"><%= new Date(ban.expires_at).toLocaleString() %></p>
+          </div>
+        </div>
+        <% } %>
+
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-red-300 mb-1">Banned On</p>
+            <p class="text-white"><%= new Date(ban.banned_at).toLocaleString() %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-4">
+        <div class="p-4 bg-blue-950/30 border border-blue-800/50 rounded-xl">
+          <div class="flex items-start gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+            </svg>
+            <div>
+              <p class="text-sm font-semibold text-blue-300 mb-1">Need Help?</p>
+              <p class="text-sm text-gray-300">
+                If you believe this ban was issued in error, please contact the server administrators through Discord or support channels.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <% if (settings.socialMedia && settings.socialMedia.enabled) { %>
+          <% const discordLink = settings.socialMedia.links?.find(link => link.name === 'Discord' && link.enabled); %>
+          <% if (discordLink) { %>
+          <a href="<%= discordLink.url %>" 
+            class="block w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 rounded-xl text-white font-semibold text-center transition-all duration-200 shadow-lg hover:shadow-xl">
+            <div class="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.211.375-.445.865-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/>
+              </svg>
+              Join Our Discord Server
+            </div>
+          </a>
+          <% } %>
+        <% } %>
+
+        <a href="/" class="block w-full py-4 px-6 bg-gray-800 hover:bg-gray-700 rounded-xl text-white font-semibold text-center transition-all duration-200 border border-gray-700 hover:border-gray-600">
+          Return to Homepage
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-center">
+      <p class="text-sm text-gray-500">
+        &copy; <%= new Date().getFullYear() %> <%= settings.name %>. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

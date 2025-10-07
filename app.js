@@ -365,6 +365,39 @@ if (cluster.isMaster) {
     next();
   });
 
+  // Ban check middleware
+  const BanManager = require('./lib/BanManager');
+  app.use(async (req, res, next) => {
+    // Skip ban check for these paths
+    const skipPaths = ['/callback', '/login', '/logout', '/assets/', '/css/', '/js/', '/api/'];
+    if (skipPaths.some(path => req.path.startsWith(path))) {
+      return next();
+    }
+    
+    // Check if user is banned
+    if (req.session && req.session.userinfo && req.session.userinfo.id) {
+      try {
+        const banManager = new BanManager(db, settings);
+        const ban = await banManager.isBanned(req.session.userinfo.id);
+        
+        if (ban) {
+          // Clear session
+          req.session.destroy();
+          
+          // Render ban page
+          return res.status(403).render('errors/banned', {
+            ban,
+            settings
+          });
+        }
+      } catch (error) {
+        console.error('[Ban Check] Error:', error);
+      }
+    }
+    
+    next();
+  });
+
   // Load the API files.
   let apifiles = fs.readdirSync("./api").filter((file) => file.endsWith(".js")); //UzJsdVoxUnBibTg9IHdhcyByaWdodA==
 

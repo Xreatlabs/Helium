@@ -48,6 +48,8 @@ async function checkAdmin(req, res, db) {
 }
 
 module.exports.load = async function (app, db) {
+  const BanManager = require("../lib/BanManager");
+  const banManager = new BanManager(db, settings);
   // Fetch eggs from Pterodactyl Panel
   app.get("/admin/pterodactyl/eggs", async (req, res) => {
     if (!req.session.userinfo || !req.session.userinfo.id) {
@@ -1884,3 +1886,150 @@ module.exports.load = async function (app, db) {
 function hexToDecimal(hex) {
   return parseInt(hex.replace("#", ""), 16);
 }
+
+  /**
+   * Ban System Endpoints
+   */
+
+  // Get all banned users
+  app.get("/admin/bans/list", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const BanManager = require("../lib/BanManager");
+      const banManager = new BanManager(db, settings);
+      const bannedUsers = await banManager.getBannedUsers();
+
+      res.json({
+        success: true,
+        bans: bannedUsers
+      });
+    } catch (error) {
+      console.error('[Admin] Error listing bans:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Ban a user
+  app.post("/admin/bans/ban", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { userId, reason, duration, cleanup } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ success: false, error: "User ID is required" });
+      }
+
+      const BanManager = require("../lib/BanManager");
+      const banManager = new BanManager(db, settings);
+      
+      const result = await banManager.banUser(userId, req.session.userinfo.id, {
+        reason: reason || "No reason provided",
+        duration: duration ? parseInt(duration) : null,
+        cleanup: cleanup !== false,
+        bannedByUsername: req.session.userinfo.username || 'Admin'
+      });
+
+      if (result.success) {
+        log(
+          "user banned",
+          `${req.session.userinfo.username} banned user ${userId}. Reason: ${reason || 'No reason'}`
+        );
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('[Admin] Error banning user:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Unban a user
+  app.post("/admin/bans/unban", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { userId, reason } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ success: false, error: "User ID is required" });
+      }
+
+      const BanManager = require("../lib/BanManager");
+      const banManager = new BanManager(db, settings);
+      
+      const result = await banManager.unban(
+        userId,
+        req.session.userinfo.id,
+        reason || "No reason provided"
+      );
+
+      if (result.success) {
+        log(
+          "user unbanned",
+          `${req.session.userinfo.username} unbanned user ${userId}. Reason: ${reason || 'No reason'}`
+        );
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('[Admin] Error unbanning user:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Get ban history for a user
+  app.get("/admin/bans/history/:userId", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const BanManager = require("../lib/BanManager");
+      const banManager = new BanManager(db, settings);
+      const history = await banManager.getBanHistory(req.params.userId);
+
+      res.json({
+        success: true,
+        history: history
+      });
+    } catch (error) {
+      console.error('[Admin] Error getting ban history:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Check if user is banned (for admins to check)
+  app.get("/admin/bans/check/:userId", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const BanManager = require("../lib/BanManager");
+      const banManager = new BanManager(db, settings);
+      const ban = await banManager.isBanned(req.params.userId);
+
+      res.json({
+        success: true,
+        banned: !!ban,
+        ban: ban
+      });
+    } catch (error) {
+      console.error('[Admin] Error checking ban status:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
