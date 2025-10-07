@@ -55,7 +55,8 @@
     "admin": "admin/admin.ejs",
     "settings": "admin/settings-full.ejs",
     "webhooks": "admin/webhooks.ejs",
-    "api-keys": "admin/api-keys.ejs"
+    "api-keys": "admin/api-keys.ejs",
+    "discord-roles": "admin/discord-roles.ejs"
   },
   "mustbeloggedin": [
     "/dashboard",
@@ -74,6 +75,7 @@
     "/admin",
     "/settings",
     "/webhooks",
-    "/api-keys"
+    "/api-keys",
+    "/discord-roles"
   ]
 }

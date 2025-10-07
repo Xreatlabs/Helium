@@ -900,6 +900,235 @@ message.reply('⚠️ Delete server? Reply with "yes" to confirm.');
 
 ---
 
+## 🔵 Discord Role Rewards System (NEW!)
+
+The role rewards system allows you to automatically grant resources and coins when users receive specific Discord roles, including server boost roles!
+
+### How It Works
+
+1. **Configure roles** in the admin dashboard (`/discord-roles`)
+2. **Set rewards** for each role (RAM, Disk, CPU, Servers, Coins)
+3. **Bot detects** when users get/lose roles
+4. **Dashboard automatically** grants or removes rewards
+
+### Admin Configuration
+
+Go to your dashboard at `/discord-roles` to:
+- Add role configurations with Discord Role IDs
+- Set rewards (resources and coins) for each role
+- Enable/disable specific role configurations
+- Perfect for server boost rewards!
+
+### Bot Implementation
+
+#### 38. !syncroles <@user> / !syncmyroles
+Sync a user's Discord roles with the dashboard and apply rewards.
+
+```javascript
+// Get user's Discord roles
+const member = message.mentions.members.first() || message.member;
+const roleIds = member.roles.cache.map(role => role.id);
+
+POST /api/dashboard/roles/sync
+Body: {
+  "discordId": member.user.id,
+  "roles": roleIds,
+  "action": "add"
+}
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "message": "Role rewards granted successfully",
+  "rewarded": true,
+  "rewards": {
+    "ram": 2048,
+    "disk": 5120,
+    "cpu": 100,
+    "servers": 1,
+    "coins": 500
+  },
+  "roles": ["Server Booster", "VIP Member"]
+}
+```
+
+**Example Command:**
+```
+!syncmyroles
+✅ Synced your roles! You received:
+🎁 RAM: 2048 MB
+💾 Disk: 5120 MB
+⚡ CPU: 100%
+🖥️ Servers: 1
+🪙 Coins: 500
+From roles: Server Booster, VIP Member
+```
+
+#### 39. !myroles
+Show user's Discord roles that have rewards configured.
+
+```javascript
+GET /api/dashboard/roles/user/{discordId}
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "discordId": "123456789012345678",
+    "roles": [
+      {
+        "role_id": "987654321098765432",
+        "role_name": "Server Booster",
+        "rewards_ram": 2048,
+        "rewards_disk": 5120,
+        "rewards_cpu": 100,
+        "rewards_servers": 1,
+        "rewards_coins": 500,
+        "granted_at": "2024-01-15T10:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### Automatic Role Detection (Advanced)
+
+For automatic detection, use Discord.js events in your bot:
+
+```javascript
+// When user gets a new role
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  const addedRoles = newMember.roles.cache.filter(role => 
+    !oldMember.roles.cache.has(role.id)
+  );
+  
+  if (addedRoles.size > 0) {
+    const roleIds = Array.from(addedRoles.keys());
+    
+    try {
+      const response = await api.post('/api/dashboard/roles/sync', {
+        discordId: newMember.user.id,
+        roles: roleIds,
+        action: 'add'
+      });
+      
+      if (response.data.rewarded) {
+        // Notify user via DM
+        await newMember.send(
+          `🎉 You received rewards for your new role(s)!\n` +
+          `🎁 ${JSON.stringify(response.data.rewards)}`
+        );
+      }
+    } catch (error) {
+      console.error('Failed to sync roles:', error);
+    }
+  }
+  
+  // When user loses a role
+  const removedRoles = oldMember.roles.cache.filter(role => 
+    !newMember.roles.cache.has(role.id)
+  );
+  
+  if (removedRoles.size > 0) {
+    const roleIds = Array.from(removedRoles.keys());
+    
+    await api.post('/api/dashboard/roles/sync', {
+      discordId: newMember.user.id,
+      roles: roleIds,
+      action: 'remove'
+    });
+  }
+});
+```
+
+### Boost Detection Example
+
+```javascript
+// Detect server boosts
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  // Check if user started boosting
+  if (!oldMember.premiumSince && newMember.premiumSince) {
+    // Find the booster role
+    const boosterRole = newMember.guild.roles.premiumSubscriberRole;
+    
+    if (boosterRole) {
+      // Sync the booster role
+      await api.post('/api/dashboard/roles/sync', {
+        discordId: newMember.user.id,
+        roles: [boosterRole.id],
+        action: 'add'
+      });
+      
+      // Thank the booster
+      await newMember.send(
+        `🚀 Thank you for boosting ${newMember.guild.name}!\n` +
+        `You've received special rewards on the dashboard! 🎁`
+      );
+    }
+  }
+  
+  // Check if user stopped boosting
+  if (oldMember.premiumSince && !newMember.premiumSince) {
+    const boosterRole = newMember.guild.roles.premiumSubscriberRole;
+    
+    if (boosterRole) {
+      await api.post('/api/dashboard/roles/sync', {
+        discordId: newMember.user.id,
+        roles: [boosterRole.id],
+        action: 'remove'
+      });
+    }
+  }
+});
+```
+
+### API Endpoints Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/dashboard/roles/sync` | POST | Sync user roles and apply/remove rewards |
+| `/api/dashboard/roles/user/:discordId` | GET | Get user's configured roles and rewards |
+| `/admin/discord-roles` | GET | List all role configurations (admin) |
+| `/admin/discord-roles/create` | POST | Create role configuration (admin) |
+| `/admin/discord-roles/:id` | PUT | Update role configuration (admin) |
+| `/admin/discord-roles/:id` | DELETE | Delete role configuration (admin) |
+| `/admin/discord-roles/:id/toggle` | POST | Enable/disable role (admin) |
+
+### Role Sync Request Format
+
+```json
+{
+  "discordId": "123456789012345678",
+  "roles": ["987654321098765432", "876543210987654321"],
+  "action": "add" // or "remove"
+}
+```
+
+### Use Cases
+
+1. **Server Boost Rewards**
+   - Configure your server booster role
+   - Automatically give boosters extra resources and coins
+   - Remove rewards if they stop boosting
+
+2. **VIP/Premium Roles**
+   - Set up VIP roles with enhanced resources
+   - Stack multiple VIP tiers for cumulative rewards
+
+3. **Event Roles**
+   - Create temporary event roles with coin rewards
+   - Perfect for giveaways and competitions
+
+4. **Achievement Roles**
+   - Reward active members with resource boosts
+   - Incentivize community participation
+
+---
+
 ## Getting Started Checklist
 
 - [ ] Create Dashboard API key (Admin Panel → API Keys)
@@ -908,6 +1137,8 @@ message.reply('⚠️ Delete server? Reply with "yes" to confirm.');
 - [ ] Enable Message Content Intent in Discord Portal
 - [ ] Test bot login and API connection
 - [ ] (Optional) Add Pterodactyl client key for power control
+- [ ] Configure Discord role rewards in admin panel
+- [ ] Implement role sync events in bot
 - [ ] Implement commands from the list above
 - [ ] Add error handling
 - [ ] Test with real users
@@ -922,11 +1153,13 @@ message.reply('⚠️ Delete server? Reply with "yes" to confirm.');
 - API errors: Verify Dashboard API key
 - Power control fails: Add client key to settings.json
 - User not found: User must login to dashboard first
+- Role rewards not working: Check role IDs and ensure roles are enabled in admin panel
 
 **Testing:**
 1. Test API: `curl http://localhost:19133/api/dashboard/health`
 2. Test bot: Send `!ping` in Discord
 3. Test auth: Try `!userinfo` command
+4. Test roles: Configure a test role and use `!syncmyroles`
 
 ---
 

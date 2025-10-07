@@ -327,6 +327,44 @@ if (cluster.isMaster) {
     next();
   });
 
+  // Maintenance mode middleware
+  app.use(async (req, res, next) => {
+    const freshSettings = JSON.parse(fs.readFileSync('./settings.json', 'utf8'));
+    
+    // Skip maintenance check for these paths
+    const allowedPaths = ['/maintenance', '/logout', '/callback'];
+    const isAllowedPath = allowedPaths.some(path => req.path.startsWith(path));
+    
+    // Skip maintenance check for API endpoints
+    const isApiEndpoint = req.path.startsWith('/api/') || req.path.startsWith('/admin/');
+    
+    if (freshSettings.maintenance?.enabled && !isAllowedPath && !isApiEndpoint) {
+      // Check if user is admin
+      let isAdmin = false;
+      
+      if (req.session && req.session.userinfo && req.session.userinfo.id) {
+        // Check session root_admin first
+        if (req.session.pterodactyl && req.session.pterodactyl.root_admin === true) {
+          isAdmin = true;
+        } else {
+          // Fallback to database
+          const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
+          isAdmin = (adminStatus === 1) || (adminStatus === true) || (adminStatus === "1") || (adminStatus === "true");
+        }
+      }
+      
+      // If not admin, show maintenance page
+      if (!isAdmin) {
+        return res.render('errors/maintenance.ejs', { 
+          settings: freshSettings,
+          req: req
+        });
+      }
+    }
+    
+    next();
+  });
+
   // Load the API files.
   let apifiles = fs.readdirSync("./api").filter((file) => file.endsWith(".js")); //UzJsdVoxUnBibTg9IHdhcyByaWdodA==
 

@@ -1663,6 +1663,222 @@ module.exports.load = async function (app, db) {
       res.status(500).json({ error: "Failed to toggle API key" });
     }
   });
+
+  // ==================== DISCORD ROLE CONFIGURATION ====================
+
+  /**
+   * GET /admin/discord-roles
+   * Get all configured Discord roles
+   */
+  app.get("/admin/discord-roles", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath, { readonly: true });
+      
+      const roles = dbFile.prepare(`
+        SELECT * FROM discord_roles 
+        ORDER BY created_at DESC
+      `).all();
+      
+      dbFile.close();
+
+      res.json({ success: true, roles });
+    } catch (error) {
+      console.error("Error fetching Discord roles:", error);
+      res.status(500).json({ error: "Failed to fetch Discord roles" });
+    }
+  });
+
+  /**
+   * POST /admin/discord-roles/create
+   * Create a new Discord role configuration
+   */
+  app.post("/admin/discord-roles/create", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { roleId, roleName, guildId, rewards } = req.body;
+
+      if (!roleId || !roleName || !guildId) {
+        return res.status(400).json({ error: "Missing required fields: roleId, roleName, guildId" });
+      }
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      
+      const stmt = dbFile.prepare(`
+        INSERT INTO discord_roles (
+          role_id, role_name, guild_id, rewards_ram, rewards_disk, 
+          rewards_cpu, rewards_servers, rewards_coins, enabled
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `);
+
+      stmt.run(
+        roleId,
+        roleName,
+        guildId,
+        rewards?.ram || 0,
+        rewards?.disk || 0,
+        rewards?.cpu || 0,
+        rewards?.servers || 0,
+        rewards?.coins || 0
+      );
+
+      dbFile.close();
+
+      log(
+        "discord role created",
+        `${req.session.userinfo.username} created Discord role configuration: ${roleName} (${roleId})`
+      );
+
+      res.json({ success: true, message: "Discord role configuration created successfully" });
+    } catch (error) {
+      console.error("Error creating Discord role:", error);
+      if (error.message.includes('UNIQUE constraint failed')) {
+        res.status(400).json({ error: "Role ID already exists" });
+      } else {
+        res.status(500).json({ error: "Failed to create Discord role configuration" });
+      }
+    }
+  });
+
+  /**
+   * PUT /admin/discord-roles/:id
+   * Update a Discord role configuration
+   */
+  app.put("/admin/discord-roles/:id", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const roleConfigId = parseInt(req.params.id);
+      const { roleName, rewards, enabled } = req.body;
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      
+      const stmt = dbFile.prepare(`
+        UPDATE discord_roles 
+        SET role_name = ?, rewards_ram = ?, rewards_disk = ?, 
+            rewards_cpu = ?, rewards_servers = ?, rewards_coins = ?,
+            enabled = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `);
+
+      const result = stmt.run(
+        roleName,
+        rewards?.ram || 0,
+        rewards?.disk || 0,
+        rewards?.cpu || 0,
+        rewards?.servers || 0,
+        rewards?.coins || 0,
+        enabled ? 1 : 0,
+        roleConfigId
+      );
+
+      dbFile.close();
+
+      if (result.changes > 0) {
+        log(
+          "discord role updated",
+          `${req.session.userinfo.username} updated Discord role configuration ID: ${roleConfigId}`
+        );
+        res.json({ success: true, message: "Discord role configuration updated successfully" });
+      } else {
+        res.status(404).json({ error: "Role configuration not found" });
+      }
+    } catch (error) {
+      console.error("Error updating Discord role:", error);
+      res.status(500).json({ error: "Failed to update Discord role configuration" });
+    }
+  });
+
+  /**
+   * DELETE /admin/discord-roles/:id
+   * Delete a Discord role configuration
+   */
+  app.delete("/admin/discord-roles/:id", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const roleConfigId = parseInt(req.params.id);
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      
+      const stmt = dbFile.prepare('DELETE FROM discord_roles WHERE id = ?');
+      const result = stmt.run(roleConfigId);
+
+      dbFile.close();
+
+      if (result.changes > 0) {
+        log(
+          "discord role deleted",
+          `${req.session.userinfo.username} deleted Discord role configuration ID: ${roleConfigId}`
+        );
+        res.json({ success: true, message: "Discord role configuration deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Role configuration not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting Discord role:", error);
+      res.status(500).json({ error: "Failed to delete Discord role configuration" });
+    }
+  });
+
+  /**
+   * POST /admin/discord-roles/:id/toggle
+   * Toggle role configuration enabled status
+   */
+  app.post("/admin/discord-roles/:id/toggle", async (req, res) => {
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const roleConfigId = parseInt(req.params.id);
+      const { enabled } = req.body;
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      
+      const stmt = dbFile.prepare(`
+        UPDATE discord_roles 
+        SET enabled = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `);
+
+      const result = stmt.run(enabled ? 1 : 0, roleConfigId);
+      dbFile.close();
+
+      if (result.changes > 0) {
+        log(
+          "discord role toggled",
+          `${req.session.userinfo.username} ${enabled ? "enabled" : "disabled"} Discord role configuration ID: ${roleConfigId}`
+        );
+        res.json({ success: true, message: `Role configuration ${enabled ? "enabled" : "disabled"} successfully` });
+      } else {
+        res.status(404).json({ error: "Role configuration not found" });
+      }
+    } catch (error) {
+      console.error("Error toggling Discord role:", error);
+      res.status(500).json({ error: "Failed to toggle role configuration" });
+    }
+  });
 };
 
 function hexToDecimal(hex) {

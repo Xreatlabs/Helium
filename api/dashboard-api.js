@@ -798,4 +798,210 @@ module.exports.load = async function (app, db) {
       });
     }
   });
+
+  // ==================== DISCORD ROLE REWARDS SYSTEM ====================
+  
+  /**
+   * POST /api/dashboard/roles/sync
+   * Sync user roles from Discord and grant rewards
+   * This endpoint should be called by Discord bot when:
+   * - User gets a new role (including boosts)
+   * - User loses a role
+   * - Manual sync is requested
+   */
+  app.post('/api/dashboard/roles/sync', requireApiKey(['roles.write', '*']), async (req, res) => {
+    try {
+      const { discordId, roles, action } = req.body;
+
+      if (!discordId || !roles || !Array.isArray(roles)) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Missing required fields: discordId, roles (array)'
+        });
+      }
+
+      const pterodactylId = await db.get(`users-${discordId}`);
+      if (!pterodactylId) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'User not found in database'
+        });
+      }
+
+      // Get role rewards from database
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath, { readonly: true });
+      
+      const roleConfigs = dbFile.prepare(`
+        SELECT role_id, role_name, rewards_ram, rewards_disk, rewards_cpu, rewards_servers, rewards_coins
+        FROM discord_roles 
+        WHERE enabled = 1 AND role_id IN (${roles.map(() => '?').join(',')})
+      `).all(...roles);
+      
+      dbFile.close();
+
+      if (roleConfigs.length === 0) {
+        return res.json({
+          success: true,
+          message: 'No reward-enabled roles found',
+          rewarded: false
+        });
+      }
+
+      // Calculate total rewards from all matching roles
+      let totalRewards = {
+        ram: 0,
+        disk: 0,
+        cpu: 0,
+        servers: 0,
+        coins: 0
+      };
+
+      roleConfigs.forEach(role => {
+        totalRewards.ram += role.rewards_ram || 0;
+        totalRewards.disk += role.rewards_disk || 0;
+        totalRewards.cpu += role.rewards_cpu || 0;
+        totalRewards.servers += role.rewards_servers || 0;
+        totalRewards.coins += role.rewards_coins || 0;
+      });
+
+      // Grant rewards based on action
+      if (action === 'add') {
+        // Add rewards when role is granted
+        const currentExtra = await db.get(`extra-${discordId}`) || {
+          ram: 0, disk: 0, cpu: 0, servers: 0
+        };
+
+        const newExtra = {
+          ram: currentExtra.ram + totalRewards.ram,
+          disk: currentExtra.disk + totalRewards.disk,
+          cpu: currentExtra.cpu + totalRewards.cpu,
+          servers: currentExtra.servers + totalRewards.servers
+        };
+
+        await db.set(`extra-${discordId}`, newExtra);
+
+        // Add coins
+        if (totalRewards.coins > 0) {
+          const currentCoins = await db.get(`coins-${discordId}`) || 0;
+          await db.set(`coins-${discordId}`, currentCoins + totalRewards.coins);
+        }
+
+        // Track role assignment
+        const dbWrite = new sqlite3(dbPath);
+        const stmt = dbWrite.prepare(`
+          INSERT OR IGNORE INTO user_discord_roles (discord_id, role_id) 
+          VALUES (?, ?)
+        `);
+        
+        roles.forEach(roleId => {
+          stmt.run(discordId, roleId);
+        });
+        
+        dbWrite.close();
+
+        res.json({
+          success: true,
+          message: 'Role rewards granted successfully',
+          rewarded: true,
+          rewards: totalRewards,
+          roles: roleConfigs.map(r => r.role_name)
+        });
+
+      } else if (action === 'remove') {
+        // Remove rewards when role is lost
+        const currentExtra = await db.get(`extra-${discordId}`) || {
+          ram: 0, disk: 0, cpu: 0, servers: 0
+        };
+
+        const newExtra = {
+          ram: Math.max(0, currentExtra.ram - totalRewards.ram),
+          disk: Math.max(0, currentExtra.disk - totalRewards.disk),
+          cpu: Math.max(0, currentExtra.cpu - totalRewards.cpu),
+          servers: Math.max(0, currentExtra.servers - totalRewards.servers)
+        };
+
+        await db.set(`extra-${discordId}`, newExtra);
+
+        // Remove coins (but don't go below 0)
+        if (totalRewards.coins > 0) {
+          const currentCoins = await db.get(`coins-${discordId}`) || 0;
+          await db.set(`coins-${discordId}`, Math.max(0, currentCoins - totalRewards.coins));
+        }
+
+        // Remove role tracking
+        const dbWrite = new sqlite3(dbPath);
+        const stmt = dbWrite.prepare(`
+          DELETE FROM user_discord_roles 
+          WHERE discord_id = ? AND role_id = ?
+        `);
+        
+        roles.forEach(roleId => {
+          stmt.run(discordId, roleId);
+        });
+        
+        dbWrite.close();
+
+        res.json({
+          success: true,
+          message: 'Role rewards removed successfully',
+          rewarded: true,
+          removed: totalRewards,
+          roles: roleConfigs.map(r => r.role_name)
+        });
+
+      } else {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Invalid action. Must be "add" or "remove"'
+        });
+      }
+
+    } catch (error) {
+      console.error('Error syncing roles:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /api/dashboard/roles/user/:discordId
+   * Get user's Discord roles and their rewards
+   */
+  app.get('/api/dashboard/roles/user/:discordId', requireApiKey(['roles.read', '*']), async (req, res) => {
+    try {
+      const discordId = req.params.discordId;
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath, { readonly: true });
+      
+      const userRoles = dbFile.prepare(`
+        SELECT ur.role_id, ur.granted_at, dr.role_name, dr.rewards_ram, dr.rewards_disk, 
+               dr.rewards_cpu, dr.rewards_servers, dr.rewards_coins
+        FROM user_discord_roles ur
+        LEFT JOIN discord_roles dr ON ur.role_id = dr.role_id
+        WHERE ur.discord_id = ?
+      `).all(discordId);
+      
+      dbFile.close();
+
+      res.json({
+        success: true,
+        data: {
+          discordId,
+          roles: userRoles
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
 };
