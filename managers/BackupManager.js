@@ -27,72 +27,139 @@ class BackupManager {
   }
 
   /**
-   * Create a backup of the database
+   * Create a backup of the database with validation and retry logic
    * @param {string} name - Optional custom name for the backup
+   * @param {number} retries - Number of retry attempts (default: 3)
    * @returns {Promise<Object>} Backup information
    */
-  async createBackup(name = null) {
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupName = name || `backup-${timestamp}`;
-      const backupFile = path.join(this.backupPath, `${backupName}.sqlite`);
-      const metadataFile = path.join(this.backupPath, `${backupName}.json`);
+  async createBackup(name = null, retries = 3) {
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupName = name || `backup-${timestamp}`;
+        const backupFile = path.join(this.backupPath, `${backupName}.sqlite`);
+        const metadataFile = path.join(this.backupPath, `${backupName}.json`);
 
-      console.log(chalk.blue(`Backup Manager: Creating backup '${backupName}'...`));
+        if (attempt > 1) {
+          console.log(chalk.yellow(`Backup Manager: Retry attempt ${attempt}/${retries}...`));
+        }
 
-      // Get database file path
-      const dbPath = this.settings.database.replace('sqlite://', '');
-      const sourcePath = path.resolve(dbPath);
+        console.log(chalk.blue(`Backup Manager: Creating backup '${backupName}'...`));
 
-      // Verify source database exists
-      if (!fs.existsSync(sourcePath)) {
-        throw new Error(`Database file not found at ${sourcePath}`);
-      }
+        // Ensure backup directory exists
+        this.ensureBackupDirectory();
 
-      // Copy database file
-      fs.copyFileSync(sourcePath, backupFile);
+        // Get database file path
+        const dbPath = this.settings.database?.replace('sqlite://', '') || './database.sqlite';
+        const sourcePath = path.resolve(dbPath);
 
-      // Create metadata
-      const metadata = {
-        name: backupName,
-        timestamp: new Date().toISOString(),
-        size: fs.statSync(backupFile).size,
-        databasePath: dbPath,
-        version: this.settings.version || '1.0.0',
-        includesSettings: this.backupConfig.includeSettings || false,
-      };
+        // Verify source database exists and is readable
+        if (!fs.existsSync(sourcePath)) {
+          throw new Error(`Database file not found at ${sourcePath}`);
+        }
 
-      // Optionally backup settings.json
-      if (this.backupConfig.includeSettings) {
-        const settingsBackupFile = path.join(this.backupPath, `${backupName}-settings.json`);
-        const settingsPath = path.resolve('./settings.json');
+        const sourceStats = fs.statSync(sourcePath);
+        if (sourceStats.size === 0) {
+          throw new Error(`Database file is empty at ${sourcePath}`);
+        }
+
+        // Check available disk space
+        await this.checkDiskSpace(sourceStats.size);
+
+        // Copy database file with verification
+        fs.copyFileSync(sourcePath, backupFile);
         
-        if (fs.existsSync(settingsPath)) {
-          fs.copyFileSync(settingsPath, settingsBackupFile);
-          metadata.includesSettings = true;
-          metadata.settingsSize = fs.statSync(settingsBackupFile).size;
+        // Verify the backup was created correctly
+        const backupStats = fs.statSync(backupFile);
+        if (backupStats.size !== sourceStats.size) {
+          throw new Error(`Backup file size mismatch. Expected ${sourceStats.size}, got ${backupStats.size}`);
+        }
+
+        // Create metadata
+        const metadata = {
+          name: backupName,
+          timestamp: new Date().toISOString(),
+          size: backupStats.size,
+          sizeMB: (backupStats.size / (1024 * 1024)).toFixed(2),
+          databasePath: dbPath,
+          version: this.settings.version || '1.0.0',
+          includesSettings: this.backupConfig.includeSettings || false,
+          verified: true,
+          attempt: attempt,
+        };
+
+        // Optionally backup settings.json
+        if (this.backupConfig.includeSettings) {
+          const settingsBackupFile = path.join(this.backupPath, `${backupName}-settings.json`);
+          const settingsPath = path.resolve('./settings.json');
+          
+          if (fs.existsSync(settingsPath)) {
+            try {
+              fs.copyFileSync(settingsPath, settingsBackupFile);
+              metadata.includesSettings = true;
+              metadata.settingsSize = fs.statSync(settingsBackupFile).size;
+              console.log(chalk.green('Backup Manager: Settings included in backup'));
+            } catch (settingsError) {
+              console.warn(chalk.yellow('Backup Manager: Could not backup settings.json'), settingsError.message);
+              metadata.includesSettings = false;
+            }
+          }
+        }
+
+        // Save metadata
+        fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
+
+        console.log(chalk.green(`Backup Manager: Backup created successfully - ${backupName}`));
+        console.log(chalk.gray(`  Size: ${metadata.sizeMB} MB`));
+        console.log(chalk.gray(`  Verified: ${metadata.verified}`));
+
+        // Clean up old backups
+        await this.cleanupOldBackups();
+
+        return {
+          success: true,
+          backup: metadata,
+          attempts: attempt,
+        };
+      } catch (error) {
+        lastError = error;
+        console.error(chalk.red(`Backup Manager: Error on attempt ${attempt}/${retries}:`), error.message);
+        
+        if (attempt < retries) {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
         }
       }
+    }
 
-      // Save metadata
-      fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
+    // All retries failed
+    console.error(chalk.red('Backup Manager: All backup attempts failed'));
+    return {
+      success: false,
+      error: lastError?.message || 'Unknown error',
+      attempts: retries,
+    };
+  }
 
-      console.log(chalk.green(`Backup Manager: Backup created successfully - ${backupName}`));
-      console.log(chalk.gray(`  Size: ${(metadata.size / 1024).toFixed(2)} KB`));
-
-      // Clean up old backups
-      await this.cleanupOldBackups();
-
-      return {
-        success: true,
-        backup: metadata,
-      };
+  /**
+   * Check if there's enough disk space for backup
+   * @param {number} requiredSpace - Required space in bytes
+   * @returns {Promise<void>}
+   */
+  async checkDiskSpace(requiredSpace) {
+    // Reserve 10% extra space for safety
+    const safetyMargin = requiredSpace * 1.1;
+    
+    // This is a basic check - in production you might want to use a library like 'check-disk-space'
+    // For now, we'll just ensure the directory is writable
+    try {
+      const testFile = path.join(this.backupPath, '.write-test');
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
     } catch (error) {
-      console.error(chalk.red('Backup Manager: Error creating backup:'), error);
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw new Error(`Backup directory not writable: ${error.message}`);
     }
   }
 
@@ -288,6 +355,8 @@ class BackupManager {
         oldestBackup: backups.length > 0 ? backups[backups.length - 1] : null,
         newestBackup: backups.length > 0 ? backups[0] : null,
         backupPath: this.backupPath,
+        maxBackups: this.backupConfig.maxBackups || 10,
+        autoBackupEnabled: this.backupConfig.enabled && this.backupConfig.automatic,
       };
     } catch (error) {
       console.error(chalk.red('Backup Manager: Error getting stats:'), error);
@@ -297,6 +366,73 @@ class BackupManager {
         error: error.message,
       };
     }
+  }
+
+  /**
+   * Verify a backup file integrity
+   * @param {string} backupName - Name of the backup to verify
+   * @returns {Promise<Object>} Verification result
+   */
+  async verifyBackup(backupName) {
+    try {
+      const backupFile = path.join(this.backupPath, `${backupName}.sqlite`);
+      const metadataFile = path.join(this.backupPath, `${backupName}.json`);
+
+      if (!fs.existsSync(backupFile)) {
+        return {
+          success: false,
+          error: 'Backup file not found'
+        };
+      }
+
+      if (!fs.existsSync(metadataFile)) {
+        return {
+          success: false,
+          error: 'Backup metadata not found'
+        };
+      }
+
+      const metadata = JSON.parse(fs.readFileSync(metadataFile, 'utf8'));
+      const actualSize = fs.statSync(backupFile).size;
+
+      if (metadata.size !== actualSize) {
+        return {
+          success: false,
+          error: `Size mismatch: expected ${metadata.size}, got ${actualSize}`,
+          metadata,
+          actualSize
+        };
+      }
+
+      return {
+        success: true,
+        verified: true,
+        metadata,
+        actualSize,
+        message: 'Backup verified successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get current backup system status
+   * @returns {Object} Status information
+   */
+  getStatus() {
+    return {
+      enabled: this.backupConfig.enabled || false,
+      automatic: this.backupConfig.automatic || false,
+      schedule: this.backupConfig.schedule || 'daily',
+      frequency: this.backupConfig.frequency || 1,
+      maxBackups: this.backupConfig.maxBackups || 10,
+      backupPath: this.backupPath,
+      includesSettings: this.backupConfig.includeSettings || false,
+    };
   }
 }
 

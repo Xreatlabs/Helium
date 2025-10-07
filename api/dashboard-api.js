@@ -7,8 +7,69 @@ const { requireApiKey } = require('../middleware/apiAuth');
 const settings = require('../settings.json');
 const fetch = require('node-fetch');
 const fs = require('fs');
+const path = require('path');
+
+async function checkAdmin(req, res, db) {
+  if (!req.session || !req.session.userinfo || !req.session.userinfo.id) {
+    return false;
+  }
+  const isRootAdminSession = !!(req.session.pterodactyl && req.session.pterodactyl.root_admin === true);
+  if (isRootAdminSession) return true;
+  const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
+  return adminStatus === 1 || adminStatus === true || adminStatus === "1" || adminStatus === "true";
+}
 
 module.exports.load = async function (app, db) {
+  
+  // ==================== SETTINGS MANAGEMENT ====================
+  
+  /**
+   * POST /admin/settings/update
+   * Update settings.json dynamically
+   */
+  app.post('/admin/settings/update', async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { path: settingPath, value } = req.body;
+      
+      if (!settingPath) {
+        return res.status(400).json({ success: false, error: "Setting path is required" });
+      }
+
+      // Read current settings
+      const settingsPath = path.resolve('./settings.json');
+      const currentSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+
+      // Update the setting using path notation (e.g., "backup.enabled")
+      const pathParts = settingPath.split('.');
+      let target = currentSettings;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        if (!target[pathParts[i]]) {
+          target[pathParts[i]] = {};
+        }
+        target = target[pathParts[i]];
+      }
+      
+      target[pathParts[pathParts.length - 1]] = value;
+
+      // Write back to settings.json
+      fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+
+      res.json({ 
+        success: true, 
+        message: "Setting updated successfully",
+        requiresRestart: true 
+      });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
   
   // ==================== USER MANAGEMENT ====================
   

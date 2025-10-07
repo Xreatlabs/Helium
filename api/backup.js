@@ -172,4 +172,40 @@ module.exports.load = async function (app, db) {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+
+  // Verify a backup
+  app.post("/admin/backups/verify", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { backupName } = req.body;
+
+      if (!backupName) {
+        return res.status(400).json({ success: false, error: "Backup name is required" });
+      }
+
+      const result = await backupManager.verifyBackup(backupName);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Get backup system status
+  app.get("/admin/backups/status", async (req, res) => {
+    if (!req.session.pterodactyl) return res.status(401).json({ error: "Unauthorized" });
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const status = backupManager.getStatus();
+      res.json({ success: true, status: status });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 };
