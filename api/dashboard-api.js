@@ -1004,7 +1004,6 @@ module.exports.load = async function (app, db) {
       });
     }
   });
-};
 
   /**
    * POST /api/dashboard/ban
@@ -1116,4 +1115,4 @@ module.exports.load = async function (app, db) {
       });
     }
   });
-
+};

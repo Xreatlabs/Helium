@@ -1881,11 +1881,6 @@ module.exports.load = async function (app, db) {
       res.status(500).json({ error: "Failed to toggle role configuration" });
     }
   });
-};
-
-function hexToDecimal(hex) {
-  return parseInt(hex.replace("#", ""), 16);
-}
 
   /**
    * Ban System Endpoints
@@ -2032,4 +2027,8 @@ function hexToDecimal(hex) {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+};
 
+function hexToDecimal(hex) {
+  return parseInt(hex.replace("#", ""), 16);
+}
