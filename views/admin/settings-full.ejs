@@ -18,79 +18,51 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="../assets/backup-admin.js" defer></script>
   <style>
-    .tab-button {
-      position: relative;
+    .category-group {
+      margin-bottom: 0.5rem;
     }
-    .tab-button.active {
+    .category-header {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .category-header:hover {
+      background: rgba(0,0,0,0.05);
+    }
+    .dark .category-header:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .category-items {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .category-items.active {
+      max-height: 1000px;
+    }
+    .category-icon {
+      transition: transform 0.3s;
+    }
+    .category-icon.active {
+      transform: rotate(90deg);
+    }
+    .sub-tab-button {
+      transition: all 0.2s;
+    }
+    .sub-tab-button:hover {
+      background: rgba(59, 130, 246, 0.1);
+      padding-left: 1.25rem;
+    }
+    .sub-tab-button.active {
+      background: rgba(59, 130, 246, 0.15);
       color: #3b82f6;
+      border-left: 3px solid #3b82f6;
+      padding-left: 1.25rem;
     }
-    .dark .tab-button.active {
+    .dark .sub-tab-button.active {
       color: #60a5fa;
+      border-left-color: #60a5fa;
     }
-    .tab-button.active::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: #3b82f6;
-    }
-    .dark .tab-button.active::after {
-      background: #60a5fa;
-    }
-    
-    /* Scrollbar styling for tabs navigation */
-    #tabs-nav {
-      scrollbar-width: auto !important;
-      scrollbar-color: #9ca3af #e5e7eb !important;
-      padding-bottom: 12px !important;
-    }
-    
-    .dark #tabs-nav {
-      scrollbar-color: #6b7280 #374151 !important;
-    }
-    
-    #tabs-nav::-webkit-scrollbar {
-      height: 12px !important;
-      display: block !important;
-    }
-    
-    #tabs-nav::-webkit-scrollbar-track {
-      background: #e5e7eb !important;
-      border-radius: 6px !important;
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-    
-    .dark #tabs-nav::-webkit-scrollbar-track {
-      background: #374151 !important;
-    }
-    
-    #tabs-nav::-webkit-scrollbar-thumb {
-      background: #9ca3af !important;
-      border-radius: 6px !important;
-      border: 2px solid #e5e7eb;
-    }
-    
-    .dark #tabs-nav::-webkit-scrollbar-thumb {
-      background: #6b7280 !important;
-      border-color: #374151;
-    }
-    
-    #tabs-nav::-webkit-scrollbar-thumb:hover {
-      background: #6b7280 !important;
-    }
-    
-    .dark #tabs-nav::-webkit-scrollbar-thumb:hover {
-      background: #9ca3af !important;
-    }
-    
-    /* Add spacing between tabs */
-    .tab-button {
-      margin-right: 2rem;
-    }
-
   </style>
 </head>
 
@@ -151,72 +123,114 @@
             </div>
             <% } %>
 
-            <!-- Tabs Navigation -->
-            <div class="border-b border-gray-200 dark:border-gray-700 mb-8">
-              <nav class="-mb-px flex overflow-x-auto" id="tabs-nav">
-                <button onclick="showTab('general')" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  General
-                </button>
-                <button onclick="showTab('announcement')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Announcement
-                </button>
-                <button onclick="showTab('socialmedia')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Social Media
-                </button>
-                <button onclick="showTab('health')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Health Monitoring
-                </button>
-                <button onclick="showTab('pterodactyl')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Pterodactyl
-                </button>
-                <button onclick="showTab('oauth')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  OAuth2
-                </button>
-                <button onclick="showTab('ratelimits')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Rate Limits
-                </button>
-                <button onclick="showTab('api')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  API & Bot
-                </button>
-                <button onclick="showTab('permissions')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Permissions
-                </button>
-                <button onclick="showTab('packages')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Packages
-                </button>
-                <button onclick="showTab('usermaxres')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  User Max Resources
-                </button>
-                <button onclick="showTab('coins')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Coins & Store
-                </button>
-                <button onclick="showTab('renewal')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Renewal System
-                </button>
-                <button onclick="showTab('linkvertise')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Linkvertise
-                </button>
-                <button onclick="showTab('afk')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  AFK System
-                </button>
-                <button onclick="showTab('security')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Security
-                </button>
-                <button onclick="showTab('logging')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Logging
-                </button>
-                <button onclick="showTab('codes')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  Codes
-                </button>
-                <button onclick="showTab('backup')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1 -mt-1">
-                    <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
-                    <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-                  </svg>
-                  Backups
-                </button>
-              </nav>
-            </div>
+            <!-- Categorized Navigation -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+              <!-- Sidebar Navigation -->
+              <div class="lg:col-span-1">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700 sticky top-6">
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 px-2">Settings Categories</h3>
+                  
+                  <!-- Core Settings -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('core')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Core Settings</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400 active" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items active ml-4 mt-1">
+                      <button onclick="showTab('general')" class="sub-tab-button active block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">General</button>
+                      <button onclick="showTab('announcement')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Announcement</button>
+                      <button onclick="showTab('socialmedia')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Social Media</button>
+                    </div>
+                  </div>
+
+                  <!-- Auth & Access -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('auth')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Auth & Access</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items ml-4 mt-1">
+                      <button onclick="showTab('oauth')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">OAuth2</button>
+                      <button onclick="showTab('security')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Security</button>
+                      <button onclick="showTab('permissions')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Permissions</button>
+                    </div>
+                  </div>
+
+                  <!-- Integrations -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('integrations')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Integrations</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items ml-4 mt-1">
+                      <button onclick="showTab('pterodactyl')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Pterodactyl</button>
+                      <button onclick="showTab('api')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">API & Bot</button>
+                    </div>
+                  </div>
+
+                  <!-- Resources -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('resources')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Resources</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items ml-4 mt-1">
+                      <button onclick="showTab('packages')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Packages</button>
+                      <button onclick="showTab('usermaxres')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">User Max Resources</button>
+                      <button onclick="showTab('coins')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Coins & Store</button>
+                      <button onclick="showTab('codes')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Codes</button>
+                    </div>
+                  </div>
+
+                  <!-- Features -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('features')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Features</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items ml-4 mt-1">
+                      <button onclick="showTab('renewal')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Renewal System</button>
+                      <button onclick="showTab('linkvertise')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Linkvertise</button>
+                      <button onclick="showTab('afk')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">AFK System</button>
+                    </div>
+                  </div>
+
+                  <!-- System -->
+                  <div class="category-group">
+                    <div class="category-header px-3 py-2 rounded-lg flex items-center justify-between" onclick="toggleCategory('system')">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">System</span>
+                      </div>
+                      <svg class="category-icon w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="category-items ml-4 mt-1">
+                      <button onclick="showTab('ratelimits')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Rate Limits</button>
+                      <button onclick="showTab('health')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Health Monitoring</button>
+                      <button onclick="showTab('logging')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Logging</button>
+                      <button onclick="showTab('backup')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Backups</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content Area -->
+              <div class="lg:col-span-3" id="settings-content">
 
             <!-- Tab Content -->
             <div id="tab-general" class="tab-content">
@@ -1665,6 +1679,9 @@
               </div>
             </div>
 
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
@@ -1673,6 +1690,20 @@
   </div>
 
   <script>
+    function toggleCategory(categoryName) {
+      const categoryGroups = document.querySelectorAll('.category-group');
+      categoryGroups.forEach(group => {
+        const header = group.querySelector('.category-header');
+        const items = group.querySelector('.category-items');
+        const icon = group.querySelector('.category-icon');
+        
+        if (header.getAttribute('onclick').includes(categoryName)) {
+          items.classList.toggle('active');
+          icon.classList.toggle('active');
+        }
+      });
+    }
+
     function showTab(tabName) {
       // Hide all tabs
       document.querySelectorAll('.tab-content').forEach(tab => {
@@ -1680,7 +1711,7 @@
       });
       
       // Remove active class from all buttons
-      document.querySelectorAll('.tab-button').forEach(btn => {
+      document.querySelectorAll('.sub-tab-button').forEach(btn => {
         btn.classList.remove('active');
       });
       
@@ -1689,6 +1720,18 @@
       
       // Add active class to clicked button
       event.target.classList.add('active');
+      
+      // Ensure the category is expanded
+      const clickedButton = event.target;
+      const category = clickedButton.closest('.category-group');
+      if (category) {
+        const items = category.querySelector('.category-items');
+        const icon = category.querySelector('.category-icon');
+        if (!items.classList.contains('active')) {
+          items.classList.add('active');
+          icon.classList.add('active');
+        }
+      }
     }
 
     async function saveSettings(event, category) {
