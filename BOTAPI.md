@@ -1129,6 +1129,529 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
 ---
 
+## 🔵 Ban System (NEW!)
+
+The ban system allows you to ban users from accessing the dashboard and optionally delete their servers. Bans can be temporary or permanent and are fully integrated between Discord and the dashboard.
+
+### How It Works
+
+1. **Ban a user** via Discord bot or dashboard
+2. **User is blocked** from accessing dashboard immediately
+3. **Optionally delete** user's servers during ban
+4. **Track ban history** for all users
+5. **Unban** restores access (servers not restored)
+
+### Admin Configuration
+
+Go to your dashboard at `/bans` to:
+- View all currently banned users
+- Ban users with custom reasons and durations
+- Unban users with reason logging
+- View ban history and audit trail
+
+### Bot Implementation
+
+#### 40. !ban <@user> [duration] [reason]
+Ban a user from the dashboard with optional duration and reason.
+
+```javascript
+POST /api/dashboard/ban
+Body: {
+  "discordId": "user_discord_id",
+  "reason": "Spam/abuse/etc",
+  "duration": 86400,  // Seconds, null for permanent
+  "cleanup": true     // Delete their servers
+}
+```
+
+**Duration Options:**
+- `null` or omitted - Permanent ban
+- `3600` - 1 hour
+- `86400` - 1 day
+- `604800` - 1 week
+- `2592000` - 1 month
+- Custom value in seconds
+
+**Example Commands:**
+```
+!ban @user Spamming
+→ Permanent ban with reason
+
+!ban @user 1d Inappropriate behavior
+→ 1 day ban
+
+!ban @user 1w Multiple violations
+→ 1 week ban
+
+!ban @user 1h Testing ban system
+→ 1 hour temporary ban
+```
+
+**Example Implementation:**
+```javascript
+if (command === 'ban') {
+  // Check admin permission
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ Admin only!');
+  }
+  
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply('❌ Please mention a user to ban');
+  }
+  
+  // Parse duration (1h, 1d, 1w, 1m)
+  let duration = null;
+  let reason = args.slice(2).join(' ') || 'No reason provided';
+  
+  if (args[1]) {
+    const durationStr = args[1].toLowerCase();
+    if (durationStr.endsWith('h')) {
+      duration = parseInt(durationStr) * 3600;
+      reason = args.slice(2).join(' ') || reason;
+    } else if (durationStr.endsWith('d')) {
+      duration = parseInt(durationStr) * 86400;
+      reason = args.slice(2).join(' ') || reason;
+    } else if (durationStr.endsWith('w')) {
+      duration = parseInt(durationStr) * 604800;
+      reason = args.slice(2).join(' ') || reason;
+    } else if (durationStr.endsWith('m')) {
+      duration = parseInt(durationStr) * 2592000;
+      reason = args.slice(2).join(' ') || reason;
+    } else {
+      // No duration parsed, all args are reason
+      reason = args.slice(1).join(' ');
+    }
+  }
+  
+  try {
+    const response = await api.post('/api/dashboard/ban', {
+      discordId: user.id,
+      reason: reason,
+      duration: duration,
+      cleanup: true  // Delete their servers
+    });
+    
+    if (response.data.success) {
+      const durationText = duration 
+        ? `for ${formatDuration(duration)}` 
+        : 'permanently';
+      
+      const embed = new EmbedBuilder()
+        .setColor('#ff0000')
+        .setTitle('🔨 User Banned')
+        .setDescription(`${user.tag} has been banned ${durationText}`)
+        .addFields(
+          { name: 'Reason', value: reason },
+          { name: 'Servers Deleted', value: response.data.serversDeleted || 0 }
+        )
+        .setTimestamp();
+      
+      message.reply({ embeds: [embed] });
+      
+      // Try to DM the user
+      try {
+        await user.send(
+          `You have been banned from the dashboard ${durationText}.\n` +
+          `Reason: ${reason}\n` +
+          `If you believe this is a mistake, please contact an administrator.`
+        );
+      } catch (e) {
+        // User has DMs disabled
+      }
+    }
+  } catch (error) {
+    console.error('Ban error:', error);
+    message.reply('❌ Failed to ban user: ' + 
+      (error.response?.data?.error || error.message));
+  }
+}
+
+// Helper function to format duration
+function formatDuration(seconds) {
+  if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours';
+  if (seconds < 604800) return Math.floor(seconds / 86400) + ' days';
+  if (seconds < 2592000) return Math.floor(seconds / 604800) + ' weeks';
+  return Math.floor(seconds / 2592000) + ' months';
+}
+```
+
+#### 41. !unban <@user> [reason]
+Unban a user and restore their dashboard access.
+
+```javascript
+POST /api/dashboard/unban
+Body: {
+  "discordId": "user_discord_id",
+  "reason": "Appeal accepted/time served/etc"
+}
+```
+
+**Example Commands:**
+```
+!unban @user Appeal accepted
+!unban @user Served time
+!unban @user Mistake
+```
+
+**Example Implementation:**
+```javascript
+if (command === 'unban') {
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ Admin only!');
+  }
+  
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply('❌ Please mention a user to unban');
+  }
+  
+  const reason = args.slice(1).join(' ') || 'No reason provided';
+  
+  try {
+    const response = await api.post('/api/dashboard/unban', {
+      discordId: user.id,
+      reason: reason
+    });
+    
+    if (response.data.success) {
+      const embed = new EmbedBuilder()
+        .setColor('#00ff00')
+        .setTitle('✅ User Unbanned')
+        .setDescription(`${user.tag} has been unbanned`)
+        .addFields({ name: 'Reason', value: reason })
+        .setTimestamp();
+      
+      message.reply({ embeds: [embed] });
+      
+      // Try to DM the user
+      try {
+        await user.send(
+          `You have been unbanned from the dashboard.\n` +
+          `Reason: ${reason}\n` +
+          `You can now access your account again.`
+        );
+      } catch (e) {
+        // User has DMs disabled
+      }
+    }
+  } catch (error) {
+    console.error('Unban error:', error);
+    message.reply('❌ Failed to unban user: ' + 
+      (error.response?.data?.error || error.message));
+  }
+}
+```
+
+#### 42. !checkban <@user>
+Check if a user is currently banned.
+
+```javascript
+GET /api/dashboard/bans/check/{discordId}
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "banned": true,
+  "ban": {
+    "userId": "123456789012345678",
+    "reason": "Spamming",
+    "bannedBy": "Admin",
+    "bannedAt": 1704067200000,
+    "expiresAt": 1704153600000,
+    "permanent": false
+  }
+}
+```
+
+**Example Implementation:**
+```javascript
+if (command === 'checkban') {
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply('❌ Please mention a user to check');
+  }
+  
+  try {
+    const response = await api.get(`/api/dashboard/bans/check/${user.id}`);
+    
+    if (response.data.banned) {
+      const ban = response.data.ban;
+      const embed = new EmbedBuilder()
+        .setColor('#ff0000')
+        .setTitle('🔒 User is Banned')
+        .setDescription(`${user.tag} is currently banned`)
+        .addFields(
+          { name: 'Reason', value: ban.reason },
+          { name: 'Banned By', value: ban.bannedBy },
+          { name: 'Banned At', value: new Date(ban.bannedAt).toLocaleString() },
+          { 
+            name: 'Expires', 
+            value: ban.permanent 
+              ? 'Never (Permanent)' 
+              : new Date(ban.expiresAt).toLocaleString() 
+          }
+        )
+        .setTimestamp();
+      
+      message.reply({ embeds: [embed] });
+    } else {
+      message.reply(`✅ ${user.tag} is not banned`);
+    }
+  } catch (error) {
+    console.error('Check ban error:', error);
+    message.reply('❌ Failed to check ban status');
+  }
+}
+```
+
+#### 43. !banhistory <@user>
+View a user's complete ban history (all past bans).
+
+```javascript
+GET /api/dashboard/bans/history/{discordId}
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "history": [
+    {
+      "userId": "123456789012345678",
+      "reason": "Spam",
+      "bannedBy": "Admin",
+      "bannedAt": 1704067200000,
+      "unbannedAt": 1704153600000,
+      "unbannedBy": "Moderator",
+      "unbanReason": "Appeal accepted"
+    }
+  ]
+}
+```
+
+**Example Implementation:**
+```javascript
+if (command === 'banhistory') {
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ Admin only!');
+  }
+  
+  const user = message.mentions.users.first();
+  if (!user) {
+    return message.reply('❌ Please mention a user');
+  }
+  
+  try {
+    const response = await api.get(`/api/dashboard/bans/history/${user.id}`);
+    
+    if (response.data.history.length === 0) {
+      return message.reply(`${user.tag} has no ban history`);
+    }
+    
+    const embed = new EmbedBuilder()
+      .setColor('#ffaa00')
+      .setTitle(`📜 Ban History for ${user.tag}`)
+      .setDescription(`Total bans: ${response.data.history.length}`);
+    
+    response.data.history.forEach((ban, index) => {
+      const bannedDate = new Date(ban.bannedAt).toLocaleDateString();
+      const unbannedDate = ban.unbannedAt 
+        ? new Date(ban.unbannedAt).toLocaleDateString()
+        : 'Still banned';
+      
+      embed.addFields({
+        name: `Ban #${index + 1} - ${bannedDate}`,
+        value: 
+          `**Reason:** ${ban.reason}\n` +
+          `**Banned by:** ${ban.bannedBy}\n` +
+          `**Unbanned:** ${unbannedDate}\n` +
+          `**Unban reason:** ${ban.unbanReason || 'N/A'}`,
+        inline: false
+      });
+    });
+    
+    message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error('Ban history error:', error);
+    message.reply('❌ Failed to fetch ban history');
+  }
+}
+```
+
+#### 44. !bans / !banlist
+List all currently banned users (admin only).
+
+```javascript
+GET /api/dashboard/bans/list
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "bans": [
+    {
+      "userId": "123456789012345678",
+      "reason": "Spam",
+      "bannedBy": "Admin",
+      "bannedAt": 1704067200000,
+      "expiresAt": null,
+      "permanent": true
+    }
+  ]
+}
+```
+
+**Example Implementation:**
+```javascript
+if (command === 'bans' || command === 'banlist') {
+  if (!message.member.permissions.has('Administrator')) {
+    return message.reply('❌ Admin only!');
+  }
+  
+  try {
+    const response = await api.get('/api/dashboard/bans/list');
+    
+    if (response.data.bans.length === 0) {
+      return message.reply('✅ No users are currently banned');
+    }
+    
+    const embed = new EmbedBuilder()
+      .setColor('#ff0000')
+      .setTitle('🔨 Currently Banned Users')
+      .setDescription(`Total: ${response.data.bans.length} banned users`);
+    
+    response.data.bans.slice(0, 10).forEach(ban => {
+      const banType = ban.permanent ? 'Permanent' : 'Temporary';
+      const expires = ban.permanent 
+        ? 'Never' 
+        : new Date(ban.expiresAt).toLocaleDateString();
+      
+      embed.addFields({
+        name: `User ID: ${ban.userId}`,
+        value: 
+          `**Type:** ${banType}\n` +
+          `**Reason:** ${ban.reason}\n` +
+          `**Banned by:** ${ban.bannedBy}\n` +
+          `**Expires:** ${expires}`,
+        inline: true
+      });
+    });
+    
+    if (response.data.bans.length > 10) {
+      embed.setFooter({ 
+        text: `Showing 10 of ${response.data.bans.length} bans` 
+      });
+    }
+    
+    message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error('Ban list error:', error);
+    message.reply('❌ Failed to fetch ban list');
+  }
+}
+```
+
+### Automatic Ban Expiration
+
+Bans with durations automatically expire. The dashboard middleware checks on every request:
+
+- **User tries to access dashboard** → Middleware checks ban status
+- **Ban has expired** → Automatically removed
+- **Ban still active** → User shown banned page with expiration time
+
+No bot action needed for expiration - it's handled automatically by the dashboard.
+
+### Ban Features Summary
+
+✅ **Permanent Bans** - Never expire unless manually unbanned
+✅ **Temporary Bans** - Auto-expire after duration
+✅ **Server Cleanup** - Optionally delete user's servers when banned
+✅ **Ban History** - Complete audit trail of all bans
+✅ **Custom Reasons** - Track why users were banned
+✅ **Multiple Admins** - Track who banned/unbanned
+✅ **Auto-Expiration** - Temporary bans expire automatically
+✅ **Dashboard Integration** - View/manage bans in admin panel
+✅ **Bot Integration** - Full control via Discord commands
+
+### API Endpoints Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/dashboard/ban` | POST | Ban a user |
+| `/api/dashboard/unban` | POST | Unban a user |
+| `/api/dashboard/bans/check/:userId` | GET | Check if user is banned |
+| `/api/dashboard/bans/history/:userId` | GET | Get user's ban history |
+| `/api/dashboard/bans/list` | GET | List all current bans (admin) |
+| `/admin/bans/ban` | POST | Ban user (admin dashboard) |
+| `/admin/bans/unban` | POST | Unban user (admin dashboard) |
+
+### Ban Request Format
+
+**Ban User:**
+```json
+{
+  "discordId": "123456789012345678",
+  "reason": "Violation of terms",
+  "duration": 86400,  // Seconds, or null for permanent
+  "cleanup": true     // Delete their servers
+}
+```
+
+**Unban User:**
+```json
+{
+  "discordId": "123456789012345678",
+  "reason": "Appeal accepted"
+}
+```
+
+### Use Cases
+
+1. **Abuse Prevention**
+   - Ban users who violate terms of service
+   - Temporary bans for warnings
+   - Permanent bans for serious violations
+
+2. **Server Protection**
+   - Ban users who create malicious servers
+   - Option to delete servers during ban
+
+3. **Appeal System**
+   - Temporary bans for first offenses
+   - Review history before permanent bans
+   - Unban with reason logging
+
+4. **Automated Moderation**
+   - Integrate with auto-mod systems
+   - Temporary bans for spam detection
+   - Escalating ban durations for repeat offenders
+
+### Security Notes
+
+⚠️ **Important:** Ban commands should be restricted to administrators only!
+
+```javascript
+// Always check admin permissions
+if (!message.member.permissions.has('Administrator')) {
+  return message.reply('❌ Admin only!');
+}
+```
+
+⚠️ **Logging:** All ban actions are logged with:
+- Who performed the action
+- When it was performed
+- Reason for the action
+- Target user
+
+⚠️ **Notifications:** Consider DMing users when they're banned/unbanned (if DMs are open)
+
+---
+
 ## Getting Started Checklist
 
 - [ ] Create Dashboard API key (Admin Panel → API Keys)
