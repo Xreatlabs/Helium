@@ -4,20 +4,54 @@
 
 Helium is a modern, high-performance client dashboard for Pterodactyl Panel. Built with Express.js and featuring Discord OAuth2 authentication, it provides users with an intuitive interface to manage their game servers, earn rewards through AFK time, and access premium features.
 
-## Features
+## ✨ Features
 
+### 🔐 Authentication & User Management
 - **Discord OAuth2 Authentication** - Secure login with Discord accounts
+- **Admin Dashboard** - Comprehensive admin tools for user and server management
+- **Dark Mode** - Full dark mode support with user preferences and system detection
+- **Account Switcher** - Switch between multiple linked accounts seamlessly
+
+### 🎮 Server Management
 - **Server Management** - Create, edit, and delete Pterodactyl servers
 - **Resource Management** - Manage CPU, RAM, disk, and server limits
-- **AFK Rewards System** - Earn coins by accumulating AFK time
+- **Server Renewal System** - Automatic server suspension with renewal reminders and grace periods
+- **Auto-Renewal** - Set servers to automatically renew with available coins
+
+### 💰 Economy System
+- **AFK Rewards System** - Earn coins by accumulating AFK time with WebSocket connection
 - **Resource Store** - Purchase additional resources with earned coins
+- **Coin Transfer System** - Transfer coins between users with configurable tax rates
 - **AFK Leaderboard** - Compete with other users for top AFK time
-- **Admin Dashboard** - Comprehensive admin tools for user and server management
-- **Discord Webhooks** - Real-time event notifications to Discord channels
-- **Server Renewal System** - Automatic server suspension with grace periods
-- **Dark Mode** - Full dark mode support with user preferences
 - **Linkvertise Integration** - Monetize with Linkvertise coin rewards
-- **Multi-worker Clustering** - Improved performance with cluster mode
+- **Redemption Codes** - Create and manage promo codes for resources and coins
+
+### 🎁 Discord Role Rewards (NEW!)
+- **Automatic Role Rewards** - Grant resources and coins when users receive Discord roles
+- **Server Boost Rewards** - Perfect for rewarding server boosters automatically
+- **Multiple Role Support** - Stack multiple role rewards for VIP tiers
+- **Admin Configuration UI** - Easy role management at `/discord-roles`
+- **Bot Integration** - Complete Discord bot examples included
+
+### 🛠️ Advanced Systems
+- **Database Backup System** - Automatic daily backups with manual backup support
+- **Health Monitoring** - Real-time system health checks (panel, database, disk, memory)
+- **Maintenance Mode** - Beautiful maintenance page with admin bypass
+- **Discord Webhooks** - Real-time event notifications to Discord channels
+- **API System** - RESTful API with key-based authentication and rate limiting
+
+### 🎨 User Experience
+- **Responsive Design** - Mobile-friendly interface with Tailwind CSS
+- **Social Media Links** - Configurable social links with 13+ service icons
+- **Announcement System** - Display important announcements with multiple styles
+- **Settings Categorization** - Organized admin settings with sidebar navigation
+- **Real-time Updates** - Live server status and resource updates
+
+### 🚀 Performance & Reliability
+- **Multi-worker Clustering** - Improved performance with 8 worker processes
+- **Enhanced Pterodactyl Client** - Automatic retry, rate limiting, and caching
+- **Better-SQLite3** - Fast, reliable database with session persistence
+- **WebSocket Support** - Real-time communication for AFK rewards
 
 ## Quick Start
 
@@ -29,16 +63,38 @@ Helium is a modern, high-performance client dashboard for Pterodactyl Panel. Bui
 
 ### Installation
 
+#### Automatic Installation (Recommended)
+
 ```bash
 # Clone the repository
 git clone https://github.com/xreatlabs/helium
 cd helium
 
-# Run initial setup (creates settings.json)
-npm run setup
+# Run the installation script
+chmod +x install
+./install
+```
+
+The installation script will:
+- Check system requirements
+- Install dependencies
+- Copy example settings
+- Run database migrations
+- Create necessary directories
+- Prompt for basic configuration
+
+#### Manual Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/xreatlabs/helium
+cd helium
 
 # Install dependencies
 npm install
+
+# Copy example settings
+cp settings.example.json settings.json
 
 # Run database migrations
 npm run migrate
@@ -145,7 +201,121 @@ server {
 }
 ```
 
-## Core Systems
+## 📚 Core Systems
+
+### Discord Role Rewards System
+
+Automatically grant resources and coins when users receive Discord roles. Perfect for server boost rewards!
+
+**Setup:**
+1. Configure roles at `/discord-roles` in admin panel
+2. Add role ID, name, and rewards (coins, RAM, disk, CPU, servers)
+3. Set up Discord bot to sync roles using provided examples
+4. Users automatically receive rewards when they get roles
+
+**Bot Integration:**
+```javascript
+// When user gets a role
+await api.post('/api/dashboard/roles/sync', {
+  discordId: userId,
+  roles: [roleId1, roleId2],
+  action: 'add'
+});
+```
+
+See [DISCORD_ROLE_SETUP.md](DISCORD_ROLE_SETUP.md) for complete setup guide and bot examples.
+
+### Backup System
+
+Automatic and manual database backups with verification.
+
+**Features:**
+- Automatic daily backups at configurable time
+- Manual backup creation
+- Backup restoration with safety backup
+- Download backups
+- Automatic cleanup (keeps last N backups)
+- Includes database and settings.json
+
+**Configuration:**
+```json
+{
+  "backup": {
+    "enabled": true,
+    "automatic": true,
+    "schedule": "daily",
+    "time": "03:00",
+    "maxBackups": 10,
+    "path": "./backups"
+  }
+}
+```
+
+Access backup management at `/settings` → Backups tab.
+
+### Health Monitoring System
+
+Real-time system health monitoring with thresholds and alerts.
+
+**Monitors:**
+- ✅ Pterodactyl Panel connectivity
+- ✅ Database connectivity
+- ✅ Disk space usage
+- ✅ Memory usage
+
+**Features:**
+- Configurable warning and critical thresholds
+- Optional Discord webhook alerts
+- Real-time status dashboard
+- Auto-refresh every 60 seconds
+
+**Configuration:**
+```json
+{
+  "healthMonitoring": {
+    "enabled": true,
+    "checkInterval": 60,
+    "thresholds": {
+      "diskSpaceWarning": 80,
+      "diskSpaceCritical": 90,
+      "memoryWarning": 80,
+      "memoryCritical": 90
+    },
+    "alerts": {
+      "webhook": true,
+      "webhookUrl": "discord_webhook_url"
+    }
+  }
+}
+```
+
+Access health dashboard at `/settings` → Health Monitoring.
+
+### Maintenance Mode
+
+Display a beautiful maintenance page while performing updates.
+
+**Features:**
+- Animated maintenance page with auto-refresh
+- Admin bypass (admins can still access dashboard)
+- Configurable title and message
+- API endpoints excluded from maintenance check
+- Easy toggle in admin settings
+
+**Enable:**
+```json
+{
+  "maintenance": {
+    "enabled": true,
+    "message": "We're performing scheduled maintenance.",
+    "title": "Maintenance Mode"
+  }
+}
+```
+
+Or toggle at `/settings` → General Settings → Maintenance Mode.
+
+## 💻 Core Systems
 
 ### AFK Rewards System
 
@@ -175,7 +345,33 @@ Users can purchase server resources with earned coins:
 - More CPU allocation
 - Additional server slots
 
-Configure pricing in `settings.json` under `api.client.coins.store`.
+**Configuration:**
+```json
+{
+  "coins": {
+    "enabled": true,
+    "transfer": {
+      "enabled": true,
+      "tax": {
+        "enabled": true,
+        "percentage": 5
+      }
+    },
+    "store": {
+      "enabled": true,
+      "ram": { "cost": 500, "per": 1024 },
+      "disk": { "cost": 250, "per": 5120 },
+      "cpu": { "cost": 500, "per": 100 },
+      "servers": { "cost": 100, "per": 2 }
+    }
+  }
+}
+```
+
+**Tax System:**
+- Configurable tax on coin transfers between users
+- Tax percentage (0-100%)
+- Helps manage economy inflation
 
 ### Server Renewal System
 
@@ -316,6 +512,25 @@ npm run build:watch # Build Tailwind CSS in watch mode
 npm test            # Run test suite
 npm run migrate     # Run database migrations
 npm run setup       # Initial setup wizard
+./install           # Run installation script
+```
+
+### Environment Setup
+
+Helium supports both Node.js and Bun runtimes:
+
+**With Node.js:**
+```bash
+node --version  # v16+ required
+npm install
+npm start
+```
+
+**With Bun (Faster):**
+```bash
+bun --version  # v1.0+ recommended
+bun install
+bun run start:bun
 ```
 
 ### Running Tests
@@ -346,21 +561,36 @@ Current migrations:
 ```
 helium/
 ├── api/              # API route handlers
-├── assets/           # Static assets (CSS, images)
+│   ├── admin.js      # Admin API endpoints
+│   ├── backup.js     # Backup management API
+│   ├── dashboard-api.js  # Dashboard/Bot API
+│   └── servers.js    # Server management API
+├── assets/           # Static assets (CSS, images, JS)
+├── bot-examples/     # Discord bot integration examples
 ├── lib/              # Core libraries and utilities
+│   ├── PteroClient.js    # Enhanced Pterodactyl client
+│   └── healthCheck.js    # System health monitoring
 ├── managers/         # Business logic managers
+│   └── BackupManager.js  # Backup system manager
 ├── middleware/       # Express middleware
 ├── migrations/       # Database migrations
+│   ├── 001_initial.sql
+│   ├── 002_webhooks.sql
+│   └── 003_discord_roles.sql
 ├── scripts/          # Utility scripts
 ├── views/            # EJS templates
 │   ├── admin/        # Admin panel views
+│   │   ├── discord-roles.ejs
+│   │   └── settings-full.ejs
 │   ├── coins/        # Coin-related views
 │   ├── components/   # Reusable components
+│   ├── errors/       # Error pages (maintenance, 404, 500)
 │   ├── general/      # General pages
 │   └── servers/      # Server management views
 ├── __tests__/        # Test files
 ├── app.js            # Main application file
 ├── server.js         # Bun runtime entry point
+├── install           # Installation script
 └── settings.json     # Configuration file
 ```
 
@@ -455,25 +685,52 @@ Configure per-endpoint rate limits in `settings.json`:
 }
 ```
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
 **"Database error" on startup**
-- Ensure `database.sqlite` has correct permissions
-- Run `npm run migrate` to apply migrations
+- Ensure `database.sqlite` has correct permissions: `chmod 644 database.sqlite`
+- Run `npm run migrate` to apply pending migrations
+- Check disk space availability
 
 **"Failed to authenticate" errors**
-- Verify Pterodactyl API key has correct permissions
+- Verify Pterodactyl API key has correct permissions (Application API Key)
 - Check panel URL is accessible from Helium server
+- Ensure API key hasn't expired
 
 **OAuth2 redirect issues**
 - Verify Discord OAuth2 callback URL matches `settings.json`
-- Check redirect URI in Discord Developer Portal
+- Check redirect URI in Discord Developer Portal matches exactly
+- Ensure callback URL is publicly accessible
 
 **Session lost after restart**
 - Sessions are persistent in SQLite
 - Check `database.sqlite` permissions
+- Verify `website.secret` hasn't changed
+
+**Discord role rewards not working**
+- Configure role IDs at `/discord-roles`
+- Set up Discord bot with provided examples (see `bot-examples/`)
+- Verify API key is configured in bot
+- Check bot has `GuildMembers` intent enabled in Discord Developer Portal
+
+**Backup system not working**
+- Enable backup system in settings: `backup.enabled: true`
+- Check `backups/` directory permissions
+- Verify sufficient disk space
+- Enable automatic backups: `backup.automatic: true`
+
+**Health monitoring issues**
+- Verify health monitoring is enabled in settings
+- Check Pterodactyl panel is accessible
+- Ensure database connection is working
+- Review thresholds in configuration
+
+**Maintenance mode stuck**
+- Disable in settings: `maintenance.enabled: false`
+- Or edit `settings.json` manually
+- Restart the application
 
 ### Debug Mode
 
@@ -481,6 +738,37 @@ Enable detailed logging:
 
 ```bash
 NODE_ENV=development npm start
+```
+
+Check application logs:
+```bash
+# If using systemd
+journalctl -u helium -f
+
+# If using PM2
+pm2 logs helium
+
+# If running directly
+# Check console output
+```
+
+### Database Issues
+
+**Reset database (WARNING: Deletes all data):**
+```bash
+rm database.sqlite
+npm run migrate
+```
+
+**Backup database before reset:**
+```bash
+cp database.sqlite database.backup.sqlite
+```
+
+**Check database integrity:**
+```bash
+npm run migrate
+# Will show any migration errors
 ```
 
 ## Contributing
@@ -502,14 +790,57 @@ See [LICENSE](LICENSE) file for details.
 - Maintained by Matt James and contributors
 - Powered by Pterodactyl Panel
 
-## Support
+## 📖 Documentation
 
-- GitHub Issues: Report bugs and request features
-- Documentation: Check the `/docs` directory for guides
-- Discord: Join our community server (if available)
+- **[BOTAPI.md](BOTAPI.md)** - Complete API documentation for bot integration
+- **[DISCORD_ROLE_SETUP.md](DISCORD_ROLE_SETUP.md)** - Discord role rewards setup guide
+- **[UPGRADE_GUIDE.md](UPGRADE_GUIDE.md)** - Version upgrade instructions
+- **[linkvertise-docs.md](linkvertise-docs.md)** - Linkvertise integration guide
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 
----
+## 🤝 Support
+
+- **GitHub Issues:** Report bugs and request features
+- **Documentation:** Check the documentation files for detailed guides
+- **Community:** Join discussions in GitHub Discussions
+- **Updates:** Watch the repository for new releases
+
+## 🎯 Roadmap
+
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Plugin system for extensions
+- [ ] Mobile app (React Native)
+- [ ] Advanced ticket system
+- [ ] Payment gateway integration
+- [ ] Server statistics and graphs
+- [ ] Advanced user permissions
+
+## 📊 Requirements
+
+- **Node.js:** v16.0.0 or higher (v20+ recommended)
+- **OR Bun:** v1.0.0 or higher (faster alternative)
+- **Pterodactyl Panel:** v1.0+
+- **Discord Application:** For OAuth2 authentication
+- **Operating System:** Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
+- **Database:** SQLite (included)
+- **Memory:** 512 MB minimum, 1 GB recommended
+- **Disk:** 1 GB minimum free space
+
+## 🔄 Version
 
 **Helium 1.0.0 - Cascade Ridge**
 
-Built with ❤️ for the Pterodactyl community
+### Recent Updates (v1.0.0)
+- ✅ Discord role-based automatic rewards system
+- ✅ Database backup system with automatic scheduling
+- ✅ Health monitoring with real-time status
+- ✅ Maintenance mode with beautiful UI
+- ✅ Coin transfer tax system
+- ✅ Enhanced admin settings with categorization
+- ✅ Fixed checkbox persistence in settings
+- ✅ Improved error handling and logging
+
+---
+
+Built with ❤️ for the Pterodactyl community by [Matt James](https://github.com/xreatlabs)
