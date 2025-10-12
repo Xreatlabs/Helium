@@ -876,34 +876,38 @@ module.exports.load = async function (app, db) {
 
       if (ramstring) {
         let ram = parseFloat(ramstring);
-        if (ram < 0 || ram > 999999999999999) {
+        if (ram < -999999999999999 || ram > 999999999999999) {
           return res.redirect(`${failredirect}?err=RAMSIZE`);
         }
-        extra.ram = ram;
+        // If negative, subtract from current value; otherwise set to exact value
+        extra.ram = ram < 0 ? Math.max(0, extra.ram + ram) : ram;
       }
 
       if (diskstring) {
         let disk = parseFloat(diskstring);
-        if (disk < 0 || disk > 999999999999999) {
+        if (disk < -999999999999999 || disk > 999999999999999) {
           return res.redirect(`${failredirect}?err=DISKSIZE`);
         }
-        extra.disk = disk;
+        // If negative, subtract from current value; otherwise set to exact value
+        extra.disk = disk < 0 ? Math.max(0, extra.disk + disk) : disk;
       }
 
       if (cpustring) {
         let cpu = parseFloat(cpustring);
-        if (cpu < 0 || cpu > 999999999999999) {
+        if (cpu < -999999999999999 || cpu > 999999999999999) {
           return res.redirect(`${failredirect}?err=CPUSIZE`);
         }
-        extra.cpu = cpu;
+        // If negative, subtract from current value; otherwise set to exact value
+        extra.cpu = cpu < 0 ? Math.max(0, extra.cpu + cpu) : cpu;
       }
 
       if (serversstring) {
         let servers = parseFloat(serversstring);
-        if (servers < 0 || servers > 999999999999999) {
+        if (servers < -999999999999999 || servers > 999999999999999) {
           return res.redirect(`${failredirect}?err=SERVERSIZE`);
         }
-        extra.servers = servers;
+        // If negative, subtract from current value; otherwise set to exact value
+        extra.servers = servers < 0 ? Math.max(0, extra.servers + servers) : servers;
       }
 
       if (

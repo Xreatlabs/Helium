@@ -537,7 +537,9 @@ async function autoJoinGuild(userId, accessToken) {
 
   for (const guildId of guildIds) {
     try {
-      await fetch(`${DISCORD_API}/guilds/${guildId}/members/${userId}`, {
+      console.log(`[OAuth] Attempting to add user ${userId} to guild ${guildId}`);
+      
+      const response = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${userId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bot ${settings.api.client.bot.token}`,
@@ -545,9 +547,26 @@ async function autoJoinGuild(userId, accessToken) {
         },
         body: JSON.stringify({ access_token: accessToken }),
       });
-      console.log(`[OAuth] Added user ${userId} to guild ${guildId}`);
+      
+      if (response.ok) {
+        console.log(`[OAuth] Successfully added user ${userId} to guild ${guildId}`);
+      } else {
+        const errorText = await response.text();
+        console.error(`[OAuth] Failed to add user ${userId} to guild ${guildId}`);
+        console.error(`[OAuth] Status: ${response.status} ${response.statusText}`);
+        console.error(`[OAuth] Error details:`, errorText);
+        
+        // Common error explanations
+        if (response.status === 401) {
+          console.error(`[OAuth] Bot token is invalid or expired`);
+        } else if (response.status === 403) {
+          console.error(`[OAuth] Bot lacks permission to add members to this guild. Ensure bot has 'CREATE_INSTANT_INVITE' permission and is in the guild.`);
+        } else if (response.status === 404) {
+          console.error(`[OAuth] Guild ${guildId} not found or bot is not in the guild`);
+        }
+      }
     } catch (error) {
-      console.error(`[OAuth] Failed to add user to guild ${guildId}:`, error);
+      console.error(`[OAuth] Exception while adding user to guild ${guildId}:`, error.message);
     }
   }
 }

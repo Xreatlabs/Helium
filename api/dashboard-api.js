@@ -8,6 +8,7 @@ const settings = require('../settings.json');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
+const log = require('../misc/log');
 
 async function checkAdmin(req, res, db) {
   if (!req.session || !req.session.userinfo || !req.session.userinfo.id) {
@@ -1112,6 +1113,283 @@ module.exports.load = async function (app, db) {
         success: false,
         message: 'Internal server error',
         error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /api/dashboard/bans/history/:discordId
+   * Get ban history for a user
+   */
+  app.get('/api/dashboard/bans/history/:discordId', requireApiKey(['users.read', '*']), async (req, res) => {
+    try {
+      const { discordId } = req.params;
+
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath, { readonly: true });
+
+      const history = dbFile.prepare(`
+        SELECT userId, reason, bannedAt, bannedBy, expiresAt, unbannedAt, unbannedBy, unbannedReason
+        FROM ban_history
+        WHERE userId = ?
+        ORDER BY bannedAt DESC
+      `).all(discordId);
+
+      dbFile.close();
+
+      res.json({
+        success: true,
+        discordId,
+        history
+      });
+    } catch (error) {
+      console.error('[Dashboard API] Error fetching ban history:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /api/dashboard/bans/list
+   * Get list of all currently banned users
+   */
+  app.get('/api/dashboard/bans/list', requireApiKey(['users.read', '*']), async (req, res) => {
+    try {
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath, { readonly: true });
+
+      const bans = dbFile.prepare(`
+        SELECT userId, reason, bannedAt, bannedBy, expiresAt
+        FROM banned_users
+        ORDER BY bannedAt DESC
+      `).all();
+
+      dbFile.close();
+
+      res.json({
+        success: true,
+        bans
+      });
+    } catch (error) {
+      console.error('[Dashboard API] Error fetching ban list:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  });
+
+  // ==================== CODE REDEMPTION ====================
+  
+  /**
+   * POST /api/dashboard/codes/redeem
+   * Redeem a code for a user (Bot-friendly API)
+   * 
+   * Body: {
+   *   discordId: "user_discord_id",
+   *   code: "CODE-TO-REDEEM"
+   * }
+   */
+  app.post('/api/dashboard/codes/redeem', requireApiKey(['codes.redeem', '*']), async (req, res) => {
+    try {
+      const { discordId, code } = req.body;
+
+      if (!discordId || !code) {
+        return res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Missing required fields: discordId, code'
+        });
+      }
+
+      // Check if user exists
+      const pterodactylId = await db.get(`users-${discordId}`);
+      if (!pterodactylId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Not Found',
+          message: 'User not found. Please login to the dashboard first.'
+        });
+      }
+
+      const codeUpper = code.toUpperCase().trim();
+      const codeData = await db.get(`code-${codeUpper}`);
+
+      if (!codeData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Invalid Code',
+          message: 'This code does not exist or has been deleted.'
+        });
+      }
+
+      // Check if code is expired
+      if (codeData.expiresAt && Date.now() > codeData.expiresAt) {
+        return res.status(400).json({
+          success: false,
+          error: 'Expired',
+          message: 'This code has expired.'
+        });
+      }
+
+      // Check if code has reached max uses
+      if (codeData.uses >= codeData.maxUses) {
+        return res.status(400).json({
+          success: false,
+          error: 'Max Uses Reached',
+          message: 'This code has reached its maximum number of uses.'
+        });
+      }
+
+      // Check if user has already used this code max times
+      const userUseCount = codeData.usedBy[discordId] || 0;
+      if (userUseCount >= codeData.maxUsesPerUser) {
+        return res.status(400).json({
+          success: false,
+          error: 'Already Redeemed',
+          message: `You have already used this code ${userUseCount} time(s). Maximum uses per user: ${codeData.maxUsesPerUser}`
+        });
+      }
+
+      // Grant rewards
+      const rewards = codeData.rewards;
+
+      // Add coins
+      if (rewards.coins > 0) {
+        const currentCoins = (await db.get(`coins-${discordId}`)) || 0;
+        await db.set(`coins-${discordId}`, currentCoins + rewards.coins);
+      }
+
+      // Add extra resources
+      const extra = (await db.get(`extra-${discordId}`)) || {
+        ram: 0,
+        disk: 0,
+        cpu: 0,
+        servers: 0
+      };
+
+      if (rewards.ram > 0) extra.ram += rewards.ram;
+      if (rewards.disk > 0) extra.disk += rewards.disk;
+      if (rewards.cpu > 0) extra.cpu += rewards.cpu;
+      if (rewards.servers > 0) extra.servers += rewards.servers;
+
+      await db.set(`extra-${discordId}`, extra);
+
+      // Update code usage
+      codeData.uses += 1;
+      codeData.usedBy[discordId] = (codeData.usedBy[discordId] || 0) + 1;
+      await db.set(`code-${codeUpper}`, codeData);
+
+      // Build rewards list for response
+      const rewardsList = [];
+      if (rewards.coins > 0) rewardsList.push(`${rewards.coins} coins`);
+      if (rewards.ram > 0) rewardsList.push(`${rewards.ram}MB RAM`);
+      if (rewards.disk > 0) rewardsList.push(`${rewards.disk}MB Disk`);
+      if (rewards.cpu > 0) rewardsList.push(`${rewards.cpu}% CPU`);
+      if (rewards.servers > 0) rewardsList.push(`${rewards.servers} server slot(s)`);
+
+      const remainingUses = codeData.maxUsesPerUser - codeData.usedBy[discordId];
+
+      // Log redemption
+      log(
+        `code redeemed`,
+        `Discord user ${discordId} redeemed code ${codeUpper} via bot and received: ${rewardsList.join(', ')}`
+      );
+
+      // Trigger webhook for coins if applicable
+      const { onCoinsAdded } = require('../lib/integrations');
+      if (rewards.coins > 0) {
+        onCoinsAdded(
+          discordId,
+          `Discord User ${discordId}`,
+          rewards.coins
+        ).catch(err => console.error('Webhook error:', err));
+      }
+
+      res.json({
+        success: true,
+        message: `Successfully redeemed! You received: ${rewardsList.join(', ')}`,
+        data: {
+          rewards,
+          rewardsList,
+          remainingUses,
+          totalUsesRemaining: codeData.maxUses - codeData.uses
+        }
+      });
+    } catch (error) {
+      console.error('[Dashboard API] Error redeeming code:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /api/dashboard/codes/check
+   * Check if a code is valid without redeeming it
+   * 
+   * Body: {
+   *   discordId: "user_discord_id",
+   *   code: "CODE-TO-CHECK"
+   * }
+   */
+  app.post('/api/dashboard/codes/check', requireApiKey(['codes.read', '*']), async (req, res) => {
+    try {
+      const { discordId, code } = req.body;
+
+      if (!discordId || !code) {
+        return res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Missing required fields: discordId, code'
+        });
+      }
+
+      const codeUpper = code.toUpperCase().trim();
+      const codeData = await db.get(`code-${codeUpper}`);
+
+      if (!codeData) {
+        return res.json({
+          success: true,
+          valid: false,
+          reason: 'Code does not exist'
+        });
+      }
+
+      const userUseCount = codeData.usedBy[discordId] || 0;
+
+      const valid =
+        (!codeData.expiresAt || Date.now() <= codeData.expiresAt) &&
+        codeData.uses < codeData.maxUses &&
+        userUseCount < codeData.maxUsesPerUser;
+
+      let reason = "";
+      if (codeData.expiresAt && Date.now() > codeData.expiresAt) reason = "Code has expired";
+      else if (codeData.uses >= codeData.maxUses) reason = "Code has reached maximum total uses";
+      else if (userUseCount >= codeData.maxUsesPerUser) reason = `You have already used this code ${userUseCount}/${codeData.maxUsesPerUser} times`;
+      else reason = "Code is valid";
+
+      res.json({
+        success: true,
+        valid,
+        reason,
+        rewards: valid ? codeData.rewards : null,
+        usesRemaining: valid ? codeData.maxUsesPerUser - userUseCount : 0
+      });
+    } catch (error) {
+      console.error('[Dashboard API] Error checking code:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: error.message
       });
     }
   });
