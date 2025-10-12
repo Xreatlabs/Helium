@@ -1072,6 +1072,7 @@
 
     // Select user
     function selectUser(user) {
+      console.log('selectUser called with:', user);
       selectedUser = user;
       document.getElementById('user-search-results').classList.add('hidden');
       
@@ -1090,6 +1091,7 @@
       document.getElementById('selected-user-ram').textContent = `${user.resources.ram} MB`;
       document.getElementById('selected-user-disk').textContent = `${user.resources.disk} MB`;
       document.getElementById('selected-user-cpu').textContent = `${user.resources.cpu}%`;
+      console.log('User card DOM updated with resources:', user.resources);
     }
 
     // Add coins to user
@@ -1199,8 +1201,13 @@
           // Force fresh data with cache busting
           const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}&_=${Date.now()}`);
           const data = await searchResponse.json();
+          console.log('Refresh data received:', data);
           if (data.users && data.users.length > 0) {
+            console.log('Updating user card with:', data.users[0]);
             selectUser(data.users[0]);
+            console.log('User card updated');
+          } else {
+            console.error('No user data returned from search');
           }
           await loadAllUsers();
           
