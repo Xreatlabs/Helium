@@ -876,20 +876,26 @@ module.exports.load = async function (app, db) {
 
       if (ramstring) {
         let ram = parseFloat(ramstring);
+        log(`setresources RAM`, `input=${ramstring}, parsed=${ram}, current=${extra.ram}, isNegative=${ram < 0}`);
         if (ram < -999999999999999 || ram > 999999999999999) {
           return res.redirect(`${failredirect}?err=RAMSIZE`);
         }
         // If negative, subtract from current value; otherwise set to exact value
-        extra.ram = ram < 0 ? Math.max(0, extra.ram + ram) : ram;
+        const newRam = ram < 0 ? Math.max(0, extra.ram + ram) : ram;
+        log(`setresources RAM result`, `new value=${newRam} (${ram < 0 ? 'subtract' : 'set'})`);
+        extra.ram = newRam;
       }
 
       if (diskstring) {
         let disk = parseFloat(diskstring);
+        console.log(`[setresources] Disk: input=${diskstring}, parsed=${disk}, current=${extra.disk}`);
         if (disk < -999999999999999 || disk > 999999999999999) {
           return res.redirect(`${failredirect}?err=DISKSIZE`);
         }
         // If negative, subtract from current value; otherwise set to exact value
-        extra.disk = disk < 0 ? Math.max(0, extra.disk + disk) : disk;
+        const newDisk = disk < 0 ? Math.max(0, extra.disk + disk) : disk;
+        console.log(`[setresources] Disk: new value=${newDisk} (${disk < 0 ? 'subtract' : 'set'})`);
+        extra.disk = newDisk;
       }
 
       if (cpustring) {

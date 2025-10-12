@@ -1188,18 +1188,22 @@
         
         const response = await fetch(`/setresources?${params.toString()}`);
         if (response.redirected || response.ok) {
-          alert(`Successfully set resources for ${selectedUser.username}`);
           document.getElementById('resource-ram').value = '';
           document.getElementById('resource-disk').value = '';
           document.getElementById('resource-cpu').value = '';
           document.getElementById('resource-servers').value = '';
-          // Refresh user data
+          
+          // Wait a moment for database to update, then refresh user data
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
           const data = await searchResponse.json();
           if (data.users && data.users.length > 0) {
             selectUser(data.users[0]);
           }
-          loadAllUsers();
+          await loadAllUsers();
+          
+          alert(`Successfully updated resources for ${selectedUser.username}!`);
         }
       } catch (err) {
         console.error('Failed to set resources:', err);
