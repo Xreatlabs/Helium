@@ -1179,7 +1179,14 @@
       }
 
       try {
-        const response = await fetch(`/setresources?id=${selectedUser.id}&ram=${ram}&disk=${disk}&cpu=${cpu}&servers=${servers}`);
+        // Only pass parameters that have values
+        const params = new URLSearchParams({ id: selectedUser.id });
+        if (ramInput) params.append('ram', ram);
+        if (diskInput) params.append('disk', disk);
+        if (cpuInput) params.append('cpu', cpu);
+        if (serversInput) params.append('servers', servers);
+        
+        const response = await fetch(`/setresources?${params.toString()}`);
         if (response.redirected || response.ok) {
           alert(`Successfully set resources for ${selectedUser.username}`);
           document.getElementById('resource-ram').value = '';
