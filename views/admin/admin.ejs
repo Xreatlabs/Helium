@@ -1190,28 +1190,54 @@
         
         const response = await fetch(`/setresources?${params.toString()}`);
         if (response.redirected || response.ok) {
+          // Clear input fields
           document.getElementById('resource-ram').value = '';
           document.getElementById('resource-disk').value = '';
           document.getElementById('resource-cpu').value = '';
           document.getElementById('resource-servers').value = '';
           
-          // Wait for database to update across cluster workers, then refresh user data
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Calculate and update UI immediately with expected values
+          const currentResources = { ...selectedUser.resources };
+          console.log('Current resources before update:', currentResources);
           
-          // Force fresh data with cache busting
-          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}&_=${Date.now()}`);
-          const data = await searchResponse.json();
-          console.log('Refresh data received:', data);
-          if (data.users && data.users.length > 0) {
-            console.log('Updating user card with:', data.users[0]);
-            selectUser(data.users[0]);
-            console.log('User card updated');
-          } else {
-            console.error('No user data returned from search');
+          // Update the expected values based on what we sent
+          if (ramInput) {
+            currentResources.ram = ram < 0 ? Math.max(0, currentResources.ram + ram) : ram;
           }
-          await loadAllUsers();
+          if (diskInput) {
+            currentResources.disk = disk < 0 ? Math.max(0, currentResources.disk + disk) : disk;
+          }
+          if (cpuInput) {
+            currentResources.cpu = cpu < 0 ? Math.max(0, currentResources.cpu + cpu) : cpu;
+          }
+          if (serversInput) {
+            currentResources.servers = servers < 0 ? Math.max(0, currentResources.servers + servers) : servers;
+          }
           
+          console.log('Calculated new resources:', currentResources);
+          
+          // Update the displayed values immediately
+          document.getElementById('selected-user-ram').textContent = `${currentResources.ram} MB`;
+          document.getElementById('selected-user-disk').textContent = `${currentResources.disk} MB`;
+          document.getElementById('selected-user-cpu').textContent = `${currentResources.cpu}%`;
+          document.getElementById('selected-user-servers').textContent = currentResources.servers;
+          
+          // Update selectedUser object so future operations use correct values
+          selectedUser.resources = currentResources;
+          
+          // Show success message
           alert(`Successfully updated resources for ${selectedUser.username}!`);
+          
+          // Refresh data in background to sync with server
+          setTimeout(async () => {
+            const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}&_=${Date.now()}`);
+            const data = await searchResponse.json();
+            console.log('Background refresh data received:', data);
+            if (data.users && data.users.length > 0) {
+              selectUser(data.users[0]);
+            }
+            loadAllUsers();
+          }, 1000);
         }
       } catch (err) {
         console.error('Failed to set resources:', err);
