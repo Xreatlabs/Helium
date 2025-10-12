@@ -1193,10 +1193,11 @@
           document.getElementById('resource-cpu').value = '';
           document.getElementById('resource-servers').value = '';
           
-          // Wait a moment for database to update, then refresh user data
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait for database to update across cluster workers, then refresh user data
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}`);
+          // Force fresh data with cache busting
+          const searchResponse = await fetch(`/admin/users/search?q=${selectedUser.id}&_=${Date.now()}`);
           const data = await searchResponse.json();
           if (data.users && data.users.length > 0) {
             selectUser(data.users[0]);
