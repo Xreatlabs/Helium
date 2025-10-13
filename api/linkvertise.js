@@ -84,6 +84,17 @@ module.exports.load = function(app, db) {
 
     const userId = req.session.userinfo.id;
 
+    // Check daily limit
+    const dailyLimit = Number(cfg.dailyLimit) || 0;
+    if (dailyLimit > 0) {
+      const hasReachedLimit = await linkvertiseService.hasReachedDailyLimit(userId, dailyLimit);
+      if (hasReachedLimit) {
+        const usageCount = await linkvertiseService.getDailyUsageCount(userId);
+        console.log(`[Linkvertise] User ${userId} has reached daily limit (${usageCount}/${dailyLimit})`);
+        return res.redirect(`/linkvertise?error=daily_limit_reached&limit=${dailyLimit}`);
+      }
+    }
+
     const token = await linkvertiseService.createCallbackToken(userId);
     if (!token) {
       return res.redirect('/linkvertise?err=failed_to_create_token');
@@ -142,6 +153,9 @@ module.exports.load = function(app, db) {
       console.log(`[Linkvertise] Token validation failed for user ${sessionUserId}: ${validation.reason}`);
       return res.redirect(`/dashboard?err=LINKVERTISE_TOKEN_INVALID`);
     }
+
+    // Track daily usage
+    await linkvertiseService.trackDailyUsage(sessionUserId);
 
     const reward = Number(cfg.rewardCoins || 10);
     const currentCoins = (await db.get(`coins-${sessionUserId}`)) || 0;

@@ -322,7 +322,9 @@
         "baseUrl": "https://link-to.net",
         "domain": "http://localhost:3000",
         "rewardCoins": 10,
-        "cooldownTime": 3600
+        "cooldownTime": 3600,
+        "dailyLimit": 5,
+        "_dailyLimit_note": "Maximum number of times a user can use Linkvertise per day (0 = unlimited)"
       }
     },
     "afk": {
