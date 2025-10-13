@@ -143,6 +143,7 @@
                       <button onclick="showTab('general')" class="sub-tab-button active block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">General</button>
                       <button onclick="showTab('announcement')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Announcement</button>
                       <button onclick="showTab('socialmedia')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Social Media</button>
+                      <button onclick="showTab('theme')" class="sub-tab-button block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg">Theme</button>
                     </div>
                   </div>
 
@@ -476,6 +477,365 @@
                 <form id="form-socialmedia" onsubmit="saveSocialMedia(event)">
                   <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                     Save Social Media Links
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div id="tab-theme" class="tab-content hidden">
+              <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Theme & Appearance</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Customize the visual appearance of your dashboard</p>
+                
+                <div class="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <p class="text-sm text-purple-800 dark:text-purple-200">🎨 <strong>Note:</strong> Theme changes may require a page refresh to take full effect. Custom CSS will override default styles.</p>
+                </div>
+
+                <form id="form-theme" onsubmit="saveSettings(event, 'theme')">
+                  <div class="space-y-6">
+                    <!-- Branding -->
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Branding</h4>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo URL</label>
+                          <input type="text" name="theme.branding.logo" value="<%= settings.theme?.branding?.logo || '' %>" 
+                            placeholder="/assets/logo.png"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Path to your logo image (displayed in navigation)</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favicon URL</label>
+                          <input type="text" name="theme.branding.favicon" value="<%= settings.theme?.branding?.favicon || '' %>" 
+                            placeholder="/assets/favicon.png"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Path to your favicon (browser tab icon)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Color Scheme -->
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Color Scheme</h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Primary Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.primary" value="<%= settings.theme?.colors?.primary || '#3b82f6' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.primary || '#3b82f6' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#3b82f6">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Main brand color (buttons, links)</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accent Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.accent" value="<%= settings.theme?.colors?.accent || '#8b5cf6' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.accent || '#8b5cf6' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#8b5cf6">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Secondary highlight color</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Success Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.success" value="<%= settings.theme?.colors?.success || '#10b981' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.success || '#10b981' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#10b981">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Success messages and positive actions</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Warning Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.warning" value="<%= settings.theme?.colors?.warning || '#f59e0b' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.warning || '#f59e0b' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#f59e0b">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Warning messages and caution states</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Error Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.error" value="<%= settings.theme?.colors?.error || '#ef4444' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.error || '#ef4444' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#ef4444">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Error messages and destructive actions</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Info Color</label>
+                          <div class="flex gap-2">
+                            <input type="color" name="theme.colors.info" value="<%= settings.theme?.colors?.info || '#06b6d4' %>" 
+                              class="h-10 w-20 rounded border border-gray-300 dark:border-gray-600">
+                            <input type="text" value="<%= settings.theme?.colors?.info || '#06b6d4' %>" 
+                              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="#06b6d4">
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Informational messages and hints</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Typography -->
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Typography</h4>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Font Family</label>
+                          <select name="theme.typography.fontFamily" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Inter" <%= (settings.theme?.typography?.fontFamily || 'Inter') === 'Inter' ? 'selected' : '' %>>Inter (Default)</option>
+                            <option value="Roboto" <%= settings.theme?.typography?.fontFamily === 'Roboto' ? 'selected' : '' %>>Roboto</option>
+                            <option value="Open Sans" <%= settings.theme?.typography?.fontFamily === 'Open Sans' ? 'selected' : '' %>>Open Sans</option>
+                            <option value="Lato" <%= settings.theme?.typography?.fontFamily === 'Lato' ? 'selected' : '' %>>Lato</option>
+                            <option value="Montserrat" <%= settings.theme?.typography?.fontFamily === 'Montserrat' ? 'selected' : '' %>>Montserrat</option>
+                            <option value="Poppins" <%= settings.theme?.typography?.fontFamily === 'Poppins' ? 'selected' : '' %>>Poppins</option>
+                            <option value="system-ui" <%= settings.theme?.typography?.fontFamily === 'system-ui' ? 'selected' : '' %>>System UI</option>
+                          </select>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose the primary font for your dashboard</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Font URL (Google Fonts)</label>
+                          <input type="text" name="theme.typography.fontUrl" value="<%= settings.theme?.typography?.fontUrl || '' %>" 
+                            placeholder="https://fonts.googleapis.com/css2?family=..."
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional: Load custom font from Google Fonts or other CDN</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Dark Mode -->
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Dark Mode Settings</h4>
+                      <div class="space-y-4">
+                        <div class="flex items-center">
+                          <input type="checkbox" name="theme.darkMode.enabled" <%= (settings.theme?.darkMode?.enabled !== false) ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Dark Mode Toggle</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="checkbox" name="theme.darkMode.default" <%= settings.theme?.darkMode?.default ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Use Dark Mode by Default</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="checkbox" name="theme.darkMode.respectSystemPreference" <%= (settings.theme?.darkMode?.respectSystemPreference !== false) ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Respect System Dark Mode Preference</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom CSS -->
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Custom CSS</h4>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom CSS Code</label>
+                        <textarea name="theme.customCSS" rows="10"
+                          placeholder="/* Add your custom CSS here */
+.card {
+  border-radius: 1rem;
+}
+
+.button-primary {
+  background-color: #your-color;
+}"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 font-mono text-sm"><%= settings.theme?.customCSS || '' %></textarea>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">⚠️ Advanced: Add custom CSS to override default styles. Use with caution.</p>
+                      </div>
+                    </div>
+
+                    <!-- Background & Effects -->
+                    <div class="pb-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Background & Effects</h4>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Image URL</label>
+                          <input type="text" name="theme.background.image" value="<%= settings.theme?.background?.image || '' %>" 
+                            placeholder="https://example.com/background.jpg"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional: Set a custom background image for the dashboard</p>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Blur</label>
+                          <select name="theme.background.blur" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            <option value="none" <%= (settings.theme?.background?.blur || 'none') === 'none' ? 'selected' : '' %>>None</option>
+                            <option value="sm" <%= settings.theme?.background?.blur === 'sm' ? 'selected' : '' %>>Small</option>
+                            <option value="md" <%= settings.theme?.background?.blur === 'md' ? 'selected' : '' %>>Medium</option>
+                            <option value="lg" <%= settings.theme?.background?.blur === 'lg' ? 'selected' : '' %>>Large</option>
+                          </select>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Apply blur effect to background image</p>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="checkbox" name="theme.effects.animations" <%= (settings.theme?.effects?.animations !== false) ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Animations & Transitions</label>
+                        </div>
+                        <div class="flex items-center">
+                          <input type="checkbox" name="theme.effects.shadows" <%= (settings.theme?.effects?.shadows !== false) ? 'checked' : '' %> 
+                            class="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+                          <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Enable Shadows</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Festive Themes -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">🎉 Festive Themes</h4>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Enable special festive themes with animated effects for celebrations</p>
+                      
+                      <!-- Halloween Theme -->
+                      <div class="mb-6 p-4 border border-orange-200 dark:border-orange-800 rounded-lg bg-gradient-to-r from-orange-50 to-purple-50 dark:from-orange-900/20 dark:to-purple-900/20">
+                        <div class="flex items-start gap-4">
+                          <div class="flex-shrink-0 text-4xl">🎃</div>
+                          <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                              <h5 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Halloween Theme</h5>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="theme.festive.halloween.enabled" <%= settings.theme?.festive?.halloween?.enabled ? 'checked' : '' %> 
+                                  class="sr-only peer"
+                                  onchange="document.getElementById('halloween-options').style.display = this.checked ? 'block' : 'none'">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
+                              </label>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              Spooky Halloween theme with pumpkins, ghosts, bats, and eerie effects
+                            </p>
+                            
+                            <div id="halloween-options" style="display: <%= settings.theme?.festive?.halloween?.enabled ? 'block' : 'none' %>;" class="space-y-3 pl-4 border-l-2 border-orange-400">
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.floatingPumpkins" <%= settings.theme?.festive?.halloween?.effects?.floatingPumpkins !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Floating Pumpkins 🎃</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.flyingBats" <%= settings.theme?.festive?.halloween?.effects?.flyingBats !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Flying Bats 🦇</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.ghosts" <%= settings.theme?.festive?.halloween?.effects?.ghosts !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Floating Ghosts 👻</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.spiderWebs" <%= settings.theme?.festive?.halloween?.effects?.spiderWebs !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Spider Webs 🕸️</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.darkOverlay" <%= settings.theme?.festive?.halloween?.effects?.darkOverlay !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Dark Spooky Overlay</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.halloween.effects.glowingText" <%= settings.theme?.festive?.halloween?.effects?.glowingText !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-orange-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Orange Glowing Text Effects</label>
+                              </div>
+                              <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Effect Intensity</label>
+                                <select name="theme.festive.halloween.intensity" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+                                  <option value="low" <%= (settings.theme?.festive?.halloween?.intensity || 'medium') === 'low' ? 'selected' : '' %>>Low</option>
+                                  <option value="medium" <%= (settings.theme?.festive?.halloween?.intensity || 'medium') === 'medium' ? 'selected' : '' %>>Medium</option>
+                                  <option value="high" <%= settings.theme?.festive?.halloween?.intensity === 'high' ? 'selected' : '' %>>High</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Diwali Theme -->
+                      <div class="p-4 border border-yellow-200 dark:border-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+                        <div class="flex items-start gap-4">
+                          <div class="flex-shrink-0 text-4xl">🪔</div>
+                          <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                              <h5 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Diwali Theme</h5>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="theme.festive.diwali.enabled" <%= settings.theme?.festive?.diwali?.enabled ? 'checked' : '' %> 
+                                  class="sr-only peer"
+                                  onchange="document.getElementById('diwali-options').style.display = this.checked ? 'block' : 'none'">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 dark:peer-focus:ring-yellow-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-600"></div>
+                              </label>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              Festival of Lights theme with diyas, fireworks, rangoli patterns, and vibrant colors
+                            </p>
+                            
+                            <div id="diwali-options" style="display: <%= settings.theme?.festive?.diwali?.enabled ? 'block' : 'none' %>;" class="space-y-3 pl-4 border-l-2 border-yellow-400">
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.floatingDiyas" <%= settings.theme?.festive?.diwali?.effects?.floatingDiyas !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Floating Diyas 🪔</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.fireworks" <%= settings.theme?.festive?.diwali?.effects?.fireworks !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Fireworks Animation 🎆</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.sparkles" <%= settings.theme?.festive?.diwali?.effects?.sparkles !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Golden Sparkles ✨</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.rangoli" <%= settings.theme?.festive?.diwali?.effects?.rangoli !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Rangoli Patterns 🌺</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.glowingLights" <%= settings.theme?.festive?.diwali?.effects?.glowingLights !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Glowing String Lights 💡</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.colorfulOverlay" <%= settings.theme?.festive?.diwali?.effects?.colorfulOverlay !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vibrant Color Overlay</label>
+                              </div>
+                              <div class="flex items-center">
+                                <input type="checkbox" name="theme.festive.diwali.effects.goldenGlow" <%= settings.theme?.festive?.diwali?.effects?.goldenGlow !== false ? 'checked' : '' %> 
+                                  class="h-4 w-4 text-yellow-600 rounded border-gray-300 dark:border-gray-600">
+                                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Golden Glow Effects</label>
+                              </div>
+                              <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Effect Intensity</label>
+                                <select name="theme.festive.diwali.intensity" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+                                  <option value="low" <%= (settings.theme?.festive?.diwali?.intensity || 'medium') === 'low' ? 'selected' : '' %>>Low</option>
+                                  <option value="medium" <%= (settings.theme?.festive?.diwali?.intensity || 'medium') === 'medium' ? 'selected' : '' %>>Medium</option>
+                                  <option value="high" <%= settings.theme?.festive?.diwali?.intensity === 'high' ? 'selected' : '' %>>High</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <p class="text-xs text-purple-800 dark:text-purple-200">
+                          ⚠️ <strong>Note:</strong> Festive themes add animated overlays to your dashboard. Only enable one festive theme at a time for best performance. These effects are purely cosmetic and won't affect functionality.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p class="text-xs text-blue-800 dark:text-blue-200">💡 <strong>Tip:</strong> After saving theme changes, refresh your browser to see the updates. Some changes may require clearing your browser cache.</p>
+                    </div>
+                  </div>
+                  <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                    Save Theme Settings
                   </button>
                 </form>
               </div>

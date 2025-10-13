@@ -1,0 +1,991 @@
+<%
+  // Festive Themes Component - Renders Halloween and Diwali effects
+  const halloweenEnabled = settings.theme?.festive?.halloween?.enabled || false;
+  const diwaliEnabled = settings.theme?.festive?.diwali?.enabled || false;
+  
+  const halloweenEffects = settings.theme?.festive?.halloween?.effects || {};
+  const halloweenIntensity = settings.theme?.festive?.halloween?.intensity || 'medium';
+  
+  const diwaliEffects = settings.theme?.festive?.diwali?.effects || {};
+  const diwaliIntensity = settings.theme?.festive?.diwali?.intensity || 'medium';
+%>
+
+<% if (halloweenEnabled || diwaliEnabled) { %>
+<style>
+  /* Base styles for festive themes */
+  .festive-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  .festive-element {
+    position: absolute;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  /* Halloween Theme Styles */
+  <% if (halloweenEnabled) { %>
+  
+  /* Full page spooky transformation */
+  <% if (halloweenEffects.darkOverlay !== false) { %>
+  .halloween-overlay {
+    background: radial-gradient(circle at 50% 50%, rgba(20, 20, 35, 0.4), rgba(10, 10, 20, 0.6));
+  }
+  
+  /* Page-wide Halloween theme */
+  body {
+    background-image: 
+      linear-gradient(rgba(20, 0, 30, 0.7), rgba(10, 0, 20, 0.8)),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 140, 0, 0.03) 2px,
+        rgba(255, 140, 0, 0.03) 4px
+      );
+  }
+  
+  .dark body {
+    background-image: 
+      linear-gradient(rgba(10, 0, 20, 0.9), rgba(5, 0, 10, 0.95)),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 100, 0, 0.05) 2px,
+        rgba(255, 100, 0, 0.05) 4px
+      );
+  }
+  
+  /* Cards and containers */
+  .bg-white {
+    background: linear-gradient(135deg, rgba(30, 20, 40, 0.95), rgba(20, 15, 30, 0.98)) !important;
+    border: 1px solid rgba(255, 140, 0, 0.3) !important;
+    box-shadow: 
+      0 0 20px rgba(255, 140, 0, 0.2),
+      inset 0 0 30px rgba(10, 0, 20, 0.5) !important;
+  }
+  
+  .dark .dark\:bg-gray-800 {
+    background: linear-gradient(135deg, rgba(15, 10, 25, 0.98), rgba(10, 5, 20, 1)) !important;
+    border: 1px solid rgba(255, 100, 0, 0.4) !important;
+    box-shadow: 
+      0 0 25px rgba(255, 100, 0, 0.3),
+      inset 0 0 40px rgba(5, 0, 15, 0.7) !important;
+  }
+  
+  /* Sidebar spooky styling */
+  .bg-gray-100:not(.halloween-exempt) {
+    background: linear-gradient(180deg, rgba(25, 15, 35, 0.95), rgba(15, 10, 25, 0.98)) !important;
+    border-right: 2px solid rgba(255, 140, 0, 0.4) !important;
+  }
+  
+  .dark .dark\:bg-gray-900 {
+    background: linear-gradient(180deg, rgba(10, 5, 20, 0.98), rgba(5, 0, 15, 1)) !important;
+  }
+  
+  /* Buttons with spooky glow */
+  button:not(.halloween-exempt), .btn-primary, a.bg-blue-600 {
+    background: linear-gradient(135deg, #ff6600, #cc4400) !important;
+    box-shadow: 
+      0 4px 15px rgba(255, 100, 0, 0.4),
+      0 0 20px rgba(255, 140, 0, 0.3),
+      inset 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 140, 0, 0.5) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  button:hover:not(.halloween-exempt), .btn-primary:hover {
+    background: linear-gradient(135deg, #ff8800, #dd5500) !important;
+    box-shadow: 
+      0 6px 20px rgba(255, 120, 0, 0.6),
+      0 0 30px rgba(255, 140, 0, 0.5),
+      inset 0 -2px 15px rgba(0, 0, 0, 0.4) !important;
+    transform: translateY(-2px) !important;
+  }
+  
+  /* Text with eerie glow */
+  h1, h2, h3, h4, h5, h6, .card-title {
+    color: #ff9944 !important;
+    text-shadow: 
+      0 0 10px rgba(255, 140, 0, 0.6),
+      0 0 20px rgba(255, 100, 0, 0.4),
+      0 0 30px rgba(255, 60, 0, 0.2);
+    animation: halloween-text-flicker 4s ease-in-out infinite;
+  }
+  
+  /* Body text color overrides */
+  p, span, label, .text-gray-700, .text-gray-600, .text-gray-500 {
+    color: #e0a06e !important;
+  }
+  
+  .dark p, .dark span, .dark label,
+  .dark .dark\:text-gray-200, .dark .dark\:text-gray-300, .dark .dark\:text-gray-400 {
+    color: #ffbb88 !important;
+  }
+  
+  @keyframes halloween-text-flicker {
+    0%, 100% { 
+      text-shadow: 
+        0 0 10px rgba(255, 140, 0, 0.6),
+        0 0 20px rgba(255, 100, 0, 0.4),
+        0 0 30px rgba(255, 60, 0, 0.2);
+    }
+    50% { 
+      text-shadow: 
+        0 0 15px rgba(255, 140, 0, 0.8),
+        0 0 30px rgba(255, 100, 0, 0.6),
+        0 0 45px rgba(255, 60, 0, 0.3);
+    }
+  }
+  
+  /* Input fields with spooky border */
+  input[type="text"], input[type="password"], input[type="email"], input[type="number"], textarea, select {
+    background: rgba(20, 10, 30, 0.8) !important;
+    border: 2px solid rgba(255, 140, 0, 0.4) !important;
+    color: #ffaa66 !important;
+    box-shadow: 
+      inset 0 2px 10px rgba(0, 0, 0, 0.5),
+      0 0 15px rgba(255, 140, 0, 0.2) !important;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    border-color: rgba(255, 100, 0, 0.7) !important;
+    box-shadow: 
+      inset 0 2px 10px rgba(0, 0, 0, 0.6),
+      0 0 25px rgba(255, 140, 0, 0.4) !important;
+    outline: none !important;
+  }
+  
+  /* Links with spooky hover */
+  a {
+    color: #ff9944 !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  a:hover {
+    color: #ffbb66 !important;
+    text-shadow: 0 0 10px rgba(255, 140, 0, 0.6);
+  }
+  
+  /* Halloween fog effect */
+  .halloween-fog {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(100, 50, 150, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(150, 50, 100, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(75, 0, 130, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    animation: fog-move 20s ease-in-out infinite;
+  }
+  
+  @keyframes fog-move {
+    0%, 100% { 
+      opacity: 0.4;
+      transform: translateX(0) translateY(0);
+    }
+    50% { 
+      opacity: 0.6;
+      transform: translateX(-20px) translateY(20px);
+    }
+  }
+  
+  /* Cobwebs in corners */
+  .halloween-cobweb-tl, .halloween-cobweb-tr, .halloween-cobweb-bl, .halloween-cobweb-br {
+    position: fixed;
+    font-size: 80px;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 10000;
+    filter: grayscale(1);
+  }
+  
+  .halloween-cobweb-tl { top: 0; left: 0; transform: rotate(0deg); }
+  .halloween-cobweb-tr { top: 0; right: 0; transform: rotate(90deg); }
+  .halloween-cobweb-bl { bottom: 0; left: 0; transform: rotate(-90deg); }
+  .halloween-cobweb-br { bottom: 0; right: 0; transform: rotate(180deg); }
+  <% } %>
+
+  <% if (halloweenEffects.floatingPumpkins !== false) { %>
+  .pumpkin {
+    font-size: <%= halloweenIntensity === 'high' ? '3rem' : halloweenIntensity === 'medium' ? '2.5rem' : '2rem' %>;
+    animation: float-pumpkin 8s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.7));
+  }
+
+  @keyframes float-pumpkin {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(5deg); }
+    50% { transform: translateY(0) rotate(0deg); }
+    75% { transform: translateY(-15px) rotate(-5deg); }
+  }
+  <% } %>
+
+  <% if (halloweenEffects.flyingBats !== false) { %>
+  .bat {
+    font-size: <%= halloweenIntensity === 'high' ? '2rem' : halloweenIntensity === 'medium' ? '1.5rem' : '1.2rem' %>;
+    animation: fly-bat 6s linear infinite;
+  }
+
+  @keyframes fly-bat {
+    0% { 
+      transform: translateX(-100px) translateY(0);
+      opacity: 0;
+    }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { 
+      transform: translateX(calc(100vw + 100px)) translateY(-50px);
+      opacity: 0;
+    }
+  }
+  <% } %>
+
+  <% if (halloweenEffects.ghosts !== false) { %>
+  .ghost {
+    font-size: <%= halloweenIntensity === 'high' ? '3rem' : halloweenIntensity === 'medium' ? '2.5rem' : '2rem' %>;
+    animation: float-ghost 10s ease-in-out infinite;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+  }
+
+  @keyframes float-ghost {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+    25% { transform: translateY(-30px) translateX(20px); opacity: 0.8; }
+    50% { transform: translateY(-10px) translateX(0); opacity: 0.7; }
+    75% { transform: translateY(-25px) translateX(-20px); opacity: 0.8; }
+  }
+  <% } %>
+
+  <% if (halloweenEffects.spiderWebs !== false) { %>
+  .spider-web {
+    position: absolute;
+    font-size: 4rem;
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+
+  .spider-web::after {
+    content: '🕸️';
+  }
+  <% } %>
+
+  <% if (halloweenEffects.glowingText !== false) { %>
+  .halloween-glow {
+    text-shadow: 0 0 10px rgba(255, 140, 0, 0.5), 0 0 20px rgba(255, 100, 0, 0.3);
+  }
+  <% } %>
+
+  <% } // end Halloween styles %>
+
+  /* Diwali Theme Styles */
+  <% if (diwaliEnabled) { %>
+
+  /* Full page festive transformation */
+  <% if (diwaliEffects.colorfulOverlay !== false) { %>
+  .diwali-overlay {
+    background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.1));
+  }
+  
+  /* Page-wide Diwali theme */
+  body {
+    background-image: 
+      linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.05)),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 165, 0, 0.03) 10px,
+        rgba(255, 165, 0, 0.03) 20px
+      );
+  }
+  
+  .dark body {
+    background-image: 
+      linear-gradient(135deg, rgba(255, 165, 0, 0.15), rgba(255, 100, 0, 0.1)),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 140, 0, 0.05) 10px,
+        rgba(255, 140, 0, 0.05) 20px
+      );
+  }
+  
+  /* Cards with festive golden glow */
+  .bg-white {
+    background: linear-gradient(135deg, rgba(255, 250, 240, 0.98), rgba(255, 245, 230, 1)) !important;
+    border: 2px solid rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 
+      0 0 30px rgba(255, 215, 0, 0.3),
+      0 0 50px rgba(255, 165, 0, 0.2),
+      inset 0 0 20px rgba(255, 235, 200, 0.5) !important;
+  }
+  
+  .dark .dark\:bg-gray-800 {
+    background: linear-gradient(135deg, rgba(50, 40, 20, 0.95), rgba(40, 30, 15, 1)) !important;
+    border: 2px solid rgba(255, 165, 0, 0.5) !important;
+    box-shadow: 
+      0 0 35px rgba(255, 165, 0, 0.4),
+      0 0 60px rgba(255, 140, 0, 0.3),
+      inset 0 0 25px rgba(255, 215, 0, 0.1) !important;
+  }
+  
+  /* Sidebar with golden accents */
+  .bg-gray-100:not(.diwali-exempt) {
+    background: linear-gradient(180deg, rgba(255, 248, 240, 0.95), rgba(255, 245, 235, 1)) !important;
+    border-right: 3px solid rgba(255, 215, 0, 0.5) !important;
+    box-shadow: inset -5px 0 15px rgba(255, 215, 0, 0.2) !important;
+  }
+  
+  .dark .dark\:bg-gray-900 {
+    background: linear-gradient(180deg, rgba(40, 30, 15, 0.98), rgba(30, 20, 10, 1)) !important;
+    border-right: 3px solid rgba(255, 165, 0, 0.6) !important;
+    box-shadow: inset -5px 0 20px rgba(255, 165, 0, 0.3) !important;
+  }
+  
+  /* Buttons with festive golden gradient */
+  button:not(.diwali-exempt), .btn-primary, a.bg-blue-600 {
+    background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00) !important;
+    box-shadow: 
+      0 4px 20px rgba(255, 215, 0, 0.5),
+      0 0 30px rgba(255, 165, 0, 0.4),
+      inset 0 2px 10px rgba(255, 255, 255, 0.3) !important;
+    border: 2px solid rgba(255, 215, 0, 0.6) !important;
+    color: #8B4513 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    animation: diwali-button-glow 2s ease-in-out infinite;
+  }
+  
+  @keyframes diwali-button-glow {
+    0%, 100% {
+      box-shadow: 
+        0 4px 20px rgba(255, 215, 0, 0.5),
+        0 0 30px rgba(255, 165, 0, 0.4),
+        inset 0 2px 10px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+      box-shadow: 
+        0 6px 30px rgba(255, 215, 0, 0.7),
+        0 0 45px rgba(255, 165, 0, 0.6),
+        inset 0 2px 15px rgba(255, 255, 255, 0.4);
+    }
+  }
+  
+  button:hover:not(.diwali-exempt), .btn-primary:hover {
+    background: linear-gradient(135deg, #FFE55C, #FFB347, #FF9933) !important;
+    box-shadow: 
+      0 6px 25px rgba(255, 215, 0, 0.7),
+      0 0 40px rgba(255, 165, 0, 0.6),
+      inset 0 2px 15px rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+  }
+  
+  /* Text with festive golden glow */
+  h1, h2, h3, h4, h5, h6, .card-title {
+    background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))
+            drop-shadow(0 0 25px rgba(255, 165, 0, 0.4));
+    animation: diwali-text-shimmer 3s ease-in-out infinite;
+  }
+  
+  /* Body text color overrides */
+  p, span, label, .text-gray-700, .text-gray-600, .text-gray-500 {
+    color: #8B4513 !important;
+    font-weight: 500 !important;
+  }
+  
+  .dark p, .dark span, .dark label,
+  .dark .dark\:text-gray-200, .dark .dark\:text-gray-300, .dark .dark\:text-gray-400 {
+    color: #FFD700 !important;
+  }
+  
+  @keyframes diwali-text-shimmer {
+    0%, 100% { 
+      filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))
+              drop-shadow(0 0 25px rgba(255, 165, 0, 0.4));
+    }
+    50% { 
+      filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.9))
+              drop-shadow(0 0 40px rgba(255, 165, 0, 0.6));
+    }
+  }
+  
+  /* Input fields with golden border */
+  input[type="text"], input[type="password"], input[type="email"], input[type="number"], textarea, select {
+    background: rgba(255, 250, 240, 0.9) !important;
+    border: 2px solid rgba(255, 215, 0, 0.5) !important;
+    color: #8B4513 !important;
+    box-shadow: 
+      inset 0 2px 8px rgba(255, 215, 0, 0.2),
+      0 0 20px rgba(255, 215, 0, 0.3) !important;
+  }
+  
+  .dark input[type="text"], 
+  .dark input[type="password"], 
+  .dark input[type="email"], 
+  .dark input[type="number"], 
+  .dark textarea, 
+  .dark select {
+    background: rgba(50, 40, 20, 0.9) !important;
+    color: #FFD700 !important;
+    border: 2px solid rgba(255, 165, 0, 0.6) !important;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    border-color: rgba(255, 215, 0, 0.8) !important;
+    box-shadow: 
+      inset 0 2px 10px rgba(255, 215, 0, 0.3),
+      0 0 30px rgba(255, 215, 0, 0.5),
+      0 0 45px rgba(255, 165, 0, 0.4) !important;
+    outline: none !important;
+  }
+  
+  /* Links with festive golden color */
+  a {
+    color: #FF8C00 !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  a:hover {
+    color: #FFD700 !important;
+    text-shadow: 
+      0 0 10px rgba(255, 215, 0, 0.7),
+      0 0 20px rgba(255, 165, 0, 0.5);
+  }
+  
+  /* Festive sparkle effect on hover */
+  button:hover::before, 
+  .card:hover::before,
+  .bg-white:hover::before {
+    content: '✨';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 24px;
+    animation: sparkle-float 1s ease-out;
+    pointer-events: none;
+  }
+  
+  @keyframes sparkle-float {
+    0% { 
+      opacity: 0;
+      transform: translateY(0) scale(0.5);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-10px) scale(1);
+    }
+    100% { 
+      opacity: 0;
+      transform: translateY(-20px) scale(0.8);
+    }
+  }
+  
+  /* Ambient golden light animation */
+  .diwali-ambient-glow {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 70% 70%, rgba(255, 165, 0, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(255, 140, 0, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    animation: diwali-ambient-glow-anim 8s ease-in-out infinite;
+  }
+  
+  @keyframes diwali-ambient-glow-anim {
+    0%, 100% { 
+      opacity: 0.5;
+      transform: scale(1) rotate(0deg);
+    }
+    50% { 
+      opacity: 0.8;
+      transform: scale(1.05) rotate(5deg);
+    }
+  }
+  
+  /* Rangoli corners */
+  .diwali-rangoli-bl, .diwali-rangoli-br, .diwali-rangoli-tc {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.25;
+  }
+  
+  .diwali-rangoli-bl {
+    bottom: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
+    background: 
+      radial-gradient(circle, rgba(255, 0, 100, 0.3) 0%, transparent 50%),
+      radial-gradient(circle, rgba(255, 215, 0, 0.3) 20%, transparent 60%),
+      radial-gradient(circle, rgba(0, 200, 255, 0.3) 40%, transparent 70%);
+    border-radius: 50%;
+    animation: rangoli-pulse 5s ease-in-out infinite;
+  }
+  
+  .diwali-rangoli-br {
+    bottom: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: 
+      radial-gradient(circle, rgba(255, 100, 150, 0.3) 0%, transparent 50%),
+      radial-gradient(circle, rgba(255, 165, 0, 0.3) 20%, transparent 60%),
+      radial-gradient(circle, rgba(100, 200, 255, 0.3) 40%, transparent 70%);
+    border-radius: 50%;
+    animation: rangoli-pulse 5s ease-in-out infinite 0.5s;
+  }
+  
+  .diwali-rangoli-tc {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background: 
+      radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 50%),
+      radial-gradient(circle, rgba(255, 100, 200, 0.2) 25%, transparent 60%),
+      radial-gradient(circle, rgba(100, 255, 200, 0.2) 50%, transparent 75%);
+    border-radius: 50%;
+    animation: rangoli-pulse 6s ease-in-out infinite 1s;
+  }
+  
+  @keyframes rangoli-pulse {
+    0%, 100% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 0.25;
+    }
+    50% { 
+      transform: scale(1.15) rotate(180deg);
+      opacity: 0.4;
+    }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.floatingDiyas !== false) { %>
+  .diya {
+    font-size: <%= diwaliIntensity === 'high' ? '3rem' : diwaliIntensity === 'medium' ? '2.5rem' : '2rem' %>;
+    animation: float-diya 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+  }
+
+  @keyframes float-diya {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-25px) scale(1.05); }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.fireworks !== false) { %>
+  .firework {
+    font-size: <%= diwaliIntensity === 'high' ? '3rem' : diwaliIntensity === 'medium' ? '2.5rem' : '2rem' %>;
+    animation: burst-firework 3s ease-out infinite;
+  }
+
+  @keyframes burst-firework {
+    0% { 
+      transform: scale(0) rotate(0deg);
+      opacity: 0;
+    }
+    20% {
+      transform: scale(1) rotate(180deg);
+      opacity: 1;
+    }
+    100% { 
+      transform: scale(1.5) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.sparkles !== false) { %>
+  .sparkle {
+    font-size: <%= diwaliIntensity === 'high' ? '2rem' : diwaliIntensity === 'medium' ? '1.5rem' : '1.2rem' %>;
+    animation: twinkle 2s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.rangoli !== false) { %>
+  .rangoli {
+    position: absolute;
+    font-size: 5rem;
+    opacity: 0.2;
+    animation: fade-rangoli 8s ease-in-out infinite;
+  }
+
+  @keyframes fade-rangoli {
+    0%, 100% { opacity: 0.1; transform: rotate(0deg); }
+    50% { opacity: 0.3; transform: rotate(180deg); }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.glowingLights !== false) { %>
+  .string-light {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    top: 10px;
+    animation: glow-light 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-light {
+    from { 
+      box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+      opacity: 0.6;
+    }
+    to { 
+      box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+      opacity: 1;
+    }
+  }
+  <% } %>
+
+  <% if (diwaliEffects.goldenGlow !== false) { %>
+  .diwali-glow {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 165, 0, 0.4);
+  }
+  <% } %>
+
+  <% } // end Diwali styles %>
+</style>
+
+<!-- Festive Elements Container -->
+<div class="festive-overlay <%= halloweenEnabled ? 'halloween-overlay' : '' %> <%= diwaliEnabled ? 'diwali-overlay' : '' %>">
+  
+  <!-- Halloween Elements -->
+  <% if (halloweenEnabled) { %>
+    
+    <!-- Fog effect -->
+    <div class="halloween-fog"></div>
+    
+    <!-- Cobwebs in corners -->
+    <div class="halloween-cobweb-tl">🕸️</div>
+    <div class="halloween-cobweb-tr">🕸️</div>
+    <div class="halloween-cobweb-bl">🕸️</div>
+    <div class="halloween-cobweb-br">🕸️</div>
+    
+    <% if (halloweenEffects.spiderWebs !== false) { %>
+      <div class="spider-web" style="top: 5%; left: 5%;"></div>
+      <div class="spider-web" style="top: 8%; right: 10%;"></div>
+      <div class="spider-web" style="bottom: 15%; left: 8%;"></div>
+      <div class="spider-web" style="bottom: 10%; right: 5%;"></div>
+    <% } %>
+
+    <script>
+      (function() {
+        const container = document.querySelector('.festive-overlay');
+        const intensity = '<%= halloweenIntensity %>';
+        const count = intensity === 'high' ? 15 : intensity === 'medium' ? 10 : 6;
+
+        <% if (halloweenEffects.floatingPumpkins !== false) { %>
+        // Create floating pumpkins
+        for (let i = 0; i < Math.floor(count * 0.4); i++) {
+          const pumpkin = document.createElement('div');
+          pumpkin.className = 'festive-element pumpkin';
+          pumpkin.textContent = '🎃';
+          pumpkin.style.left = Math.random() * 100 + '%';
+          pumpkin.style.top = Math.random() * 80 + 10 + '%';
+          pumpkin.style.animationDelay = Math.random() * 3 + 's';
+          container.appendChild(pumpkin);
+        }
+        <% } %>
+
+        <% if (halloweenEffects.flyingBats !== false) { %>
+        // Create flying bats
+        for (let i = 0; i < Math.floor(count * 0.3); i++) {
+          const bat = document.createElement('div');
+          bat.className = 'festive-element bat';
+          bat.textContent = '🦇';
+          bat.style.top = Math.random() * 70 + '%';
+          bat.style.animationDelay = Math.random() * 5 + 's';
+          bat.style.animationDuration = (4 + Math.random() * 4) + 's';
+          container.appendChild(bat);
+        }
+        <% } %>
+
+        <% if (halloweenEffects.ghosts !== false) { %>
+        // Create floating ghosts
+        for (let i = 0; i < Math.floor(count * 0.3); i++) {
+          const ghost = document.createElement('div');
+          ghost.className = 'festive-element ghost';
+          ghost.textContent = '👻';
+          ghost.style.left = Math.random() * 100 + '%';
+          ghost.style.top = Math.random() * 80 + '%';
+          ghost.style.animationDelay = Math.random() * 4 + 's';
+          container.appendChild(ghost);
+        }
+        <% } %>
+      })();
+    </script>
+  <% } // end Halloween elements %>
+
+  <!-- Diwali Elements -->
+  <% if (diwaliEnabled) { %>
+    
+    <!-- Ambient golden glow -->
+    <div class="diwali-ambient-glow"></div>
+    
+    <!-- Rangoli decorations -->
+    <div class="diwali-rangoli-bl"></div>
+    <div class="diwali-rangoli-br"></div>
+    <div class="diwali-rangoli-tc"></div>
+    
+    <% if (diwaliEffects.rangoli !== false) { %>
+      <div class="rangoli" style="bottom: 5%; left: 10%;">🌺</div>
+      <div class="rangoli" style="bottom: 5%; right: 10%;">🌸</div>
+      <div class="rangoli" style="top: 5%; left: 15%;">🏵️</div>
+      <div class="rangoli" style="top: 5%; right: 15%;">🌼</div>
+    <% } %>
+
+    <script>
+      (function() {
+        const container = document.querySelector('.festive-overlay');
+        const intensity = '<%= diwaliIntensity %>';
+        const count = intensity === 'high' ? 20 : intensity === 'medium' ? 12 : 8;
+
+        <% if (diwaliEffects.floatingDiyas !== false) { %>
+        // Create floating diyas
+        for (let i = 0; i < Math.floor(count * 0.3); i++) {
+          const diya = document.createElement('div');
+          diya.className = 'festive-element diya';
+          diya.textContent = '🪔';
+          diya.style.left = Math.random() * 100 + '%';
+          diya.style.top = Math.random() * 80 + 10 + '%';
+          diya.style.animationDelay = Math.random() * 3 + 's';
+          container.appendChild(diya);
+        }
+        <% } %>
+
+        <% if (diwaliEffects.fireworks !== false) { %>
+        // Create fireworks
+        for (let i = 0; i < Math.floor(count * 0.25); i++) {
+          const firework = document.createElement('div');
+          firework.className = 'festive-element firework';
+          firework.textContent = '🎆';
+          firework.style.left = Math.random() * 100 + '%';
+          firework.style.top = Math.random() * 50 + '%';
+          firework.style.animationDelay = Math.random() * 3 + 's';
+          container.appendChild(firework);
+        }
+        <% } %>
+
+        <% if (diwaliEffects.sparkles !== false) { %>
+        // Create sparkles
+        for (let i = 0; i < Math.floor(count * 0.4); i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'festive-element sparkle';
+          sparkle.textContent = '✨';
+          sparkle.style.left = Math.random() * 100 + '%';
+          sparkle.style.top = Math.random() * 100 + '%';
+          sparkle.style.animationDelay = Math.random() * 2 + 's';
+          container.appendChild(sparkle);
+        }
+        <% } %>
+
+        <% if (diwaliEffects.glowingLights !== false) { %>
+        // Create string lights across top
+        const colors = ['#FFD700', '#FF6347', '#00FF00', '#00BFFF', '#FF1493', '#FF8C00'];
+        const lightCount = intensity === 'high' ? 30 : intensity === 'medium' ? 20 : 12;
+        const spacing = 100 / lightCount;
+        
+        for (let i = 0; i < lightCount; i++) {
+          const light = document.createElement('div');
+          light.className = 'string-light';
+          light.style.left = (i * spacing) + '%';
+          light.style.color = colors[Math.floor(Math.random() * colors.length)];
+          light.style.animationDelay = (Math.random() * 1) + 's';
+          container.appendChild(light);
+        }
+        <% } %>
+      })();
+    </script>
+  <% } // end Diwali elements %>
+</div>
+
+<% if (halloweenEnabled && halloweenEffects.glowingText !== false) { %>
+<style>
+  h1, h2, h3, .card-title {
+    animation: halloween-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes halloween-pulse {
+    0%, 100% { text-shadow: 0 0 5px rgba(255, 140, 0, 0.3); }
+    50% { text-shadow: 0 0 15px rgba(255, 140, 0, 0.6), 0 0 25px rgba(255, 100, 0, 0.4); }
+  }
+</style>
+<% } %>
+
+<% if (diwaliEnabled && diwaliEffects.goldenGlow !== false) { %>
+<style>
+  h1, h2, h3, .card-title {
+    animation: diwali-glow 3s ease-in-out infinite;
+  }
+  
+  @keyframes diwali-glow {
+    0%, 100% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); }
+    50% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 165, 0, 0.5); }
+  }
+</style>
+<% } %>
+
+<!-- Interactive Theme Features -->
+<% if (halloweenEnabled || diwaliEnabled) { %>
+<script>
+  (function() {
+    // Welcome notification
+    setTimeout(() => {
+      const themeName = <%= halloweenEnabled ? "'Halloween'" : "'Diwali'" %>;
+      const emoji = <%= halloweenEnabled ? "'🎃'" : "'🪔'" %>;
+      
+      // Create notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: <%= halloweenEnabled ? "linear-gradient(135deg, rgba(255, 100, 0, 0.95), rgba(200, 50, 0, 0.98))" : "linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 165, 0, 0.98))" %>;
+        color: <%= halloweenEnabled ? "#fff" : "#8B4513" %>;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        font-size: 16px;
+        font-weight: 600;
+        z-index: 100000;
+        animation: slideInRight 0.5s ease-out, fadeOut 0.5s ease-in 4.5s forwards;
+        border: 2px solid <%= halloweenEnabled ? "rgba(255, 140, 0, 0.6)" : "rgba(255, 215, 0, 0.8)" %>;
+      `;
+      notification.innerHTML = `${emoji} ${themeName} Theme Active! ${emoji}`;
+      document.body.appendChild(notification);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+      
+      // Add animations
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideInRight {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeOut {
+          to {
+            opacity: 0;
+            transform: translateX(400px);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }, 1000);
+    
+    // Cursor trail effect
+    <% if (halloweenEnabled) { %>
+    const cursorEmojis = ['🎃', '👻', '🦇', '💀', '🕷️'];
+    <% } else { %>
+    const cursorEmojis = ['✨', '🪔', '🎆', '💫', '🌟'];
+    <% } %>
+    
+    let lastCursorTime = 0;
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastCursorTime < 100) return; // Throttle
+      lastCursorTime = now;
+      
+      if (Math.random() < 0.3) { // 30% chance
+        const trail = document.createElement('div');
+        const emoji = cursorEmojis[Math.floor(Math.random() * cursorEmojis.length)];
+        trail.textContent = emoji;
+        trail.style.cssText = `
+          position: fixed;
+          left: ${e.clientX}px;
+          top: ${e.clientY}px;
+          pointer-events: none;
+          font-size: 20px;
+          z-index: 99999;
+          animation: cursor-trail 1s ease-out forwards;
+          transform: translate(-50%, -50%);
+        `;
+        document.body.appendChild(trail);
+        
+        setTimeout(() => trail.remove(), 1000);
+      }
+    });
+    
+    // Add cursor trail animation
+    if (!document.getElementById('cursor-trail-animation')) {
+      const style = document.createElement('style');
+      style.id = 'cursor-trail-animation';
+      style.textContent = `
+        @keyframes cursor-trail {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -100px) scale(0.3) rotate(360deg);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Page entrance animation
+    document.body.style.animation = 'pageEntrance 0.8s ease-out';
+    const entranceStyle = document.createElement('style');
+    entranceStyle.textContent = `
+      @keyframes pageEntrance {
+        from {
+          opacity: 0;
+          filter: blur(10px);
+        }
+        to {
+          opacity: 1;
+          filter: blur(0);
+        }
+      }
+    `;
+    document.head.appendChild(entranceStyle);
+  })();
+</script>
+<% } %>
+
+<% } // end if any festive theme enabled %>
