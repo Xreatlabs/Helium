@@ -233,13 +233,13 @@ module.exports.load = function (app, db) {
         email: discordUser.email,
         global_name: discordUser.global_name || discordUser.username
       };
-      req.session.pterodactylId = pterodactylUser.id;
+      req.session.pterodactylId = pterodactylUser.attributes.id;
       
       // Sync admin status with panel
-      await syncAdminStatus(pterodactylUser, discordUser.id, db);
+      await syncAdminStatus(pterodactylUser.attributes, discordUser.id, db);
       
       // Store Pterodactyl user ID for this Discord user
-      await db.set(`users-${discordUser.id}`, pterodactylUser.id);
+      await db.set(`users-${discordUser.id}`, pterodactylUser.attributes.id);
       
       // Store Discord user data separately
       await db.set(`userinfo-${discordUser.id}`, {
@@ -260,13 +260,12 @@ module.exports.load = function (app, db) {
       
       // Structure pterodactyl data to match template expectations
       req.session.pterodactyl = {
-        ...pterodactylUser,
-        relationships: {
+        ...pterodactylUser.attributes,
+        relationships: pterodactylUser.relationships || {
           servers: {
-            data: pterodactylUser.servers || []
+            data: []
           }
-        },
-        servers: pterodactylUser.servers || []
+        }
       };
       
       req.session.authenticated = true;
@@ -320,7 +319,7 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       try {
         const data = await response.json();
         console.log(`[OAuth] Existing Pterodactyl account found: ID ${existingId}`);
-        return data.attributes;
+        return data.data;
       } catch (jsonError) {
         console.error(`[OAuth] Failed to parse Pterodactyl response for user ${existingId}:`, jsonError);
         console.error(`[OAuth] Response status: ${response.status}, Response text: ${await response.text()}`);
@@ -375,7 +374,7 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
         });
         
         console.log(`[OAuth] Linked existing Pterodactyl account: ID ${userId}`);
-        return matches[0].attributes;
+        return matches[0];
       }
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse search response:`, jsonError);
@@ -452,7 +451,7 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
         username: discordUser.username
       }).catch(err => console.error('Webhook error:', err));
       
-      return data.attributes;
+      return data.data;
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse Pterodactyl create response:`, jsonError);
     }
