@@ -313,6 +313,110 @@
             "cost": 100,
             "per": 2
           }
+        },
+        "transfer": {
+          "enabled": true,
+          "tax": {
+            "enabled": true,
+            "percentage": 5,
+            "_note": "Percentage of the transfer amount that is taken as tax (0-100)"
+          }
+        },
+        "dailyRewards": {
+          "_comment": "Daily login rewards system - encourage users to return daily",
+          "enabled": false,
+          "baseReward": 10,
+          "_baseReward_note": "Base coins awarded for daily login",
+          "streakBonus": {
+            "enabled": true,
+            "bonusPerDay": 5,
+            "_bonusPerDay_note": "Additional coins per day of streak (e.g., day 5 = 10 base + 25 bonus)",
+            "maxStreak": 30,
+            "_maxStreak_note": "Maximum streak days for bonus calculation"
+          },
+          "milestoneRewards": {
+            "_comment": "Special rewards at streak milestones",
+            "enabled": true,
+            "milestones": {
+              "7": {
+                "coins": 100,
+                "ram": 512,
+                "disk": 0,
+                "cpu": 0
+              },
+              "14": {
+                "coins": 200,
+                "ram": 1024,
+                "disk": 2048,
+                "cpu": 0
+              },
+              "30": {
+                "coins": 500,
+                "ram": 2048,
+                "disk": 5120,
+                "cpu": 50
+              }
+            }
+          }
+        },
+        "lottery": {
+          "_comment": "Lottery/Raffle system where users buy tickets for a chance to win prizes",
+          "enabled": false,
+          "ticketCost": 50,
+          "_ticketCost_note": "Cost per lottery ticket in coins",
+          "maxTicketsPerUser": 10,
+          "_maxTicketsPerUser_note": "Maximum tickets one user can buy per round",
+          "roundDuration": 7,
+          "_roundDuration_note": "Days each lottery round lasts",
+          "autoStart": true,
+          "_autoStart_note": "Automatically start new rounds when previous round ends",
+          "prizeDistribution": {
+            "_comment": "How prize pool is distributed to winner",
+            "coinsPercentage": 80,
+            "_coinsPercentage_note": "Percentage of ticket sales given as coin prize (20% house edge)",
+            "bonusResources": {
+              "ram": 1024,
+              "disk": 5120,
+              "cpu": 100
+            }
+          },
+          "minTicketsToDrawin": 10,
+          "_minTicketsToDrawin_note": "Minimum tickets sold before a winner can be drawn"
+        },
+        "marketplace": {
+          "_comment": "User-to-user trading marketplace for resources and coins",
+          "enabled": false,
+          "tradingFee": 5,
+          "_tradingFee_note": "Percentage fee charged on marketplace sales (0-100)",
+          "listingDuration": 7,
+          "_listingDuration_note": "Days a listing stays active before expiring",
+          "minPrice": 1,
+          "_minPrice_note": "Minimum price in coins for a listing",
+          "maxActiveListings": 10,
+          "_maxActiveListings_note": "Maximum active listings per user",
+          "allowedResources": {
+            "_comment": "Which resources can be traded on marketplace",
+            "ram": true,
+            "disk": true,
+            "cpu": true,
+            "servers": false,
+            "_servers_note": "Server slots typically not tradeable"
+          },
+          "priceRanges": {
+            "_comment": "Min/max prices to prevent extreme listings",
+            "ram": {
+              "minPerMB": 0.1,
+              "maxPerMB": 2
+            },
+            "disk": {
+              "minPerMB": 0.05,
+              "maxPerMB": 1
+            },
+            "cpu": {
+              "minPerPercent": 1,
+              "maxPerPercent": 10
+            }
+          }
         }
       },
       "linkvertise": {
