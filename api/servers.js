@@ -181,7 +181,7 @@ module.exports.load = async function (app, db) {
           // Check if node exists and has capacity
           try {
             const nodeResponse = await fetch(
-              `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}?include=servers`,
+              `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}`,
               {
                 headers: {
                   Authorization: `Bearer ${settings.pterodactyl.key}`,
@@ -196,11 +196,31 @@ module.exports.load = async function (app, db) {
             }
 
             const nodeData = await nodeResponse.json();
-            const currentServers = nodeData.relationships?.servers?.data?.length || 0;
+
+            // Fetch all servers and count those on this node
+            const serversResponse = await fetch(
+              `${settings.pterodactyl.domain}/api/application/servers?per_page=1000`,
+              {
+                headers: {
+                  Authorization: `Bearer ${settings.pterodactyl.key}`,
+                  Accept: "application/json",
+                },
+              }
+            );
+
+            let currentServers = 0;
+            if (serversResponse.ok) {
+              const serversData = await serversResponse.json();
+              currentServers = serversData.data.filter(
+                server => server.attributes.node === nodeId
+              ).length;
+            }
 
             // Get node limit from database
             const nodeLimit = await db.get(`node-limit-${nodeId}`);
             const limit = nodeLimit ? nodeLimit.limit : 0;
+
+            console.log(`[Server Create] Node ${nodeId} - Current: ${currentServers}, Limit: ${limit}`);
 
             // Check if node has capacity (0 = unlimited)
             if (limit > 0 && currentServers >= limit) {
@@ -210,7 +230,7 @@ module.exports.load = async function (app, db) {
           } catch (err) {
             console.error("Error checking node capacity:", err);
             cb();
-            return res.redirect(`${redirectlink}?err=NODECHECK FAILED`);
+            return res.redirect(`${redirectlink}?err=NODECHECKFAILED`);
           }
 
           let egg = req.query.egg;
@@ -365,25 +385,11 @@ module.exports.load = async function (app, db) {
               }
             }
 
-            let specs = egginfo.info;
-            specs["user"] = await db.get("users-" + req.session.userinfo.id);
-            if (!specs["limits"])
-              specs["limits"] = {
-                swap: 0,
-                io: 500,
-                backups: 0,
-              };
-            specs.name = name;
-            specs.limits.swap = -1;
-            specs.limits.memory = ram;
-            specs.limits.disk = disk;
-            specs.limits.cpu = cpu;
-            
             // Get available allocation from the selected node
             let allocations;
             try {
               const allocResponse = await fetch(
-                `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}/allocations`,
+                `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}/allocations?per_page=500`,
                 {
                   headers: {
                     Authorization: `Bearer ${settings.pterodactyl.key}`,
@@ -391,25 +397,58 @@ module.exports.load = async function (app, db) {
                   },
                 }
               );
+
+              if (!allocResponse.ok) {
+                console.error(`[Server Create] Failed to fetch allocations for node ${nodeId}: ${allocResponse.status} ${allocResponse.statusText}`);
+                cb();
+                return res.redirect(`${redirectlink}?err=ALLOCATIONFETCHFAILED`);
+              }
+
               const allocData = await allocResponse.json();
-              allocations = allocData.data.filter(alloc => !alloc.attributes.assigned);
+              console.log(`[Server Create] Node ${nodeId} - Total allocations: ${allocData.data?.length || 0}`);
+              
+              allocations = allocData.data ? allocData.data.filter(alloc => !alloc.attributes.assigned) : [];
+              console.log(`[Server Create] Node ${nodeId} - Available allocations: ${allocations.length}`);
               
               if (allocations.length === 0) {
+                console.error(`[Server Create] No available allocations on node ${nodeId}`);
                 cb();
                 return res.redirect(`${redirectlink}?err=NOALLOCATIONS`);
               }
             } catch (err) {
-              console.error("Failed to fetch allocations:", err);
+              console.error(`[Server Create] Failed to fetch allocations for node ${nodeId}:`, err);
               cb();
               return res.redirect(`${redirectlink}?err=ALLOCATIONFETCHFAILED`);
             }
+
+            // Build proper server creation specs
+            const userId = await db.get("users-" + req.session.userinfo.id);
             
-            // Use first available allocation
-            specs.allocation = allocations[0].attributes.id;
+            const specs = {
+              name: name,
+              user: userId,
+              egg: egginfo.info.egg,
+              docker_image: eggData.attributes.docker_image || "ghcr.io/pterodactyl/yolks:java_21",
+              startup: eggData.attributes.startup,
+              environment: defaultEnvironment,
+              limits: {
+                memory: ram,
+                swap: -1,
+                disk: disk,
+                io: 500,
+                cpu: cpu,
+              },
+              feature_limits: {
+                databases: egginfo.info.feature_limits?.databases || 0,
+                backups: egginfo.info.feature_limits?.backups || 0,
+                allocations: 1,
+              },
+              allocation: {
+                default: allocations[0].attributes.id
+              }
+            };
             
-            specs.docker_image = "ghcr.io/pterodactyl/yolks:java_21";
-            specs.startup = eggData.attributes.startup;
-            specs.environment = defaultEnvironment;
+            console.log(`[Server Create] Using allocation ${allocations[0].attributes.id} on node ${nodeId}`);
 
             let serverinfo = await fetch(
               settings.pterodactyl.domain + "/api/application/servers",
@@ -420,12 +459,15 @@ module.exports.load = async function (app, db) {
                   Authorization: `Bearer ${settings.pterodactyl.key}`,
                   Accept: "application/json",
                 },
-                body: JSON.stringify(await specs),
+                body: JSON.stringify(specs),
               }
             );
             await serverinfo;
             if (serverinfo.statusText !== "Created") {
-              console.log(await serverinfo.text());
+              const errorText = await serverinfo.text();
+              console.error(`[Server Create] Failed to create server. Status: ${serverinfo.status} ${serverinfo.statusText}`);
+              console.error(`[Server Create] Error response:`, errorText);
+              console.error(`[Server Create] Request body:`, JSON.stringify(specs, null, 2));
               cb();
               return res.redirect(`${redirectlink}?err=ERRORONCREATE`);
             }

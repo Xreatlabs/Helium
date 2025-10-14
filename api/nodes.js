@@ -6,6 +6,27 @@
 const settings = require("../settings.json");
 const fetch = require("node-fetch");
 
+// Helper function to check admin status
+async function checkAdmin(req, res, db) {
+  if (!req.session || !req.session.userinfo || !req.session.userinfo.id) {
+    return false;
+  }
+  // Prefer session root_admin if available
+  const isRootAdminSession =
+    !!(req.session.pterodactyl && req.session.pterodactyl.root_admin === true);
+
+  if (isRootAdminSession) return true;
+
+  // Fallback to DB flag, accepting multiple truthy representations
+  const adminStatus = await db.get(`admin-${req.session.userinfo.id}`);
+  return (
+    adminStatus === 1 ||
+    adminStatus === true ||
+    adminStatus === "1" ||
+    adminStatus === "true"
+  );
+}
+
 module.exports.load = async function (app, db) {
   
   // Fetch all nodes from Pterodactyl with current server counts
@@ -17,7 +38,7 @@ module.exports.load = async function (app, db) {
     try {
       // Fetch all nodes from Pterodactyl
       const nodesResponse = await fetch(
-        `${settings.pterodactyl.domain}/api/application/nodes?include=servers`,
+        `${settings.pterodactyl.domain}/api/application/nodes`,
         {
           headers: {
             Authorization: `Bearer ${settings.pterodactyl.key}`,
@@ -31,6 +52,30 @@ module.exports.load = async function (app, db) {
       }
 
       const nodesData = await nodesResponse.json();
+
+      // Fetch all servers to count per node
+      const serversResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers?per_page=1000`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      let serversByNode = {};
+      if (serversResponse.ok) {
+        const serversData = await serversResponse.json();
+        for (const server of serversData.data) {
+          const nodeId = server.attributes.node;
+          if (!serversByNode[nodeId]) {
+            serversByNode[nodeId] = 0;
+          }
+          serversByNode[nodeId]++;
+        }
+      }
+
       const availableNodes = [];
 
       for (const node of nodesData.data) {
@@ -42,15 +87,17 @@ module.exports.load = async function (app, db) {
         const nodeLimit = await db.get(`node-limit-${nodeId}`);
         const limit = nodeLimit ? nodeLimit.limit : 0;
         
-        // Count current servers on this node
-        const currentServers = node.relationships?.servers?.data?.length || 0;
+        // Get current server count from our map
+        const currentServers = serversByNode[nodeId] || 0;
 
         // Get location info
         let locationName = `Location ${locationId}`;
-        for (const [locKey, locValue] of Object.entries(settings.api.client.locations)) {
-          if (locValue.nodes && locValue.nodes.includes(nodeId)) {
-            locationName = locValue.name;
-            break;
+        if (settings.api.client.locations) {
+          for (const [locKey, locValue] of Object.entries(settings.api.client.locations)) {
+            if (locValue.nodes && locValue.nodes.includes(nodeId)) {
+              locationName = locValue.name;
+              break;
+            }
           }
         }
 
@@ -78,13 +125,12 @@ module.exports.load = async function (app, db) {
 
   // Admin: Set node limit
   app.post("/admin/nodes/setlimit", async (req, res) => {
-    if (!req.session.pterodactyl) {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
     // Check if user is admin
-    const userDb = await db.get("users-" + req.session.userinfo.id);
-    if (!userDb || userDb.admin !== true) {
+    if (!(await checkAdmin(req, res, db))) {
       return res.status(403).json({ error: "Admin access required" });
     }
 
@@ -153,20 +199,19 @@ module.exports.load = async function (app, db) {
 
   // Admin: Get all nodes with limits
   app.get("/admin/nodes/list", async (req, res) => {
-    if (!req.session.pterodactyl) {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
     // Check if user is admin
-    const userDb = await db.get("users-" + req.session.userinfo.id);
-    if (!userDb || userDb.admin !== true) {
+    if (!(await checkAdmin(req, res, db))) {
       return res.status(403).json({ error: "Admin access required" });
     }
 
     try {
       // Fetch all nodes from Pterodactyl
       const nodesResponse = await fetch(
-        `${settings.pterodactyl.domain}/api/application/nodes?include=servers`,
+        `${settings.pterodactyl.domain}/api/application/nodes`,
         {
           headers: {
             Authorization: `Bearer ${settings.pterodactyl.key}`,
@@ -176,10 +221,39 @@ module.exports.load = async function (app, db) {
       );
 
       if (!nodesResponse.ok) {
+        console.error("Failed to fetch nodes:", nodesResponse.status, nodesResponse.statusText);
         return res.status(500).json({ error: "Failed to fetch nodes from panel" });
       }
 
       const nodesData = await nodesResponse.json();
+
+      // Fetch all servers to count per node
+      const serversResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers?per_page=1000`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      let serversByNode = {};
+      if (serversResponse.ok) {
+        const serversData = await serversResponse.json();
+        // Count servers per node
+        for (const server of serversData.data) {
+          const nodeId = server.attributes.node;
+          if (!serversByNode[nodeId]) {
+            serversByNode[nodeId] = 0;
+          }
+          serversByNode[nodeId]++;
+        }
+        console.log(`[Nodes] Fetched ${serversData.data.length} servers and counted by node`);
+      } else {
+        console.error("Failed to fetch servers:", serversResponse.status, serversResponse.statusText);
+      }
+
       const nodesList = [];
 
       for (const node of nodesData.data) {
@@ -193,15 +267,17 @@ module.exports.load = async function (app, db) {
         const nodeLimit = await db.get(`node-limit-${nodeId}`);
         const limit = nodeLimit ? nodeLimit.limit : 0;
 
-        // Count current servers
-        const currentServers = node.relationships?.servers?.data?.length || 0;
+        // Get current server count from our map
+        const currentServers = serversByNode[nodeId] || 0;
 
-        // Get location name
+        // Get location name from settings
         let locationName = `Location ${locationId}`;
-        for (const [locKey, locValue] of Object.entries(settings.api.client.locations)) {
-          if (locValue.nodes && locValue.nodes.includes(nodeId)) {
-            locationName = locValue.name;
-            break;
+        if (settings.api.client.locations) {
+          for (const [locKey, locValue] of Object.entries(settings.api.client.locations)) {
+            if (locValue.nodes && locValue.nodes.includes(nodeId)) {
+              locationName = locValue.name;
+              break;
+            }
           }
         }
 
@@ -219,6 +295,7 @@ module.exports.load = async function (app, db) {
         });
       }
 
+      console.log(`[Nodes] Returning ${nodesList.length} nodes with server counts`);
       return res.json({ nodes: nodesList });
     } catch (err) {
       console.error("Error fetching nodes list:", err);
@@ -237,7 +314,7 @@ module.exports.load = async function (app, db) {
     try {
       // Fetch node info from Pterodactyl
       const nodeResponse = await fetch(
-        `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}?include=servers`,
+        `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}`,
         {
           headers: {
             Authorization: `Bearer ${settings.pterodactyl.key}`,
@@ -251,7 +328,25 @@ module.exports.load = async function (app, db) {
       }
 
       const nodeData = await nodeResponse.json();
-      const currentServers = nodeData.relationships?.servers?.data?.length || 0;
+
+      // Fetch all servers and count those on this node
+      const serversResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers?per_page=1000`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      let currentServers = 0;
+      if (serversResponse.ok) {
+        const serversData = await serversResponse.json();
+        currentServers = serversData.data.filter(
+          server => server.attributes.node === nodeId
+        ).length;
+      }
 
       // Get node limit
       const nodeLimit = await db.get(`node-limit-${nodeId}`);
