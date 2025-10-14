@@ -107,7 +107,7 @@ module.exports.load = async function (app, db) {
           req.query.disk &&
           req.query.cpu &&
           req.query.egg &&
-          req.query.location
+          req.query.node
         ) {
           try {
             decodeURIComponent(req.query.name);
@@ -171,31 +171,47 @@ module.exports.load = async function (app, db) {
             return res.redirect(`${redirectlink}?err=BIGSERVERNAME`);
           }
 
-          let location = req.query.location;
+          let nodeId = parseInt(req.query.node);
 
-          if (
-            Object.entries(newsettings.api.client.locations).filter(
-              (vname) => vname[0] == location
-            ).length !== 1
-          ) {
+          if (isNaN(nodeId)) {
             cb();
-            return res.redirect(`${redirectlink}?err=INVALIDLOCATION`);
+            return res.redirect(`${redirectlink}?err=INVALIDNODE`);
           }
 
-          let requiredpackage = Object.entries(
-            newsettings.api.client.locations
-          ).filter((vname) => vname[0] == location)[0][1].package;
-          if (requiredpackage)
-            if (
-              !requiredpackage.includes(
-                packagename
-                  ? packagename
-                  : newsettings.api.client.packages.default
-              )
-            ) {
+          // Check if node exists and has capacity
+          try {
+            const nodeResponse = await fetch(
+              `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}?include=servers`,
+              {
+                headers: {
+                  Authorization: `Bearer ${settings.pterodactyl.key}`,
+                  Accept: "application/json",
+                },
+              }
+            );
+
+            if (!nodeResponse.ok) {
               cb();
-              return res.redirect(`${redirectlink}?err=PREMIUMLOCATION`);
+              return res.redirect(`${redirectlink}?err=NODENOTFOUND`);
             }
+
+            const nodeData = await nodeResponse.json();
+            const currentServers = nodeData.relationships?.servers?.data?.length || 0;
+
+            // Get node limit from database
+            const nodeLimit = await db.get(`node-limit-${nodeId}`);
+            const limit = nodeLimit ? nodeLimit.limit : 0;
+
+            // Check if node has capacity (0 = unlimited)
+            if (limit > 0 && currentServers >= limit) {
+              cb();
+              return res.redirect(`${redirectlink}?err=NODEFULL`);
+            }
+          } catch (err) {
+            console.error("Error checking node capacity:", err);
+            cb();
+            return res.redirect(`${redirectlink}?err=NODECHECK FAILED`);
+          }
 
           let egg = req.query.egg;
 
@@ -362,13 +378,34 @@ module.exports.load = async function (app, db) {
             specs.limits.memory = ram;
             specs.limits.disk = disk;
             specs.limits.cpu = cpu;
-            if (!specs["deploy"])
-              specs.deploy = {
-                locations: [],
-                dedicated_ip: false,
-                port_range: [],
-              };
-            specs.deploy.locations = [location];
+            
+            // Get available allocation from the selected node
+            let allocations;
+            try {
+              const allocResponse = await fetch(
+                `${settings.pterodactyl.domain}/api/application/nodes/${nodeId}/allocations`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${settings.pterodactyl.key}`,
+                    Accept: "application/json",
+                  },
+                }
+              );
+              const allocData = await allocResponse.json();
+              allocations = allocData.data.filter(alloc => !alloc.attributes.assigned);
+              
+              if (allocations.length === 0) {
+                cb();
+                return res.redirect(`${redirectlink}?err=NOALLOCATIONS`);
+              }
+            } catch (err) {
+              console.error("Failed to fetch allocations:", err);
+              cb();
+              return res.redirect(`${redirectlink}?err=ALLOCATIONFETCHFAILED`);
+            }
+            
+            // Use first available allocation
+            specs.allocation = allocations[0].attributes.id;
             
             specs.docker_image = "ghcr.io/pterodactyl/yolks:java_21";
             specs.startup = eggData.attributes.startup;

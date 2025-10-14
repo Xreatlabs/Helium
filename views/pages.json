@@ -57,7 +57,8 @@
     "webhooks": "admin/webhooks.ejs",
     "api-keys": "admin/api-keys.ejs",
     "discord-roles": "admin/discord-roles.ejs",
-    "bans": "admin/bans.ejs"
+    "bans": "admin/bans.ejs",
+    "nodes": "admin/nodes.ejs"
   },
   "mustbeloggedin": [
     "/dashboard",
@@ -78,6 +79,7 @@
     "/webhooks",
     "/api-keys",
     "/discord-roles",
-    "/bans"
+    "/bans",
+    "/nodes"
   ]
 }
