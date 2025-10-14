@@ -58,7 +58,7 @@
     "api-keys": "admin/api-keys.ejs",
     "discord-roles": "admin/discord-roles.ejs",
     "bans": "admin/bans.ejs",
-    "nodes": "admin/nodes.ejs"
+    "admin/location": "admin/nodes.ejs"
   },
   "mustbeloggedin": [
     "/dashboard",
@@ -80,6 +80,6 @@
     "/api-keys",
     "/discord-roles",
     "/bans",
-    "/nodes"
+    "/admin/location"
   ]
 }
