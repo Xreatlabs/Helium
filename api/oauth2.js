@@ -319,7 +319,8 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
       try {
         const data = await response.json();
         console.log(`[OAuth] Existing Pterodactyl account found: ID ${existingId}`);
-        return data.data;
+        // Single user endpoint returns object directly, not wrapped in data
+        return data;
       } catch (jsonError) {
         console.error(`[OAuth] Failed to parse Pterodactyl response for user ${existingId}:`, jsonError);
         console.error(`[OAuth] Response status: ${response.status}, Response text: ${await response.text()}`);
@@ -451,7 +452,8 @@ async function getOrCreatePterodactylAccount(discordUser, db) {
         username: discordUser.username
       }).catch(err => console.error('Webhook error:', err));
       
-      return data.data;
+      // Single user creation endpoint returns object directly, not wrapped in data
+      return data;
     } catch (jsonError) {
       console.error(`[OAuth] Failed to parse Pterodactyl create response:`, jsonError);
     }

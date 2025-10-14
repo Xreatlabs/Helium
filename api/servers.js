@@ -35,21 +35,21 @@ module.exports.load = async function (app, db) {
       }
     );
     
-    if (!cacheaccount || !cacheaccount.data || !cacheaccount.data.attributes) {
+    if (!cacheaccount || !cacheaccount.attributes) {
       if (!res.headersSent) {
         return res.send("Failed to fetch account information");
       }
       return;
     }
-    req.session.pterodactyl = cacheaccount.data.attributes;
+    req.session.pterodactyl = cacheaccount.attributes;
     
     // Ensure relationships exist
     if (!req.session.pterodactyl.relationships) {
-      req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+      req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
     }
     
     // Sync admin status with panel - security fix
-    await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
+    await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
     
     if (req.query.redirect)
       if (typeof req.query.redirect == "string")
@@ -80,8 +80,8 @@ module.exports.load = async function (app, db) {
           return null;
         });
         
-        if (!cacheaccount || !cacheaccount.data || !cacheaccount.data.attributes) {
-          console.error('[Server Create] Missing cacheaccount or cacheaccount.data.attributes');
+        if (!cacheaccount || !cacheaccount.attributes) {
+          console.error('[Server Create] Missing cacheaccount or cacheaccount.attributes');
           if (!res.headersSent) {
             cb();
             return res.send(
@@ -91,15 +91,15 @@ module.exports.load = async function (app, db) {
           return;
         }
         
-        req.session.pterodactyl = cacheaccount.data.attributes;
+        req.session.pterodactyl = cacheaccount.attributes;
         
         // Ensure relationships exist
         if (!req.session.pterodactyl.relationships) {
-          req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+          req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
         }
         
         // Sync admin status with panel
-        await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
+        await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
 
         if (
           req.query.name &&
@@ -534,21 +534,21 @@ module.exports.load = async function (app, db) {
         return null;
       });
       
-      if (!cacheaccount || !cacheaccount.data || !cacheaccount.data.attributes) {
+      if (!cacheaccount || !cacheaccount.attributes) {
         if (!res.headersSent) {
           return res.send("Failed to fetch account information");
         }
         return;
       }
-      req.session.pterodactyl = cacheaccount.data.attributes;
+      req.session.pterodactyl = cacheaccount.attributes;
       
       // Ensure relationships exist
       if (!req.session.pterodactyl.relationships) {
-        req.session.pterodactyl.relationships = cacheaccount.data.relationships || { servers: { data: [] } };
+        req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
       }
       
       // Sync admin status with panel
-      await syncAdminStatus(cacheaccount.data.attributes, req.session.userinfo.id, db);
+      await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
 
       let redirectlink = theme.settings.redirect.failedmodifyserver
         ? theme.settings.redirect.failedmodifyserver
