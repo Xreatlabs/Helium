@@ -41,12 +41,11 @@ module.exports.load = async function (app, db) {
       }
       return;
     }
-    req.session.pterodactyl = cacheaccount.attributes;
-    
-    // Ensure relationships exist
-    if (!req.session.pterodactyl.relationships) {
-      req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
-    }
+    // Properly merge attributes and relationships to preserve server data
+    req.session.pterodactyl = {
+      ...cacheaccount.attributes,
+      relationships: cacheaccount.relationships || { servers: { data: [] } }
+    };
     
     // Sync admin status with panel - security fix
     await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
@@ -91,12 +90,11 @@ module.exports.load = async function (app, db) {
           return;
         }
         
-        req.session.pterodactyl = cacheaccount.attributes;
-        
-        // Ensure relationships exist
-        if (!req.session.pterodactyl.relationships) {
-          req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
-        }
+        // Properly merge attributes and relationships to preserve server data
+        req.session.pterodactyl = {
+          ...cacheaccount.attributes,
+          relationships: cacheaccount.relationships || { servers: { data: [] } }
+        };
         
         // Sync admin status with panel
         await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
@@ -540,12 +538,11 @@ module.exports.load = async function (app, db) {
         }
         return;
       }
-      req.session.pterodactyl = cacheaccount.attributes;
-      
-      // Ensure relationships exist
-      if (!req.session.pterodactyl.relationships) {
-        req.session.pterodactyl.relationships = cacheaccount.relationships || { servers: { data: [] } };
-      }
+      // Properly merge attributes and relationships to preserve server data
+      req.session.pterodactyl = {
+        ...cacheaccount.attributes,
+        relationships: cacheaccount.relationships || { servers: { data: [] } }
+      };
       
       // Sync admin status with panel
       await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
