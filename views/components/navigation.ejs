@@ -442,6 +442,12 @@
           </svg>
           Admin
         </a>
+        <a href="../admin/servers" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 flex items-center px-4 py-2 text-sm font-medium rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
+            <path d="M5.566 4.657A4.505 4.505 0 016.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0015.75 3h-7.5a3 3 0 00-2.684 1.657zM2.25 12a3 3 0 013-3h13.5a3 3 0 013 3v6a3 3 0 01-3 3H5.25a3 3 0 01-3-3v-6zM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 016.75 6h10.5a3 3 0 012.683 1.657A4.505 4.505 0 0018.75 7.5H5.25z" />
+          </svg>
+          Server Management
+        </a>
         <a href="../settings" class="nav-link transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 backdrop-blur hover:text-gray-800 dark:hover:text-gray-100 flex items-center px-4 py-2 text-sm font-medium rounded-xl">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2 text-gray-500">
             <path fill-rule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
@@ -493,40 +499,52 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    var currentPageUrl = window.location.href;
+    var currentPageUrl = window.location.pathname;
 
     // Get all navigation links
     var navLinks = document.querySelectorAll('.nav-link');
 
-    // Loop through each navigation link
+    // Find the best matching link (most specific match)
+    let bestMatch = null;
+    let bestMatchLength = 0;
+
     navLinks.forEach(function(link) {
       // Get the href attribute of the link
       var linkUrl = link.getAttribute('href');
-
-      // Check if the current page URL contains the link URL
-      if (currentPageUrl.includes(linkUrl.replace('../', '/'))) {
-        // Remove all existing classes
-        link.className = 'nav-link';
-
-        // Add the specified classes
-        link.classList.add(
-          'transition',
-          'text-gray-900',
-          'dark:text-gray-100',
-          'bg-gray-200',
-          'dark:bg-gray-700',
-          'backdrop-blur',
-          'group',
-          'flex',
-          'items-center',
-          'px-4',
-          'py-2',
-          'text-sm',
-          'font-semibold',
-          'rounded-xl'
-        );
+      var linkPath = linkUrl.replace('../', '/');
+      
+      // Normalize paths for comparison
+      var normalizedCurrent = currentPageUrl.endsWith('/') ? currentPageUrl.slice(0, -1) : currentPageUrl;
+      var normalizedLink = linkPath.endsWith('/') ? linkPath.slice(0, -1) : linkPath;
+      
+      // Check for exact match or if current path starts with link path
+      if (normalizedCurrent === normalizedLink || 
+          (normalizedCurrent.startsWith(normalizedLink + '/') && normalizedLink.length > bestMatchLength)) {
+        bestMatch = link;
+        bestMatchLength = normalizedLink.length;
       }
     });
+
+    // Apply active styles to the best match
+    if (bestMatch) {
+      bestMatch.className = 'nav-link';
+      bestMatch.classList.add(
+        'transition',
+        'text-gray-900',
+        'dark:text-gray-100',
+        'bg-gray-200',
+        'dark:bg-gray-700',
+        'backdrop-blur',
+        'group',
+        'flex',
+        'items-center',
+        'px-4',
+        'py-2',
+        'text-sm',
+        'font-semibold',
+        'rounded-xl'
+      );
+    }
   });
 </script>
 <script>

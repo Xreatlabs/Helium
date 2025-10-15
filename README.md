@@ -373,6 +373,27 @@ Users can purchase server resources with earned coins:
 - Tax percentage (0-100%)
 - Helps manage economy inflation
 
+### Admin Server Management
+
+Comprehensive server management interface at `/admin/servers`:
+
+**Features:**
+- View all servers across all users with owner information
+- Search and filter servers by status (active, expiring, expired, suspended)
+- Renew server expiration dates (set days until expiration or remove expiration)
+- Change server ownership between users
+- Change server resources (RAM, Disk, CPU) with real-time updates
+- Real-time status badges (Active, Expiring Soon, Expired, Suspended)
+- Display resource allocations (RAM, Disk, CPU)
+
+**Important:** After changing server ownership, users must click the "Refresh List" button on their Servers or Dashboard page to see updated server lists. This is due to session caching for performance.
+
+**API Endpoints:**
+- `GET /admin/servers/all` - Get all servers with owner info and expiry data
+- `POST /admin/servers/renew` - Set or remove server expiration
+- `POST /admin/servers/change-owner` - Transfer server to a different user
+- `POST /admin/servers/change-resources` - Update server RAM, Disk, and CPU limits
+
 ### Server Renewal System
 
 Automatically manages server lifecycles with renewal reminders:
@@ -593,6 +614,26 @@ helium/
 ├── install           # Installation script
 └── settings.json     # Configuration file
 ```
+
+## User Guide
+
+### Refreshing Server List
+
+If you don't see your servers or notice outdated information (for example, after an admin transfers server ownership), use the **"Refresh List"** or **"Refresh Data"** button located at the top right of:
+- Dashboard page
+- Servers page
+
+This button:
+1. Fetches fresh data from Pterodactyl Panel
+2. Updates your session cache
+3. Shows your current server list immediately
+
+**Why is this needed?**
+The dashboard caches server data in your session for better performance. When an admin makes changes (like transferring server ownership), the cache needs to be manually refreshed.
+
+**Alternative methods:**
+- Visit `/updateinfo?redirect=servers` or `/updateinfo?redirect=dashboard`
+- Log out and log back in (creates a fresh session)
 
 ## Pterodactyl API Client
 

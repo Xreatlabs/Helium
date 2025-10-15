@@ -1,0 +1,124 @@
+<%
+/**
+ * Component: Session Refresh Notice
+ * Shows notification when user needs to refresh their session data
+ */
+%>
+
+<script>
+  // Check for session refresh notifications
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const response = await fetch('/api/session-refresh-check');
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      
+      if (data.needsRefresh && data.notification) {
+        showRefreshNotification(data.notification);
+      }
+    } catch (error) {
+      console.error('Error checking session refresh status:', error);
+    }
+  });
+  
+  function showRefreshNotification(notification) {
+    // Check if notification already exists
+    if (document.getElementById('session-refresh-banner')) return;
+    
+    const banner = document.createElement('div');
+    banner.id = 'session-refresh-banner';
+    banner.className = 'fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4 shadow-lg animate-slideDown';
+    banner.style.cssText = 'animation: slideDown 0.3s ease-out;';
+    
+    banner.innerHTML = `
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3 flex-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 flex-shrink-0">
+            <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75Zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5Z" clip-rule="evenodd" />
+          </svg>
+          <div class="flex-1">
+            <p class="font-semibold text-sm md:text-base">${notification.message || 'Your server list has changed'}</p>
+            <p class="text-xs md:text-sm opacity-90 mt-1">Please refresh your server list to see the latest changes.</p>
+          </div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <button onclick="refreshServerList()" class="bg-white text-orange-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md">
+            Refresh Now
+          </button>
+          <button onclick="dismissRefreshNotification()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.insertBefore(banner, document.body.firstChild);
+    
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  async function refreshServerList() {
+    const banner = document.getElementById('session-refresh-banner');
+    if (banner) {
+      banner.style.animation = 'slideUp 0.3s ease-in';
+      setTimeout(() => banner.remove(), 300);
+    }
+    
+    // Show loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg';
+    loadingDiv.innerHTML = '<div class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Refreshing...</span></div>';
+    document.body.appendChild(loadingDiv);
+    
+    // Clear the notification flag and redirect to refresh
+    try {
+      await fetch('/api/session-refresh-clear', { method: 'POST' });
+    } catch (e) {
+      console.error('Error clearing refresh flag:', e);
+    }
+    
+    // Redirect to update info endpoint
+    const currentPath = window.location.pathname.replace('/', '');
+    window.location.href = '/updateinfo?redirect=' + (currentPath || 'dashboard');
+  }
+  
+  function dismissRefreshNotification() {
+    const banner = document.getElementById('session-refresh-banner');
+    if (banner) {
+      banner.style.animation = 'slideUp 0.3s ease-in';
+      setTimeout(() => banner.remove(), 300);
+    }
+    
+    // Clear the notification flag
+    fetch('/api/session-refresh-clear', { method: 'POST' }).catch(e => {
+      console.error('Error clearing refresh flag:', e);
+    });
+  }
+</script>

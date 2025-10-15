@@ -42,10 +42,8 @@ module.exports.load = async function (app, db) {
       return;
     }
     // Properly merge attributes and relationships to preserve server data
-    req.session.pterodactyl = {
-      ...cacheaccount.attributes,
-      relationships: cacheaccount.relationships || { servers: { data: [] } }
-    };
+    // The Pterodactyl API returns relationships inside attributes
+    req.session.pterodactyl = cacheaccount.attributes;
     
     // Sync admin status with panel - security fix
     await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
@@ -91,10 +89,8 @@ module.exports.load = async function (app, db) {
         }
         
         // Properly merge attributes and relationships to preserve server data
-        req.session.pterodactyl = {
-          ...cacheaccount.attributes,
-          relationships: cacheaccount.relationships || { servers: { data: [] } }
-        };
+        // The Pterodactyl API returns relationships inside attributes
+        req.session.pterodactyl = cacheaccount.attributes;
         
         // Sync admin status with panel
         await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);
@@ -539,10 +535,8 @@ module.exports.load = async function (app, db) {
         return;
       }
       // Properly merge attributes and relationships to preserve server data
-      req.session.pterodactyl = {
-        ...cacheaccount.attributes,
-        relationships: cacheaccount.relationships || { servers: { data: [] } }
-      };
+      // The Pterodactyl API returns relationships inside attributes
+      req.session.pterodactyl = cacheaccount.attributes;
       
       // Sync admin status with panel
       await syncAdminStatus(cacheaccount.attributes, req.session.userinfo.id, db);

@@ -54,6 +54,44 @@ module.exports.load = async function (app, db) {
   });
 
   app.use("/assets", express.static("./assets"));
+
+  // API endpoint to check if user needs to refresh their session
+  app.get("/api/session-refresh-check", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.json({ needsRefresh: false });
+    }
+
+    try {
+      const notification = await db.get(`session-refresh-${req.session.userinfo.id}`);
+      
+      if (notification) {
+        return res.json({
+          needsRefresh: true,
+          notification: notification
+        });
+      }
+      
+      return res.json({ needsRefresh: false });
+    } catch (error) {
+      console.error('Error checking session refresh:', error);
+      return res.json({ needsRefresh: false });
+    }
+  });
+
+  // API endpoint to clear session refresh notification
+  app.post("/api/session-refresh-clear", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.json({ success: false });
+    }
+
+    try {
+      await db.delete(`session-refresh-${req.session.userinfo.id}`);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error clearing session refresh:', error);
+      return res.json({ success: false });
+    }
+  });
 };
 
 async function renderTemplate(theme, renderdataeval, req, res, db) {

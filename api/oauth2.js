@@ -259,14 +259,8 @@ module.exports.load = function (app, db) {
       }
       
       // Structure pterodactyl data to match template expectations
-      req.session.pterodactyl = {
-        ...pterodactylUser.attributes,
-        relationships: pterodactylUser.relationships || {
-          servers: {
-            data: []
-          }
-        }
-      };
+      // The Pterodactyl API returns relationships inside attributes
+      req.session.pterodactyl = pterodactylUser.attributes;
       
       req.session.authenticated = true;
       req.session.loginTime = Date.now();

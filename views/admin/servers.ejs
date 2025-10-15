@@ -1,0 +1,593 @@
+<html <% if (isDarkMode) { %> class="dark" <% } %>>
+<head>
+  <title><%= settings.name %> - Admin Server Management</title>
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
+  <script>
+    (function() {
+      try {
+        var ls = localStorage.getItem('darkMode');
+        var preferDark = (ls === 'true') || (ls === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (preferDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/tailwind.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200" style="font-family: 'Inter', sans-serif;">
+  <div>
+    <%- include('../components/navigation') %>
+    <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
+      <main class="flex-1 pb-8">
+        <div class="py-6">
+          <%- include('../components/darkmode-toggle') %>
+          <%- include('../components/skeleton') %>
+          <div class="hidden max-w-7xl pt-8 mx-auto px-4 sm:px-6 md:px-8" id="content">
+            
+            <!-- Header -->
+            <div class="mb-8">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="relative">
+                  <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl h-16 w-16 flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white">
+                      <path d="M5.566 4.657A4.505 4.505 0 016.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0015.75 3h-7.5a3 3 0 00-2.684 1.657zM2.25 12a3 3 0 013-3h13.5a3 3 0 013 3v6a3 3 0 01-3 3H5.25a3 3 0 01-3-3v-6zM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 016.75 6h10.5a3 3 0 012.683 1.657A4.505 4.505 0 0018.75 7.5H5.25z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Server Management</h1>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">View, renew, and manage all user servers</p>
+                </div>
+              </div>
+              
+              <!-- Info box -->
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
+                <div class="flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                  </svg>
+                  <div class="flex-1">
+                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                      <strong>Important:</strong> When you change server ownership, users must visit <a href="/updateinfo" class="underline font-semibold hover:text-blue-900 dark:hover:text-blue-200">/updateinfo</a> to refresh their server list in the dashboard. The change is immediate in the Pterodactyl panel but cached in user sessions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div id="messageContainer"></div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+              <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Servers</label>
+                  <input type="text" id="serverSearch" placeholder="Search by server name, ID, or owner..." 
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    oninput="filterServers()">
+                </div>
+                <div class="w-full md:w-48">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status Filter</label>
+                  <select id="statusFilter" onchange="filterServers()" 
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    <option value="all">All Servers</option>
+                    <option value="active">Active</option>
+                    <option value="expiring">Expiring Soon</option>
+                    <option value="expired">Expired</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+                <div class="flex items-end">
+                  <button onclick="loadServers()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Servers List -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">All Servers</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="serverCount">Loading servers...</p>
+              </div>
+              
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Server</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Owner</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Resources</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expiry</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="serversTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                      <td colspan="6" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                          <p class="text-gray-500 dark:text-gray-400">Loading servers...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Renew Server Modal -->
+  <div id="renewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Renew Server</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Set expiration date for: <span id="renewServerName" class="font-medium"></span></p>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Days Until Expiration</label>
+        <input type="number" id="renewDays" placeholder="30" min="1" max="365"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty to remove expiration</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeRenewModal()" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+          Cancel
+        </button>
+        <button onclick="confirmRenew()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+          Renew
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Resources Modal -->
+  <div id="resourcesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Change Server Resources</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Changing resources for: <span id="resourcesServerName" class="font-medium"></span></p>
+      
+      <div class="space-y-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Memory (MB)</label>
+          <input type="number" id="newMemory" placeholder="1024" min="128"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
+          <input type="number" id="newDisk" placeholder="5120" min="128"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
+          <input type="number" id="newCpu" placeholder="100" min="10"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p class="text-xs text-blue-800 dark:text-blue-300">
+          <strong>Note:</strong> The server should be restarted for resource changes to take effect.
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeResourcesModal()" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+          Cancel
+        </button>
+        <button onclick="confirmResourcesChange()" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+          Update Resources
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Owner Modal -->
+  <div id="ownerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Change Server Owner</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Changing owner for: <span id="ownerServerName" class="font-medium"></span></p>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Owner Discord ID</label>
+        <input type="text" id="newOwnerId" placeholder="Enter Discord ID"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be a registered user ID</p>
+      </div>
+
+      <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+        <p class="text-xs text-yellow-800 dark:text-yellow-300">
+          <strong>Note:</strong> After changing ownership, both users must visit <a href="/updateinfo" class="underline font-medium">/updateinfo</a> to refresh their server list in the dashboard.
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeOwnerModal()" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+          Cancel
+        </button>
+        <button onclick="confirmOwnerChange()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+          Change Owner
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allServers = [];
+    let currentServer = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServers();
+      document.getElementById('content')?.classList.remove('hidden');
+    });
+
+    async function loadServers() {
+      try {
+        const response = await fetch('/admin/servers/all');
+        const data = await response.json();
+        
+        if (data.success) {
+          allServers = data.servers;
+          filterServers();
+        } else {
+          showMessage('error', 'Failed to load servers: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error loading servers:', error);
+        showMessage('error', 'Failed to load servers');
+      }
+    }
+
+    function filterServers() {
+      const searchTerm = document.getElementById('serverSearch').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const now = Date.now();
+      const threeDays = 3 * 24 * 60 * 60 * 1000;
+
+      let filtered = allServers.filter(server => {
+        const matchesSearch = server.name.toLowerCase().includes(searchTerm) ||
+          server.id.toString().includes(searchTerm) ||
+          (server.ownerUsername && server.ownerUsername.toLowerCase().includes(searchTerm)) ||
+          (server.ownerId && server.ownerId.includes(searchTerm));
+
+        if (!matchesSearch) return false;
+
+        if (statusFilter === 'all') return true;
+        if (statusFilter === 'suspended') return server.suspended;
+        if (statusFilter === 'expired') return server.expiryTime && server.expiryTime < now;
+        if (statusFilter === 'expiring') return server.expiryTime && server.expiryTime > now && server.expiryTime < now + threeDays;
+        if (statusFilter === 'active') return !server.suspended && (!server.expiryTime || server.expiryTime > now);
+        
+        return true;
+      });
+
+      renderServers(filtered);
+      document.getElementById('serverCount').textContent = `Showing ${filtered.length} of ${allServers.length} servers`;
+    }
+
+    function renderServers(servers) {
+      const tbody = document.getElementById('serversTableBody');
+      
+      if (servers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center">
+              <p class="text-gray-500 dark:text-gray-400">No servers found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = servers.map(server => {
+        const statusBadge = getStatusBadge(server);
+        const expiryText = getExpiryText(server);
+        
+        return `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="px-6 py-4">
+              <div class="flex items-center">
+                <div>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(server.name)}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">ID: ${server.id}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm text-gray-900 dark:text-white">${escapeHtml(server.ownerUsername || 'Unknown')}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">${server.ownerId || 'N/A'}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-xs text-gray-600 dark:text-gray-400">
+                <div>RAM: ${server.memory} MB</div>
+                <div>Disk: ${server.disk} MB</div>
+                <div>CPU: ${server.cpu}%</div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              ${statusBadge}
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm text-gray-900 dark:text-white">${expiryText}</div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-2 flex-wrap">
+                <button onclick="openRenewModal('${server.id}', '${escapeHtml(server.name)}')" 
+                  class="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                  Renew
+                </button>
+                <button onclick="openOwnerModal('${server.id}', '${escapeHtml(server.name)}', '${server.ownerId}')" 
+                  class="text-xs px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors">
+                  Change Owner
+                </button>
+                <button onclick="openResourcesModal('${server.id}', '${escapeHtml(server.name)}', ${server.memory}, ${server.disk}, ${server.cpu})" 
+                  class="text-xs px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+                  Resources
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getStatusBadge(server) {
+      const now = Date.now();
+      
+      if (server.suspended) {
+        return '<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">Suspended</span>';
+      }
+      
+      if (server.expiryTime) {
+        if (server.expiryTime < now) {
+          return '<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">Expired</span>';
+        } else if (server.expiryTime < now + (3 * 24 * 60 * 60 * 1000)) {
+          return '<span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300">Expiring Soon</span>';
+        }
+      }
+      
+      return '<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">Active</span>';
+    }
+
+    function getExpiryText(server) {
+      if (!server.expiryTime) {
+        return '<span class="text-gray-500 dark:text-gray-400">No expiration</span>';
+      }
+      
+      const now = Date.now();
+      const diff = server.expiryTime - now;
+      const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      
+      if (diff < 0) {
+        const expiredDays = Math.abs(days);
+        return `<span class="text-red-600 dark:text-red-400">Expired ${expiredDays}d ago</span>`;
+      } else if (days === 0) {
+        return `<span class="text-yellow-600 dark:text-yellow-400">In ${hours}h</span>`;
+      } else if (days < 3) {
+        return `<span class="text-yellow-600 dark:text-yellow-400">In ${days}d ${hours}h</span>`;
+      } else {
+        return `<span class="text-gray-600 dark:text-gray-400">In ${days} days</span>`;
+      }
+    }
+
+    function openRenewModal(serverId, serverName) {
+      currentServer = { id: serverId, name: serverName };
+      document.getElementById('renewServerName').textContent = serverName;
+      document.getElementById('renewDays').value = '';
+      document.getElementById('renewModal').classList.remove('hidden');
+      document.getElementById('renewModal').classList.add('flex');
+    }
+
+    function closeRenewModal() {
+      document.getElementById('renewModal').classList.add('hidden');
+      document.getElementById('renewModal').classList.remove('flex');
+      currentServer = null;
+    }
+
+    async function confirmRenew() {
+      const days = document.getElementById('renewDays').value;
+      
+      if (!currentServer) return;
+
+      try {
+        const response = await fetch('/admin/servers/renew', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serverId: currentServer.id,
+            expiryDays: days === '' ? null : parseInt(days)
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          showMessage('success', data.message);
+          closeRenewModal();
+          loadServers();
+        } else {
+          showMessage('error', 'Failed to renew server: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error renewing server:', error);
+        showMessage('error', 'Failed to renew server');
+      }
+    }
+
+    function openResourcesModal(serverId, serverName, currentMemory, currentDisk, currentCpu) {
+      currentServer = { 
+        id: serverId, 
+        name: serverName, 
+        memory: currentMemory,
+        disk: currentDisk,
+        cpu: currentCpu
+      };
+      document.getElementById('resourcesServerName').textContent = serverName;
+      document.getElementById('newMemory').value = currentMemory;
+      document.getElementById('newDisk').value = currentDisk;
+      document.getElementById('newCpu').value = currentCpu;
+      document.getElementById('resourcesModal').classList.remove('hidden');
+      document.getElementById('resourcesModal').classList.add('flex');
+    }
+
+    function closeResourcesModal() {
+      document.getElementById('resourcesModal').classList.add('hidden');
+      document.getElementById('resourcesModal').classList.remove('flex');
+      currentServer = null;
+    }
+
+    async function confirmResourcesChange() {
+      const newMemory = parseInt(document.getElementById('newMemory').value);
+      const newDisk = parseInt(document.getElementById('newDisk').value);
+      const newCpu = parseInt(document.getElementById('newCpu').value);
+      
+      if (!currentServer || isNaN(newMemory) || isNaN(newDisk) || isNaN(newCpu)) {
+        showMessage('error', 'Please enter valid resource values');
+        return;
+      }
+
+      if (newMemory < 128 || newDisk < 128 || newCpu < 10) {
+        showMessage('error', 'Resources are below minimum values (Memory: 128MB, Disk: 128MB, CPU: 10%)');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/servers/change-resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serverId: currentServer.id,
+            memory: newMemory,
+            disk: newDisk,
+            cpu: newCpu
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          showMessage('success', data.message);
+          closeResourcesModal();
+          loadServers();
+        } else {
+          showMessage('error', 'Failed to change resources: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error changing resources:', error);
+        showMessage('error', 'Failed to change resources');
+      }
+    }
+
+    function openOwnerModal(serverId, serverName, currentOwnerId) {
+      currentServer = { id: serverId, name: serverName, currentOwnerId: currentOwnerId };
+      document.getElementById('ownerServerName').textContent = serverName;
+      document.getElementById('newOwnerId').value = '';
+      document.getElementById('ownerModal').classList.remove('hidden');
+      document.getElementById('ownerModal').classList.add('flex');
+    }
+
+    function closeOwnerModal() {
+      document.getElementById('ownerModal').classList.add('hidden');
+      document.getElementById('ownerModal').classList.remove('flex');
+      currentServer = null;
+    }
+
+    async function confirmOwnerChange() {
+      const newOwnerId = document.getElementById('newOwnerId').value.trim();
+      
+      if (!currentServer || !newOwnerId) {
+        showMessage('error', 'Please enter a valid Discord ID');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/servers/change-owner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serverId: currentServer.id,
+            newOwnerId: newOwnerId
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          let message = data.message;
+          if (data.oldOwnerDiscordId || data.newOwnerDiscordId) {
+            message += '<br><br><strong>Important:</strong> Users must visit <a href="/updateinfo" class="underline">Update Server List</a> or log out and back in to see changes.';
+            if (data.oldOwnerDiscordId) {
+              message += `<br>Old owner: ${data.oldOwnerDiscordId}`;
+            }
+            if (data.newOwnerDiscordId) {
+              message += `<br>New owner: ${data.newOwnerDiscordId}`;
+            }
+          }
+          showMessage('success', message);
+          closeOwnerModal();
+          loadServers();
+        } else {
+          showMessage('error', 'Failed to change owner: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error changing owner:', error);
+        showMessage('error', 'Failed to change owner');
+      }
+    }
+
+    function showMessage(type, message) {
+      const container = document.getElementById('messageContainer');
+      const bgColor = type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+      const textColor = type === 'success' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400';
+      const icon = type === 'success' ? 
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' :
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />';
+      
+      container.innerHTML = `
+        <div class="rounded-2xl ${bgColor} border p-6 mb-6">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 ${textColor}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                ${icon}
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm ${textColor}">${message}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 10000);
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>

@@ -2037,6 +2037,429 @@ module.exports.load = async function (app, db) {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+
+  // ==================== SERVER MANAGEMENT ====================
+
+  /**
+   * GET /admin/servers/all
+   * Get all servers with owner information
+   */
+  app.get("/admin/servers/all", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      // Fetch all servers from Pterodactyl with pagination
+      let allServers = [];
+      let currentPage = 1;
+      let totalPages = 1;
+
+      do {
+        const response = await fetch(
+          `${settings.pterodactyl.domain}/api/application/servers?include=user&per_page=100&page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${settings.pterodactyl.key}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return res.status(500).json({ error: "Failed to fetch servers from Pterodactyl" });
+        }
+
+        const pterodactylData = await response.json();
+        allServers = allServers.concat(pterodactylData.data);
+        
+        // Get total pages from meta
+        totalPages = pterodactylData.meta?.pagination?.total_pages || 1;
+        currentPage++;
+      } while (currentPage <= totalPages);
+
+      console.log(`[Admin] Fetched ${allServers.length} servers from Pterodactyl`);
+      
+      // Build map of Pterodactyl user ID to Discord ID
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      const rows = dbFile.prepare("SELECT key, value FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      dbFile.close();
+      
+      const discordToPtero = {};
+      const pteroToDiscord = {};
+      rows.forEach(row => {
+        const discordId = row.key.replace('helium:users-', '');
+        let pteroId;
+        try {
+          const parsed = JSON.parse(row.value);
+          pteroId = parsed.value;
+        } catch(e) {
+          pteroId = row.value;
+        }
+        discordToPtero[discordId] = pteroId;
+        pteroToDiscord[pteroId] = discordId;
+      });
+
+      // Process servers
+      const servers = [];
+      for (const serverData of allServers) {
+        const server = serverData.attributes;
+        const user = server.relationships?.user?.attributes;
+        
+        // Find Discord ID
+        let discordId = pteroToDiscord[user?.id];
+        if (!discordId && user && /^\d{17,19}$/.test(user.username)) {
+          discordId = user.username;
+        }
+        
+        // Get expiry time
+        const expiryTime = discordId ? await db.get(`server-expiry-${server.id}`) : null;
+        
+        servers.push({
+          id: server.id,
+          uuid: server.uuid,
+          name: server.name,
+          description: server.description,
+          suspended: server.suspended,
+          memory: server.limits.memory,
+          disk: server.limits.disk,
+          cpu: server.limits.cpu,
+          ownerId: discordId || null,
+          ownerUsername: user?.username || 'Unknown',
+          ownerEmail: user?.email || null,
+          pterodactylOwnerId: user?.id,
+          expiryTime: expiryTime || null,
+          createdAt: server.created_at,
+          updatedAt: server.updated_at
+        });
+      }
+
+      res.json({ success: true, servers });
+    } catch (error) {
+      console.error("Error fetching servers:", error);
+      res.status(500).json({ error: "Failed to fetch servers" });
+    }
+  });
+
+  /**
+   * POST /admin/servers/renew
+   * Renew a server (set expiration)
+   */
+  app.post("/admin/servers/renew", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { serverId, expiryDays } = req.body;
+
+    if (!serverId) {
+      return res.status(400).json({ error: "Server ID is required" });
+    }
+
+    try {
+      // Verify server exists
+      const serverResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!serverResponse.ok) {
+        return res.status(404).json({ error: "Server not found" });
+      }
+
+      const serverData = await serverResponse.json();
+      const serverName = serverData.attributes.name;
+
+      if (expiryDays === null || expiryDays === undefined || expiryDays === "") {
+        // Remove expiration
+        await db.delete("server-expiry-" + serverId);
+        log(
+          "remove server expiry",
+          `${req.session.userinfo.username} removed expiration for server ${serverName} (ID: ${serverId})`
+        );
+        return res.json({ success: true, message: "Expiration removed successfully" });
+      }
+
+      const days = parseInt(expiryDays);
+      if (isNaN(days) || days < 1) {
+        return res.status(400).json({ error: "Invalid days value" });
+      }
+
+      const expiryDate = Date.now() + days * 24 * 60 * 60 * 1000;
+      await db.set("server-expiry-" + serverId, expiryDate);
+
+      log(
+        "set server expiry",
+        `${req.session.userinfo.username} set server ${serverName} (ID: ${serverId}) to expire in ${days} days (${new Date(expiryDate).toISOString()})`
+      );
+
+      return res.json({
+        success: true,
+        message: `Server expiration set to ${days} days from now`,
+        expiryDate: new Date(expiryDate).toISOString(),
+      });
+    } catch (error) {
+      console.error("Error setting server expiry:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  /**
+   * POST /admin/servers/change-resources
+   * Change server resources (RAM, Disk, CPU)
+   */
+  app.post("/admin/servers/change-resources", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { serverId, memory, disk, cpu } = req.body;
+
+    if (!serverId || !memory || !disk || !cpu) {
+      return res.status(400).json({ error: "Server ID and all resources (memory, disk, cpu) are required" });
+    }
+
+    try {
+      // Validate resource values
+      const memoryInt = parseInt(memory);
+      const diskInt = parseInt(disk);
+      const cpuInt = parseInt(cpu);
+
+      if (isNaN(memoryInt) || isNaN(diskInt) || isNaN(cpuInt)) {
+        return res.status(400).json({ error: "Invalid resource values" });
+      }
+
+      if (memoryInt < 128 || diskInt < 128 || cpuInt < 10) {
+        return res.status(400).json({ error: "Resources below minimum values (Memory: 128MB, Disk: 128MB, CPU: 10%)" });
+      }
+
+      // Get server info
+      const serverResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!serverResponse.ok) {
+        return res.status(404).json({ error: "Server not found" });
+      }
+
+      const serverData = await serverResponse.json();
+      const serverName = serverData.attributes.name;
+      const oldResources = serverData.attributes.limits;
+
+      // Update server build (resources)
+      const updateResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}/build`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            memory: memoryInt,
+            disk: diskInt,
+            cpu: cpuInt,
+            swap: serverData.attributes.limits.swap || 0,
+            io: serverData.attributes.limits.io || 500,
+            threads: serverData.attributes.limits.threads || null
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error("Failed to update server resources:", errorText);
+        return res.status(500).json({ error: "Failed to update server resources on Pterodactyl" });
+      }
+
+      log(
+        "change server resources",
+        `${req.session.userinfo.username} changed resources for server ${serverName} (ID: ${serverId})\nOld: RAM ${oldResources.memory}MB, Disk ${oldResources.disk}MB, CPU ${oldResources.cpu}%\nNew: RAM ${memoryInt}MB, Disk ${diskInt}MB, CPU ${cpuInt}%`
+      );
+
+      return res.json({
+        success: true,
+        message: `Server resources updated successfully. Server should be restarted for changes to take effect.`,
+      });
+    } catch (error) {
+      console.error("Error changing server resources:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  /**
+   * POST /admin/servers/change-owner
+   * Change the owner of a server
+   */
+  app.post("/admin/servers/change-owner", async (req, res) => {
+    if (!req.session.userinfo || !req.session.userinfo.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!(await checkAdmin(req, res, db))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { serverId, newOwnerId } = req.body;
+
+    if (!serverId || !newOwnerId) {
+      return res.status(400).json({ error: "Server ID and new owner ID are required" });
+    }
+
+    try {
+      // Check if new owner exists in our system
+      const newPteroId = await db.get(`users-${newOwnerId}`);
+      if (!newPteroId) {
+        return res.status(404).json({ error: "New owner not found in the system. User must be registered first." });
+      }
+
+      // Verify new owner exists on Pterodactyl
+      const userResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/users/${newPteroId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!userResponse.ok) {
+        return res.status(404).json({ error: "New owner not found on Pterodactyl panel" });
+      }
+
+      // Get server info
+      const serverResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!serverResponse.ok) {
+        return res.status(404).json({ error: "Server not found" });
+      }
+
+      const serverData = await serverResponse.json();
+      const serverName = serverData.attributes.name;
+      const oldOwnerId = serverData.attributes.user;
+
+      // Update server owner on Pterodactyl
+      const updateResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}/details`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${settings.pterodactyl.key}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            user: parseInt(newPteroId),
+            name: serverData.attributes.name,
+            external_id: serverData.attributes.external_id
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error("Failed to update server owner:", errorText);
+        return res.status(500).json({ error: "Failed to update server owner on Pterodactyl" });
+      }
+
+      // Find old owner's Discord ID and mark their sessions for refresh
+      const sqlite3 = require('better-sqlite3');
+      const dbPath = settings.database.replace('sqlite://', './');
+      const dbFile = new sqlite3(dbPath);
+      const sessionRows = dbFile.prepare("SELECT key, value FROM keyv WHERE key LIKE 'helium:users-%'").all();
+      
+      let oldOwnerDiscordId = null;
+      for (const row of sessionRows) {
+        let pteroId;
+        try {
+          const parsed = JSON.parse(row.value);
+          pteroId = parsed.value;
+        } catch(e) {
+          pteroId = row.value;
+        }
+        if (pteroId == oldOwnerId) {
+          oldOwnerDiscordId = row.key.replace('helium:users-', '');
+          break;
+        }
+      }
+
+      // Mark both users' sessions as needing refresh
+      if (oldOwnerDiscordId) {
+        await db.set(`session-refresh-${oldOwnerDiscordId}`, {
+          reason: 'server_ownership_changed',
+          serverId: serverId,
+          serverName: serverName,
+          message: `Server "${serverName}" is no longer yours. It was transferred to another user.`,
+          timestamp: Date.now()
+        });
+      }
+      
+      await db.set(`session-refresh-${newOwnerId}`, {
+        reason: 'server_ownership_changed',
+        serverId: serverId,
+        serverName: serverName,
+        message: `Server "${serverName}" has been transferred to you. Click "Refresh List" to see it.`,
+        timestamp: Date.now()
+      });
+
+      dbFile.close();
+
+      log(
+        "change server owner",
+        `${req.session.userinfo.username} changed owner of server ${serverName} (ID: ${serverId}) from Pterodactyl User ${oldOwnerId}${oldOwnerDiscordId ? ` (Discord: ${oldOwnerDiscordId})` : ''} to Discord User ${newOwnerId} (Pterodactyl User ${newPteroId})`
+      );
+
+      return res.json({
+        success: true,
+        message: `Server owner changed successfully. Users will be notified to refresh their server list.`,
+        oldOwnerDiscordId: oldOwnerDiscordId,
+        newOwnerDiscordId: newOwnerId
+      });
+    } catch (error) {
+      console.error("Error changing server owner:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
 };
 
 function hexToDecimal(hex) {
