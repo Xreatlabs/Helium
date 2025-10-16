@@ -429,6 +429,19 @@
         "cooldownTime": 3600,
         "dailyLimit": 5,
         "_dailyLimit_note": "Maximum number of times a user can use Linkvertise per day (0 = unlimited)"
+      },
+      "rewardsads": {
+        "_comment": "Configure RewardsAds earning - Get credentials from dash.rewardsx.net",
+        "enabled": false,
+        "platformId": "YOUR_PLATFORM_ID",
+        "secretKey": "YOUR_SECRET_KEY",
+        "rewardId": "YOUR_REWARD_ID",
+        "_note": "Get these values from your RewardsX dashboard at dash.rewardsx.net",
+        "domain": "http://localhost:3000",
+        "rewardCoins": 10,
+        "cooldownTime": 3600,
+        "dailyLimit": 5,
+        "_dailyLimit_note": "Maximum number of times a user can use RewardsAds per day (0 = unlimited)"
       }
     },
     "afk": {

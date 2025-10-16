@@ -379,6 +379,97 @@ module.exports.load = async function (app, db) {
     }
   });
 
+  /**
+   * POST /api/dashboard/users/:discordId/reset
+   * Reset user account to default values
+   */
+  app.post('/api/dashboard/users/:discordId/reset', requireApiKey(['users.write', '*']), async (req, res) => {
+    try {
+      const discordId = req.params.discordId;
+      const { keepServers } = req.body;
+
+      const pterodactylId = await db.get(`users-${discordId}`);
+      if (!pterodactylId) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'User not found'
+        });
+      }
+
+      // Reset coins to 0
+      await db.set(`coins-${discordId}`, 0);
+
+      // Reset extra resources to 0
+      await db.set(`extra-${discordId}`, {
+        ram: 0,
+        disk: 0,
+        cpu: 0,
+        servers: 0
+      });
+
+      // Reset package to default
+      await db.set(`package-${discordId}`, settings.api.client.packages.default);
+
+      // Delete servers if requested
+      if (!keepServers) {
+        try {
+          // Get user's servers
+          const serverResponse = await fetch(
+            `${settings.pterodactyl.domain}/api/application/users/${pterodactylId}?include=servers`,
+            {
+              headers: {
+                'Authorization': `Bearer ${settings.pterodactyl.key}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            }
+          );
+
+          if (serverResponse.ok) {
+            const userData = await serverResponse.json();
+            const servers = userData.attributes?.relationships?.servers?.data || [];
+
+            // Delete each server
+            for (const server of servers) {
+              try {
+                await fetch(
+                  `${settings.pterodactyl.domain}/api/application/servers/${server.attributes.id}`,
+                  {
+                    method: 'DELETE',
+                    headers: {
+                      'Authorization': `Bearer ${settings.pterodactyl.key}`,
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    }
+                  }
+                );
+              } catch (err) {
+                console.error(`Failed to delete server ${server.attributes.id}:`, err);
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error deleting servers during reset:', err);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'User account reset successfully',
+        data: {
+          discordId: discordId,
+          serversDeleted: !keepServers
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting user:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
   // ==================== SERVER MANAGEMENT ====================
   
   /**
@@ -654,6 +745,383 @@ module.exports.load = async function (app, db) {
       });
     } catch (error) {
       console.error('Error deleting server:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * PATCH /api/dashboard/servers/:serverId/owner
+   * Transfer server ownership to another user
+   */
+  app.patch('/api/dashboard/servers/:serverId/owner', requireApiKey(['servers.manage', '*']), async (req, res) => {
+    try {
+      const serverId = req.params.serverId;
+      const { newOwnerId } = req.body;
+
+      if (!newOwnerId) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'newOwnerId is required'
+        });
+      }
+
+      // Get new owner's Pterodactyl ID
+      const newPteroId = await db.get(`users-${newOwnerId}`);
+      if (!newPteroId) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'New owner not found in database. They need to login first.'
+        });
+      }
+
+      // First, get current server details to preserve existing configuration
+      const getServerResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!getServerResponse.ok) {
+        return res.status(getServerResponse.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to get server details'
+        });
+      }
+
+      const serverData = await getServerResponse.json();
+      const serverAttrs = serverData.attributes;
+
+      // Update server owner in Pterodactyl with complete build config
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}/build`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            allocation: serverAttrs.allocation,
+            memory: serverAttrs.limits.memory,
+            swap: serverAttrs.limits.swap,
+            disk: serverAttrs.limits.disk,
+            io: serverAttrs.limits.io,
+            cpu: serverAttrs.limits.cpu,
+            threads: serverAttrs.limits.threads,
+            feature_limits: {
+              databases: serverAttrs.feature_limits.databases,
+              allocations: serverAttrs.feature_limits.allocations,
+              backups: serverAttrs.feature_limits.backups
+            },
+            user: parseInt(newPteroId)
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return res.status(response.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to transfer server ownership',
+          details: errorText
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Server ownership transferred successfully',
+        data: {
+          serverId: serverId,
+          serverName: serverAttrs.name,
+          oldOwnerId: serverAttrs.user,
+          newOwnerId: newOwnerId,
+          newPteroId: newPteroId
+        }
+      });
+    } catch (error) {
+      console.error('Error transferring server ownership:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /api/dashboard/servers/:serverId/renew
+   * Renew/refresh a server (reinstall)
+   */
+  app.post('/api/dashboard/servers/:serverId/renew', requireApiKey(['servers.manage', '*']), async (req, res) => {
+    try {
+      const serverId = req.params.serverId;
+
+      // Trigger server reinstall via Pterodactyl API
+      const response = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}/reinstall`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return res.status(response.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to renew server',
+          details: errorText
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Server renewal initiated successfully',
+        data: { serverId: serverId }
+      });
+    } catch (error) {
+      console.error('Error renewing server:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * PATCH /api/dashboard/servers/:serverId
+   * Update server resource limits
+   */
+  app.patch('/api/dashboard/servers/:serverId', requireApiKey(['servers.manage', '*']), async (req, res) => {
+    try {
+      const serverId = req.params.serverId;
+      const { memory, disk, cpu, name } = req.body;
+
+      const updates = {};
+      if (memory !== undefined) updates.memory = parseInt(memory);
+      if (disk !== undefined) updates.disk = parseInt(disk);
+      if (cpu !== undefined) updates.cpu = parseInt(cpu);
+
+      if (Object.keys(updates).length === 0 && !name) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'At least one field must be provided (memory, disk, cpu, name)'
+        });
+      }
+
+      // Update build limits if provided
+      if (Object.keys(updates).length > 0) {
+        const buildResponse = await fetch(
+          `${settings.pterodactyl.domain}/api/application/servers/${serverId}/build`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${settings.pterodactyl.key}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              allocation: undefined,
+              ...updates,
+              swap: 0,
+              io: 500,
+              threads: null
+            })
+          }
+        );
+
+        if (!buildResponse.ok) {
+          const errorText = await buildResponse.text();
+          return res.status(buildResponse.status).json({
+            error: 'Pterodactyl API Error',
+            message: 'Failed to update server limits',
+            details: errorText
+          });
+        }
+      }
+
+      // Update server name if provided
+      if (name) {
+        const detailsResponse = await fetch(
+          `${settings.pterodactyl.domain}/api/application/servers/${serverId}/details`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${settings.pterodactyl.key}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ name: name })
+          }
+        );
+
+        if (!detailsResponse.ok) {
+          const errorText = await detailsResponse.text();
+          return res.status(detailsResponse.status).json({
+            error: 'Pterodactyl API Error',
+            message: 'Failed to update server name',
+            details: errorText
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Server updated successfully',
+        data: { serverId: serverId, updates: { ...updates, name } }
+      });
+    } catch (error) {
+      console.error('Error updating server:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * POST /api/dashboard/servers/:serverId/backup
+   * Create a server backup
+   */
+  app.post('/api/dashboard/servers/:serverId/backup', requireApiKey(['servers.manage', '*']), async (req, res) => {
+    try {
+      const serverId = req.params.serverId;
+      const { pteroKey } = req.body;
+
+      const clientKey = pteroKey || settings.pterodactyl.clientKey;
+      if (!clientKey) {
+        return res.status(501).json({
+          error: 'Not Configured',
+          message: 'Pterodactyl client key not configured'
+        });
+      }
+
+      // Get server details to find identifier
+      const serverResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!serverResponse.ok) {
+        return res.status(serverResponse.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to get server details'
+        });
+      }
+
+      const serverData = await serverResponse.json();
+      const identifier = serverData.attributes.identifier;
+
+      // Create backup via client API
+      const backupResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/client/servers/${identifier}/backups`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${clientKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({})
+        }
+      );
+
+      if (!backupResponse.ok) {
+        const errorText = await backupResponse.text();
+        return res.status(backupResponse.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to create backup',
+          details: errorText
+        });
+      }
+
+      const backupData = await backupResponse.json();
+
+      res.json({
+        success: true,
+        message: 'Backup created successfully',
+        data: backupData
+      });
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * GET /api/dashboard/servers/:serverId/logs
+   * Get server console logs
+   */
+  app.get('/api/dashboard/servers/:serverId/logs', requireApiKey(['servers.read', '*']), async (req, res) => {
+    try {
+      const serverId = req.params.serverId;
+      const lines = req.query.lines || 50;
+      const pteroKey = req.headers['ptero-key'];
+
+      const clientKey = pteroKey || settings.pterodactyl.clientKey;
+      if (!clientKey) {
+        return res.status(501).json({
+          error: 'Not Configured',
+          message: 'Pterodactyl client key not configured'
+        });
+      }
+
+      // Get server details to find identifier
+      const serverResponse = await fetch(
+        `${settings.pterodactyl.domain}/api/application/servers/${serverId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${settings.pterodactyl.key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!serverResponse.ok) {
+        return res.status(serverResponse.status).json({
+          error: 'Pterodactyl API Error',
+          message: 'Failed to get server details'
+        });
+      }
+
+      const serverData = await serverResponse.json();
+      const identifier = serverData.attributes.identifier;
+
+      // Note: Pterodactyl doesn't have a direct logs endpoint in client API
+      // This would need WebSocket connection. For now, return a message
+      res.json({
+        success: true,
+        message: 'Log retrieval requires WebSocket connection',
+        data: {
+          logs: 'Console logs require real-time WebSocket connection. Please use the panel to view logs.',
+          identifier: identifier,
+          websocket: `wss://${settings.pterodactyl.domain.replace('https://', '').replace('http://', '')}/api/client/servers/${identifier}/websocket`
+        }
+      });
+    } catch (error) {
+      console.error('Error getting server logs:', error);
       res.status(500).json({
         error: 'Internal Server Error',
         message: error.message

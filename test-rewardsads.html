@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RewardsAds SDK Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    #rewardsads-container {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      margin: 20px 0;
+      min-height: 200px;
+    }
+    .info {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>RewardsAds SDK Test</h1>
+  
+  <div class="info">
+    <h3>Configuration:</h3>
+    <p><strong>Platform ID:</strong> YOUR_PLATFORM_ID</p>
+    <p><strong>Reward ID:</strong> YOUR_REWARD_ID</p>
+  </div>
+
+  <h3>Reward Container:</h3>
+  <div id="rewardsads-container">
+    Loading RewardsAds SDK...
+  </div>
+
+  <div id="status"></div>
+
+  <!-- Load RewardsAds SDK -->
+  <script src="https://sdk.rewardsx.net/rewardads.js"></script>
+  <script>
+    const statusDiv = document.getElementById('status');
+    
+    function log(message) {
+      console.log(message);
+      const p = document.createElement('p');
+      p.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+      statusDiv.appendChild(p);
+    }
+
+    // Check if SDK loaded
+    setTimeout(function() {
+      log('Checking SDK availability...');
+      
+      if (typeof RewardADsSDK === 'undefined') {
+        log('ERROR: RewardADsSDK is not defined');
+        return;
+      }
+      
+      log('RewardADsSDK found: ' + typeof RewardADsSDK);
+      log('Available methods: ' + Object.keys(RewardADsSDK).join(', '));
+      
+      // Initialize SDK
+      try {
+        log('Initializing SDK...');
+        RewardADsSDK.init("YOUR_PLATFORM_ID", "YOUR_SECRET_KEY");
+        log('SDK initialized successfully');
+      } catch (error) {
+        log('ERROR initializing SDK: ' + error.message);
+        return;
+      }
+
+      // Wait a bit more and render reward
+      setTimeout(function() {
+        const container = document.getElementById('rewardsads-container');
+        
+        if (!container) {
+          log('ERROR: Container not found');
+          return;
+        }
+        
+        if (!RewardADsSDK.renderReward) {
+          log('ERROR: renderReward method not available');
+          log('Available methods: ' + Object.keys(RewardADsSDK).join(', '));
+          return;
+        }
+        
+        log('Rendering reward...');
+        
+        try {
+          RewardADsSDK.renderReward(container, {
+            rewardId: 'YOUR_REWARD_ID',
+            buyText: 'Complete Offer',
+            cancelText: 'Cancel',
+            onSuccess: function(result) {
+              log('SUCCESS: Offer completed!');
+              console.log('Result:', result);
+            },
+            onError: function(error) {
+              log('ERROR in offer: ' + error);
+              console.error('Error:', error);
+            }
+          });
+          log('Render method called successfully');
+        } catch (error) {
+          log('ERROR calling renderReward: ' + error.message);
+        }
+      }, 2000);
+    }, 1000);
+  </script>
+</body>
+</html>

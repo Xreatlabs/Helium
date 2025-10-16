@@ -96,6 +96,23 @@
               </div>
             </div>
             <% } %>
+            <% if (req.query.err && req.query.err == "REWARDSADS_SUCCESS") { %>
+            <div class="rounded-3xl bg-green-50 dark:bg-green-900/20 p-8 mb-5 border-2 border-green-200 dark:border-green-800">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-6 w-6 text-green-600 dark:text-green-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-md font-semibold tracking-tight text-green-800 dark:text-green-300">🎉 Congratulations!</h3>
+                  <div class="mt-1 text-sm text-green-700 dark:text-green-400">
+                    <p>You successfully earned <span class="font-bold"><%= req.query.coins || 10 %> coins</span> from RewardsAds! Your balance has been updated.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
             <% if (req.query.err && req.query.err == "LINKVERTISE_TOKEN_INVALID") { %>
             <div class="rounded-3xl bg-red-50 dark:bg-red-900/20 p-8 mb-5 border-2 border-red-200 dark:border-red-800">
               <div class="flex">
