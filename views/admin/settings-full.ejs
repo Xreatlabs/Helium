@@ -242,32 +242,32 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Site Name</label>
                       <input type="text" name="name" value="<%= settings.name %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Version</label>
                       <input type="text" name="version" value="<%= settings.version %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
                       <input type="text" name="timezone" value="<%= settings.timezone %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website Port</label>
                       <input type="number" name="website.port" value="<%= settings.website.port %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website Secret</label>
                       <input type="text" name="website.secret" value="<%= settings.website.secret %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Database Connection</label>
                       <input type="text" name="database" value="<%= settings.database %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">SQLite connection string (requires restart)</p>
                     </div>
                     <div class="flex items-center">
@@ -309,7 +309,7 @@
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maintenance Page Title</label>
                             <input type="text" name="maintenance.title" value="<%= settings.maintenance?.title || 'Maintenance Mode' %>" 
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                               placeholder="Maintenance Mode">
                           </div>
                           
@@ -317,7 +317,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maintenance Message</label>
                             <textarea name="maintenance.message" rows="3"
                               placeholder="We're currently performing scheduled maintenance. We'll be back soon!"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"><%= settings.maintenance?.message || '' %></textarea>
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"><%= settings.maintenance?.message || '' %></textarea>
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">This message will be shown to non-admin users during maintenance</p>
                           </div>
                         </div>
@@ -345,12 +345,12 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Announcement Message</label>
                       <textarea name="announcement.message" rows="3"
                         placeholder="Enter your announcement message..."
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"><%= settings.announcement?.message || '' %></textarea>
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"><%= settings.announcement?.message || '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">This message will be displayed to all users on the dashboard</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Type</label>
-                      <select name="announcement.type" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                      <select name="announcement.type" class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         <option value="info" <%= settings.announcement?.type === 'info' ? 'selected' : '' %>>Info (Blue)</option>
                         <option value="success" <%= settings.announcement?.type === 'success' ? 'selected' : '' %>>Success (Green)</option>
                         <option value="warning" <%= settings.announcement?.type === 'warning' ? 'selected' : '' %>>Warning (Yellow)</option>
@@ -501,14 +501,14 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo URL</label>
                           <input type="text" name="theme.branding.logo" value="<%= settings.theme?.branding?.logo || '' %>" 
                             placeholder="/assets/logo.png"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Path to your logo image (displayed in navigation)</p>
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favicon URL</label>
                           <input type="text" name="theme.branding.favicon" value="<%= settings.theme?.branding?.favicon || '' %>" 
                             placeholder="/assets/favicon.png"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Path to your favicon (browser tab icon)</p>
                         </div>
                       </div>
@@ -593,7 +593,7 @@
                       <div class="space-y-4">
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Font Family</label>
-                          <select name="theme.typography.fontFamily" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <select name="theme.typography.fontFamily" class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                             <option value="Inter" <%= (settings.theme?.typography?.fontFamily || 'Inter') === 'Inter' ? 'selected' : '' %>>Inter (Default)</option>
                             <option value="Roboto" <%= settings.theme?.typography?.fontFamily === 'Roboto' ? 'selected' : '' %>>Roboto</option>
                             <option value="Open Sans" <%= settings.theme?.typography?.fontFamily === 'Open Sans' ? 'selected' : '' %>>Open Sans</option>
@@ -608,7 +608,7 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Font URL (Google Fonts)</label>
                           <input type="text" name="theme.typography.fontUrl" value="<%= settings.theme?.typography?.fontUrl || '' %>" 
                             placeholder="https://fonts.googleapis.com/css2?family=..."
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional: Load custom font from Google Fonts or other CDN</p>
                         </div>
                       </div>
@@ -663,12 +663,12 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Image URL</label>
                           <input type="text" name="theme.background.image" value="<%= settings.theme?.background?.image || '' %>" 
                             placeholder="https://example.com/background.jpg"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional: Set a custom background image for the dashboard</p>
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Blur</label>
-                          <select name="theme.background.blur" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          <select name="theme.background.blur" class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                             <option value="none" <%= (settings.theme?.background?.blur || 'none') === 'none' ? 'selected' : '' %>>None</option>
                             <option value="sm" <%= settings.theme?.background?.blur === 'sm' ? 'selected' : '' %>>Small</option>
                             <option value="md" <%= settings.theme?.background?.blur === 'md' ? 'selected' : '' %>>Medium</option>
@@ -739,7 +739,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Check Interval (seconds)</label>
                       <input type="number" name="api.client.healthMonitoring.checkInterval" value="<%= settings.api?.client?.healthMonitoring?.checkInterval || 60 %>" 
                         min="30" max="3600"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How often to run health checks (30-3600 seconds)</p>
                     </div>
 
@@ -788,37 +788,37 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk Space Warning</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.diskSpaceWarning" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.diskSpaceWarning || 80 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk Space Critical</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.diskSpaceCritical" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.diskSpaceCritical || 90 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Memory Warning</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.memoryWarning" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.memoryWarning || 80 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Memory Critical</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.memoryCritical" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.memoryCritical || 90 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU Warning</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.cpuWarning" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.cpuWarning || 80 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU Critical</label>
                           <input type="number" name="api.client.healthMonitoring.thresholds.cpuCritical" value="<%= settings.api?.client?.healthMonitoring?.thresholds?.cpuCritical || 90 %>" 
                             min="0" max="100"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -835,7 +835,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Webhook URL</label>
                         <input type="text" name="api.client.healthMonitoring.alerts.webhookUrl" value="<%= settings.api?.client?.healthMonitoring?.alerts?.webhookUrl || '' %>" 
                           placeholder="https://discord.com/api/webhooks/..."
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Discord webhook for health alerts (separate from main webhook)</p>
                       </div>
                     </div>
@@ -860,14 +860,14 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Panel Domain</label>
                       <input type="text" name="pterodactyl.domain" value="<%= settings.pterodactyl?.domain || '' %>" 
                         placeholder="https://panel.example.com"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Full URL including https://</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
                       <input type="password" name="pterodactyl.key" value="<%= settings.pterodactyl?.key || '' %>" 
                         placeholder="ptla_..."
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Application API key from your Pterodactyl panel</p>
                     </div>
                   </div>
@@ -886,23 +886,23 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client ID</label>
                       <input type="text" name="api.client.oauth2.id" value="<%= settings.api?.client?.oauth2?.id || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client Secret</label>
                       <input type="password" name="api.client.oauth2.secret" value="<%= settings.api?.client?.oauth2?.secret || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Callback URL</label>
                       <input type="text" name="api.client.oauth2.link" value="<%= settings.api?.client?.oauth2?.link || '' %>" 
                         placeholder="https://dashboard.example.com"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Callback Path</label>
                       <input type="text" name="api.client.oauth2.callbackpath" value="<%= settings.api?.client?.oauth2?.callbackpath || '/callback' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex items-center">
                       <input type="checkbox" name="api.client.oauth2.prompt" <%= settings.api?.client?.oauth2?.prompt ? 'checked' : '' %> 
@@ -922,7 +922,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blocked IPs (one per line)</label>
                       <textarea name="api.client.oauth2.ip.block" rows="3" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                         placeholder="192.168.1.1"><%= settings.api?.client?.oauth2?.ip?.block ? (Array.isArray(settings.api.client.oauth2.ip.block) ? settings.api.client.oauth2.ip.block.join('\n') : settings.api.client.oauth2.ip.block) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Block specific IPs from accessing the dashboard</p>
                     </div>
@@ -944,57 +944,57 @@
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/callback</label>
                         <input type="number" name="api.client.ratelimits./callback" value="<%= settings.api?.client?.ratelimits?.['/callback'] || 2 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/create</label>
                         <input type="number" name="api.client.ratelimits./create" value="<%= settings.api?.client?.ratelimits?.['/create'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/delete</label>
                         <input type="number" name="api.client.ratelimits./delete" value="<%= settings.api?.client?.ratelimits?.['/delete'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/modify</label>
                         <input type="number" name="api.client.ratelimits./modify" value="<%= settings.api?.client?.ratelimits?.['/modify'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/updateinfo</label>
                         <input type="number" name="api.client.ratelimits./updateinfo" value="<%= settings.api?.client?.ratelimits?.['/updateinfo'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/setplan</label>
                         <input type="number" name="api.client.ratelimits./setplan" value="<%= settings.api?.client?.ratelimits?.['/setplan'] || 2 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/admin</label>
                         <input type="number" name="api.client.ratelimits./admin" value="<%= settings.api?.client?.ratelimits?.['/admin'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/regen</label>
                         <input type="number" name="api.client.ratelimits./regen" value="<%= settings.api?.client?.ratelimits?.['/regen'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/renew</label>
                         <input type="number" name="api.client.ratelimits./renew" value="<%= settings.api?.client?.ratelimits?.['/renew'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/api/userinfo</label>
                         <input type="number" name="api.client.ratelimits./api/userinfo" value="<%= settings.api?.client?.ratelimits?.['/api/userinfo'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">/linkvertise/callback</label>
                         <input type="number" name="api.client.ratelimits./linkvertise/callback" value="<%= settings.api?.client?.ratelimits?.['/linkvertise/callback'] || 1 %>" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                     </div>
                   </div>
@@ -1018,7 +1018,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Code</label>
                       <input type="password" name="api.client.api.code" value="<%= settings.api?.client?.api?.code || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Secret key for API access</p>
                     </div>
                   </div>
@@ -1035,7 +1035,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bot Token</label>
                       <input type="password" name="api.client.bot.token" value="<%= settings.api?.client?.bot?.token || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                       <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Auto Join Guild</h4>
@@ -1047,7 +1047,7 @@
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Guild IDs (one per line)</label>
                         <textarea name="api.client.bot.joinguild.guildid" rows="3" 
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Guild ID"><%= settings.api?.client?.bot?.joinguild?.guildid ? (Array.isArray(settings.api.client.bot.joinguild.guildid) ? settings.api.client.bot.joinguild.guildid.join('\n') : settings.api.client.bot.joinguild.guildid) : '' %></textarea>
                       </div>
                     </div>
@@ -1062,12 +1062,12 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Guild ID</label>
                           <input type="text" name="api.client.bot.giverole.guildid" value="<%= settings.api?.client?.bot?.giverole?.guildid || '' %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role ID</label>
                           <input type="text" name="api.client.bot.giverole.roleid" value="<%= settings.api?.client?.bot?.giverole?.roleid || '' %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1156,7 +1156,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password Length</label>
                       <input type="number" name="api.client.passwordgenerator.length" value="<%= settings.api?.client?.passwordgenerator?.length || 16 %>" 
                         min="8" max="64"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
@@ -1174,7 +1174,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Package</label>
                       <input type="text" name="api.client.packages.default" value="<%= settings.api?.client?.packages?.default || 'default' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                       <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Default Package Resources (Starting Resources)</h4>
@@ -1183,22 +1183,22 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RAM (MB)</label>
                           <input type="number" name="api.client.packages.list.default.ram" value="<%= settings.api?.client?.packages?.list?.default?.ram || 1024 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Disk (MB)</label>
                           <input type="number" name="api.client.packages.list.default.disk" value="<%= settings.api?.client?.packages?.list?.default?.disk || 1024 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPU (%)</label>
                           <input type="number" name="api.client.packages.list.default.cpu" value="<%= settings.api?.client?.packages?.list?.default?.cpu || 100 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Server Slots</label>
                           <input type="number" name="api.client.packages.list.default.servers" value="<%= settings.api?.client?.packages?.list?.default?.servers || 2 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1211,25 +1211,25 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max RAM (MB)</label>
                           <input type="number" name="api.client.packages.list.default.max.ram" value="<%= settings.api?.client?.packages?.list?.default?.max?.ram || 0 %>" 
                             placeholder="0 = unlimited"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Disk (MB)</label>
                           <input type="number" name="api.client.packages.list.default.max.disk" value="<%= settings.api?.client?.packages?.list?.default?.max?.disk || 0 %>" 
                             placeholder="0 = unlimited"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max CPU (%)</label>
                           <input type="number" name="api.client.packages.list.default.max.cpu" value="<%= settings.api?.client?.packages?.list?.default?.max?.cpu || 0 %>" 
                             placeholder="0 = unlimited"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Server Slots</label>
                           <input type="number" name="api.client.packages.list.default.max.servers" value="<%= settings.api?.client?.packages?.list?.default?.max?.servers || 0 %>" 
                             placeholder="0 = unlimited"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                       <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -1278,25 +1278,25 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max RAM (MB)</label>
                         <input type="number" name="api.client.userMaxResources.<%= discordId %>.ram" value="<%= limits.ram || 0 %>" 
                           placeholder="0 = unlimited"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Disk (MB)</label>
                         <input type="number" name="api.client.userMaxResources.<%= discordId %>.disk" value="<%= limits.disk || 0 %>" 
                           placeholder="0 = unlimited"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max CPU (%)</label>
                         <input type="number" name="api.client.userMaxResources.<%= discordId %>.cpu" value="<%= limits.cpu || 0 %>" 
                           placeholder="0 = unlimited"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Server Slots</label>
                         <input type="number" name="api.client.userMaxResources.<%= discordId %>.servers" value="<%= limits.servers || 0 %>" 
                           placeholder="0 = unlimited"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       </div>
                     </div>
                   </div>
@@ -1340,12 +1340,12 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
                           <input type="number" name="api.client.coins.store.ram.cost" value="<%= settings.api?.client?.coins?.store?.ram?.cost || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (MB)</label>
                           <input type="number" name="api.client.coins.store.ram.per" value="<%= settings.api?.client?.coins?.store?.ram?.per || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1356,12 +1356,12 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
                           <input type="number" name="api.client.coins.store.disk.cost" value="<%= settings.api?.client?.coins?.store?.disk?.cost || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (MB)</label>
                           <input type="number" name="api.client.coins.store.disk.per" value="<%= settings.api?.client?.coins?.store?.disk?.per || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1372,12 +1372,12 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
                           <input type="number" name="api.client.coins.store.cpu.cost" value="<%= settings.api?.client?.coins?.store?.cpu?.cost || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (%)</label>
                           <input type="number" name="api.client.coins.store.cpu.per" value="<%= settings.api?.client?.coins?.store?.cpu?.per || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1388,12 +1388,12 @@
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost (coins)</label>
                           <input type="number" name="api.client.coins.store.servers.cost" value="<%= settings.api?.client?.coins?.store?.servers?.cost || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Per (slots)</label>
                           <input type="number" name="api.client.coins.store.servers.per" value="<%= settings.api?.client?.coins?.store?.servers?.per || 0 %>" 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                       </div>
                     </div>
@@ -1411,7 +1411,7 @@
                           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base Reward (coins)</label>
                           <input type="number" name="api.client.coins.dailyRewards.baseReward" value="<%= settings.api?.client?.coins?.dailyRewards?.baseReward || 10 %>" 
                             min="0"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Base coins awarded for daily login</p>
                         </div>
                         <div class="flex items-center">
@@ -1424,13 +1424,13 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bonus Per Day</label>
                             <input type="number" name="api.client.coins.dailyRewards.streakBonus.bonusPerDay" value="<%= settings.api?.client?.coins?.dailyRewards?.streakBonus?.bonusPerDay || 5 %>" 
                               min="0"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Streak Days</label>
                             <input type="number" name="api.client.coins.dailyRewards.streakBonus.maxStreak" value="<%= settings.api?.client?.coins?.dailyRewards?.streakBonus?.maxStreak || 30 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                         </div>
                       </div>
@@ -1450,13 +1450,13 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ticket Cost (coins)</label>
                             <input type="number" name="api.client.coins.lottery.ticketCost" value="<%= settings.api?.client?.coins?.lottery?.ticketCost || 50 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Tickets Per User</label>
                             <input type="number" name="api.client.coins.lottery.maxTicketsPerUser" value="<%= settings.api?.client?.coins?.lottery?.maxTicketsPerUser || 10 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -1464,13 +1464,13 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Round Duration (days)</label>
                             <input type="number" name="api.client.coins.lottery.roundDuration" value="<%= settings.api?.client?.coins?.lottery?.roundDuration || 7 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Prize % of Sales</label>
                             <input type="number" name="api.client.coins.lottery.prizeDistribution.coinsPercentage" value="<%= settings.api?.client?.coins?.lottery?.prizeDistribution?.coinsPercentage || 80 %>" 
                               min="0" max="100"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">% of ticket sales as prize (rest is house edge)</p>
                           </div>
                         </div>
@@ -1491,19 +1491,19 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trading Fee (%)</label>
                             <input type="number" name="api.client.coins.marketplace.tradingFee" value="<%= settings.api?.client?.coins?.marketplace?.tradingFee || 5 %>" 
                               min="0" max="50"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Listing Duration (days)</label>
                             <input type="number" name="api.client.coins.marketplace.listingDuration" value="<%= settings.api?.client?.coins?.marketplace?.listingDuration || 7 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                           <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Active Listings</label>
                             <input type="number" name="api.client.coins.marketplace.maxActiveListings" value="<%= settings.api?.client?.coins?.marketplace?.maxActiveListings || 10 %>" 
                               min="1"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                              class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                           </div>
                         </div>
                         <div>
@@ -1559,7 +1559,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Renewal Period (days)</label>
                       <input type="number" name="api.client.allow.renewsuspendsystem.renewalperiod" value="<%= settings.api?.client?.allow?.renewsuspendsystem?.renewalperiod || 30 %>" 
                         min="1" max="365"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How many days a server lasts before requiring renewal</p>
                     </div>
 
@@ -1568,7 +1568,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Renewal Cost (coins)</label>
                       <input type="number" name="api.client.allow.renewsuspendsystem.renewalcost" value="<%= settings.api?.client?.allow?.renewsuspendsystem?.renewalcost || 100 %>" 
                         min="0"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Coins required to renew a server for the renewal period</p>
                     </div>
 
@@ -1577,7 +1577,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grace Period (days)</label>
                       <input type="number" name="api.client.allow.renewsuspendsystem.graceperiod" value="<%= settings.api?.client?.allow?.renewsuspendsystem?.graceperiod || 3 %>" 
                         min="0" max="30"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Days after expiration before auto-suspension kicks in</p>
                     </div>
 
@@ -1602,7 +1602,7 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deletion Period (days)</label>
                       <input type="number" name="api.client.allow.renewsuspendsystem.deletionperiod" value="<%= settings.api?.client?.allow?.renewsuspendsystem?.deletionperiod || 7 %>" 
                         min="0" max="90"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Days after suspension before server is permanently deleted (0 = no auto-deletion)</p>
                     </div>
 
@@ -1639,35 +1639,35 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User ID</label>
                       <input type="text" name="api.client.linkvertise.userId" value="<%= settings.api?.client?.linkvertise?.userId || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
                       <input type="text" name="api.client.linkvertise.baseUrl" value="<%= settings.api?.client?.linkvertise?.baseUrl || 'https://link-to.net' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Domain</label>
                       <input type="text" name="api.client.linkvertise.domain" value="<%= settings.api?.client?.linkvertise?.domain || '' %>" 
                         placeholder="https://dashboard.example.com"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reward Coins</label>
                       <input type="number" name="api.client.linkvertise.rewardCoins" value="<%= settings.api?.client?.linkvertise?.rewardCoins || 10 %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cooldown Time (seconds)</label>
                       <input type="number" name="api.client.linkvertise.cooldownTime" value="<%= settings.api?.client?.linkvertise?.cooldownTime || 3600 %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Note: Cooldown is currently disabled in code</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Daily Limit</label>
                       <input type="number" name="api.client.linkvertise.dailyLimit" value="<%= settings.api?.client?.linkvertise?.dailyLimit || 5 %>" 
                         min="0"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum number of times a user can use Linkvertise per day (0 = unlimited)</p>
                     </div>
                   </div>
@@ -1691,18 +1691,18 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">WebSocket Path</label>
                       <input type="text" name="api.afk.path" value="<%= settings.api?.afk?.path || 'ws' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Interval (seconds)</label>
                       <input type="number" name="api.afk.every" value="<%= settings.api?.afk?.every || 60 %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How often to award coins (in seconds)</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Coins per Interval</label>
                       <input type="number" name="api.afk.coins" value="<%= settings.api?.afk?.coins || 1 %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                   </div>
                   <button type="submit" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
@@ -1725,13 +1725,13 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ProxyCheck.io API Key</label>
                       <input type="password" name="antivpn.APIKey" value="<%= settings.antivpn?.APIKey || '' %>" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Get your key from proxycheck.io</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted IPs (one per line)</label>
                       <textarea name="antivpn.whitelistedIPs" rows="3" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                         placeholder="192.168.1.1"><%= settings.antivpn?.whitelistedIPs ? (Array.isArray(settings.antivpn.whitelistedIPs) ? settings.antivpn.whitelistedIPs.join('\n') : settings.antivpn.whitelistedIPs) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">IPs that bypass VPN check</p>
                     </div>
@@ -1754,7 +1754,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Whitelisted User IDs</label>
                       <textarea name="whitelist.users" rows="4" 
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                         placeholder="One Discord User ID per line"><%= settings.whitelist?.users ? (Array.isArray(settings.whitelist.users) ? settings.whitelist.users.join('\n') : settings.whitelist.users) : '' %></textarea>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter Discord User IDs, one per line</p>
                     </div>
@@ -1780,14 +1780,14 @@
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discord Webhook ID</label>
                       <input type="text" name="logging.webhookId" value="<%= settings.logging?.webhookId || '' %>" 
                         placeholder="1234567890123456789"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The webhook ID from your Discord webhook URL</p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discord Webhook Token</label>
                       <input type="text" name="logging.webhookToken" value="<%= settings.logging?.webhookToken || '' %>" 
                         placeholder="abcdefghijklmnopqrstuvwxyz123456789"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The webhook token from your Discord webhook URL</p>
                     </div>
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -1919,14 +1919,14 @@
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Uses Per User</label>
                         <input type="number" id="create-code-maxuses-per-user" placeholder="1" min="1" value="1"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">How many times each user can redeem this code</p>
                       </div>
                       
                       <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expires In (Days)</label>
                         <input type="number" id="create-code-expires" placeholder="0 = Never" min="0"
-                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                          class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave as 0 for never expiring</p>
                       </div>
                       
@@ -2664,25 +2664,25 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max RAM (MB)</label>
               <input type="number" name="new_ram_${newId}" value="0" 
                 placeholder="0 = unlimited"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Disk (MB)</label>
               <input type="number" name="new_disk_${newId}" value="0" 
                 placeholder="0 = unlimited"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max CPU (%)</label>
               <input type="number" name="new_cpu_${newId}" value="0" 
                 placeholder="0 = unlimited"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Server Slots</label>
               <input type="number" name="new_servers_${newId}" value="0" 
                 placeholder="0 = unlimited"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full sm:w-3/4 lg:w-2/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
         </div>
