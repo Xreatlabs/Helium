@@ -83,30 +83,50 @@
             </div>
             <% } %>
             <!-- Pterodactyl -->
-            <div class="card mt-10">
-              <div class="card-body">
+            <div class="card mt-10 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div class="card-body p-6 sm:p-8">
                 <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-200 sm:truncate tracking-tight mb-6">Pterodactyl settings</h1>
-                <% /* Panel URL */ %>
-                <label for="url" class="text-sm font-medium text-gray-600 dark:text-gray-300">URL <span class="text-gray-400 dark:text-gray-500">(hostname only)</span></label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="url" placeholder="example.com">
+                <div class="space-y-6">
+                  <div>
+                    <label for="url" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                      URL <span class="text-gray-400 dark:text-gray-500">(hostname only)</span>
+                    </label>
+                    <input type="text" class="w-full sm:w-3/4 lg:w-1/2 px-4 py-2.5 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 text-sm rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 bg-gray-50 dark:bg-gray-900" id="url" placeholder="example.com">
+                  </div>
 
-                <% /* Panel Key */ %>
-                <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">API Key</label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="key" placeholder="plta_xxx">
+                  <div>
+                    <label for="key" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">API Key</label>
+                    <input type="text" class="w-full sm:w-3/4 lg:w-1/2 px-4 py-2.5 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 text-sm rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 bg-gray-50 dark:bg-gray-900" id="key" placeholder="plta_xxx">
+                  </div>
 
-                <% /* Submit form */ %>
-                <a href="javascript:updatePtero()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 dark:bg-gray-700 px-8 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                  Update
-                </a>
+                  <div class="pt-4">
+                    <button onclick="updatePtero()" type="button" class="transition inline-flex items-center rounded-2xl bg-blue-600 dark:bg-blue-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
+                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                      </svg>
+                      Update Settings
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             <script>
               function updatePtero() {
                 const urlInput = document.getElementById('url');
                 const keyInput = document.getElementById('key');
+                const button = event.target.closest('button');
+
+                if (!urlInput.value || !keyInput.value) {
+                  alert('Please fill in all fields');
+                  return;
+                }
+
+                // Disable button and show loading state
+                button.disabled = true;
+                button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Updating...';
 
                 /* Update Pterodactyl settings */
-                const url = 'https://' + urlInput.value;
+                const url = 'https://' + urlInput.value.replace(/^https?:\/\//, '');
                 const key = keyInput.value;
 
                 fetch(`/settings/update?setting=pterodactyl.domain&value=${encodeURIComponent(url)}`)
@@ -123,7 +143,9 @@
                         })
                         .catch(error => {
                           console.error('Error:', error);
-                          alert('Failed to update Pterodactyl settings')
+                          alert('Failed to update Pterodactyl settings');
+                          button.disabled = false;
+                          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>Update Settings';
                         });
                     } else {
                       throw new Error('Failed to update Pterodactyl domain');
@@ -132,29 +154,42 @@
                   .catch(error => {
                     console.error('Error:', error);
                     alert('Failed to update Pterodactyl settings');
+                    button.disabled = false;
+                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>Update Settings';
                   });
               }
             </script>
             <!-- OAuth2 -->
-            <div class="card mt-10">
-              <div class="card-body">
+            <div class="card mt-10 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div class="card-body p-6 sm:p-8">
                 <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-200 sm:truncate tracking-tight mb-6">OAuth2 settings</h1>
-                <% /* Client ID */ %>
-                <label for="url" class="text-sm font-medium text-gray-600 dark:text-gray-300">Client ID</label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="cID" placeholder="xxx">
+                <div class="space-y-6">
+                  <div>
+                    <label for="cID" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Client ID</label>
+                    <input type="text" class="w-full sm:w-3/4 lg:w-1/2 px-4 py-2.5 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 text-sm rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 bg-gray-50 dark:bg-gray-900" id="cID" placeholder="Your Discord Client ID">
+                  </div>
 
-                <% /* Client Secret */ %>
-                <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">Client Secret</label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="cSecret" placeholder="xxx">
+                  <div>
+                    <label for="cSecret" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Client Secret</label>
+                    <input type="password" class="w-full sm:w-3/4 lg:w-1/2 px-4 py-2.5 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 text-sm rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 bg-gray-50 dark:bg-gray-900" id="cSecret" placeholder="Your Discord Client Secret">
+                  </div>
 
-                <% /* Callback URL */ %>
-                <label for="location" class="text-sm font-medium text-gray-600 dark:text-gray-300">Callback URL <span class="text-gray-400 dark:text-gray-500">(hostname only)</span></label><br>
-                <input type="text" class="mt-3 mb-4 px-4 py-2 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 group relative flex w-1/4 text-sm justify-center form-control rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 dark:bg-gray-900" id="callbackUrl" placeholder="example.com">
+                  <div>
+                    <label for="callbackUrl" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                      Callback URL <span class="text-gray-400 dark:text-gray-500">(hostname only)</span>
+                    </label>
+                    <input type="text" class="w-full sm:w-3/4 lg:w-1/2 px-4 py-2.5 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-gray-600 dark:focus:ring-gray-500 border border-gray-200 dark:border-gray-700 shadow-sm transition ease-in-out delay-100 text-sm rounded-xl placeholder:text-gray-400 dark:placeholder-gray-500 text-gray-600 dark:text-gray-100 bg-gray-50 dark:bg-gray-900" id="callbackUrl" placeholder="example.com">
+                  </div>
 
-                <% /* Submit form */ %>
-                <a href="javascript:updateOAuth2()" type="button" class="mt-6 transition inline-flex items-center rounded-2xl bg-gray-200 dark:bg-gray-700 px-8 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                  Update
-                </a>
+                  <div class="pt-4">
+                    <button onclick="updateOAuth2()" type="button" class="transition inline-flex items-center rounded-2xl bg-blue-600 dark:bg-blue-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2">
+                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                      </svg>
+                      Update Settings
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             <script>
@@ -162,11 +197,21 @@
                 const idInput = document.getElementById('cID');
                 const secretInput = document.getElementById('cSecret');
                 const urlInput = document.getElementById('callbackUrl');
+                const button = event.target.closest('button');
+
+                if (!idInput.value || !secretInput.value || !urlInput.value) {
+                  alert('Please fill in all fields');
+                  return;
+                }
+
+                // Disable button and show loading state
+                button.disabled = true;
+                button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Updating...';
 
                 /* Update OAuth2 settings */
                 const id = idInput.value;
                 const secret = secretInput.value;
-                const url = 'https://' + (urlInput.value).replace('/callback', '');
+                const url = 'https://' + urlInput.value.replace(/^https?:\/\//, '').replace('/callback', '');
 
                 fetch(`/settings/update?setting=api.client.oauth2.id&value=${encodeURIComponent(id)}`)
                   .then(response => {
@@ -177,7 +222,7 @@
                             fetch(`/settings/update?setting=api.client.oauth2.link&value=${encodeURIComponent(url)}`)
                               .then(response => {
                                 if (response.ok) {
-                                  // Redirect to /settings?err=none if both requests worked
+                                  // Redirect to /settings?err=none if all requests worked
                                   window.location.href = '/settings?err=none';
                                 } else {
                                   throw new Error('Failed to update OAuth2');
@@ -185,7 +230,9 @@
                               })
                               .catch(error => {
                                 console.error('Error:', error);
-                                alert('Failed to update OAuth2')
+                                alert('Failed to update OAuth2');
+                                button.disabled = false;
+                                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>Update Settings';
                               });
                           } else {
                             throw new Error('Failed to update OAuth2');
@@ -193,7 +240,9 @@
                         })
                         .catch(error => {
                           console.error('Error:', error);
-                          alert('Failed to update OAuth2')
+                          alert('Failed to update OAuth2');
+                          button.disabled = false;
+                          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>Update Settings';
                         });
                     } else {
                       throw new Error('Failed to update OAuth2');
@@ -202,6 +251,8 @@
                   .catch(error => {
                     console.error('Error:', error);
                     alert('Failed to update OAuth2');
+                    button.disabled = false;
+                    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-2"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" /></svg>Update Settings';
                   });
               }
             </script>
